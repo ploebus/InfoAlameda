@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 		xmlns:mx			="http://www.adobe.com/2006/mxml"
+			 	xmlns:esri			="http://www.esri.com/2008/ags"
+			 	xmlns:text			="flash.text.*"
+				creationComplete	="init()"
+				width				="634">
+	<mx:Script>
+		<![CDATA[
+			import VO.summaryXML;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.layers.Layer;
+			import mx.rpc.AsyncResponder;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Map;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.ags.tasks.QueryTask;
+			import mx.events.ListEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			
+			private static const URLSTART:String="http://67.91.201.5/infoalameda/rest/services";
+			public var theMap:Map;
+		
+			[Bindable]
+			public var qt:QueryTask;
+			
+			[Bindable]
+			public var mainData:XML;
+			
+			[Bindable]
+			public var ageData:Array;
+			
+			[Bindable]
+			public var raceData:Array;
+			
+			[Bindable]
+			public var genderData:Array;
+			
+			[Bindable]
+			public var householdData:Array;
+			
+			[Bindable]
+			public var relationshipData:Array;
+			
+			[Bindable]
+			public var occupancyData:Array;
+			
+			[Bindable]
+			public var housingTenureData:Array;
+			
+			[Bindable]
+			public var myXML:XML;
+			
+			public var title:String;
+			
+		private function init():void{
+			gc.addEventListener(Event.ACTIVATE,stop);
+		}
+		
+		private function stop(e:Event):void{
+			trace(mainData.toXMLString());
+		}
+		//different idea
+		private function getMapPosition(evt:ListEvent):void{
+			qt=new QueryTask();
+			qt.url=URLSTART+"/Profile/MapServer/0";
+				
+			//test
+			/* if(newLayer){map.removeLayer(newLayer);}
+				var newLayer:ArcGISDynamicMapServiceLayer=new ArcGISDynamicMapServiceLayer("http://infogis/InfoAlameda/rest/services/Summary/MapServer/6");
+					newLayer.layerDefinitions=["Tracts=40200"];
+				map.addLayer(newLayer); */
+			//end test
+		
+			var qry:Query=new Query();
+				qry.returnGeometry=true;
+				qry.outFields=["Tract"];
+				qry.outSpatialReference=new SpatialReference(4326);
+				qry.where="OBJECTID<>0 and Tracts ="+evt.itemRenderer.data["Tracts"];
+			
+			qt.execute(qry,new AsyncResponder(onResult,onFault));
+		}
+		
+		
+		
+		private function onResult(ft:FeatureSet,token:Object=null):void{
+			if(clickLayer){theMap.removeLayer(clickLayer);} 
+			  	theMap.addLayer(clickLayer);
+		// map.centerAt(ft.features[0].geometry.extent.center);
+				clickLayer.toolTip=ft.attributes.Tract;
+				theMap.extent=ft.features[0].geometry.extent;
+		
+			for(var i:Number=0;i<ft.features.length-1;i++)
+        			{
+        				
+        				//trace(features[i].geometry.extent.centerX as String);
+        				//var _point:MapPoint=new MapPoint(features[i].geometry.extent.centerX as Number,features[i].geometry.extent.centerY as Number)
+        				var _point:MapPoint=new MapPoint(ft.features[i].geometry.extent.center);
+        				//var _point:MapPoint=new MapPoint(features[i].attributes.long,features[i].attributes.lat);
+        				var graphic:Graphic=new Graphic(_point,textSym);
+        					clickLayer.add(graphic);
+        			}
+		}
+		
+		
+		private function onFault(info:Object,token:Object=null):void{
+			Alert.show(info.toString(),"Oops");
+		}
+		
+				
+			
+		]]>
+	</mx:Script>
+		 <esri:TextSymbol id="textSym" text="Hello" color="0xFFFFFF" backgroundColor="0x0000FF">
+    		 <text:TextFormat  bold="true" size="16"/>
+ 			</esri:TextSymbol>
+		<esri:SimpleFillSymbol id="selectedSymbol" >
+			<esri:SimpleLineSymbol style="solid" color="0xFF0000" width="3"/>
+		</esri:SimpleFillSymbol>
+			
+		<esri:GraphicsLayer id="clickLayer" symbol="{selectedSymbol}" graphicProvider="{qt.executeLastResult.features}">
+		
+	</esri:GraphicsLayer>
+	<mx:TabNavigator x="0" y="8" width="626">
+		<mx:VBox label="Sex and Age" width="100%" height="100%">
+			
+				
+					<mx:AdvancedDataGrid initialize="gc.refresh()" width="624">
+						
+						<mx:dataProvider>
+						
+							<mx:GroupingCollection2 id="gc" source="{mainData.category.(@name=='Sex and Age').variable}">
+								<mx:grouping>
+									<mx:Grouping>
+										<mx:GroupingField name="type"/>
+										<mx:GroupingField name="name"/>
+										
+									</mx:Grouping>
+								</mx:grouping>
+							</mx:GroupingCollection2>
+						</mx:dataProvider>
+							<mx:columns>
+								
+								<mx:AdvancedDataGridColumn dataField="type"/>
+								<mx:AdvancedDataGridColumn dataField="name"/>
+								<mx:AdvancedDataGridColumn dataField="number"/>
+								<mx:AdvancedDataGridColumn dataField="percent"/>
+							</mx:columns>
+					</mx:AdvancedDataGrid>
+			
+			
+		</mx:VBox>
+		<mx:VBox label="Race" width="100%" height="100%">
+				
+				
+					<mx:DataGrid dataProvider="{mainData.category.(@name=='Race').variable}" width="619">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid>
+				
+		</mx:VBox>
+		<mx:VBox label="Hispanic or Latino and Race" width="100%" height="100%">
+			<mx:DataGrid dataProvider="{mainData.category.(@name=='Hispanic or Latino Race').variable}" width="613">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid>
+		</mx:VBox>
+		<mx:VBox label="Relationships" width="100%" height="100%">
+			<mx:DataGrid dataProvider="{mainData.category.(@name=='Relationship').variable}" width="622">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid>
+		</mx:VBox>
+		<mx:VBox label="Household By Type" width="100%" height="100%">
+			<mx:DataGrid dataProvider="{mainData.category.(@name=='Household By Type').variable}" width="624">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid>
+		</mx:VBox>
+		<mx:VBox label="Housing Occupancy" width="100%" height="100%">
+			<mx:DataGrid dataProvider="{mainData.category.(@name=='Housing Occupancy').variable}" width="621">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid> 
+		</mx:VBox>
+		<mx:VBox label="Housing Tenure" width="100%" height="100%">
+			<mx:DataGrid dataProvider="{mainData.category.(@name=='Housing Tenure').variable}" width="611">
+						<mx:columns>
+							<mx:DataGridColumn dataField="name"/>
+							<mx:DataGridColumn dataField="number"/>
+							<mx:DataGridColumn dataField="percent"/>
+						</mx:columns>
+						
+					</mx:DataGrid>
+		</mx:VBox>
+	</mx:TabNavigator>
+	<mx:HBox width="624" height="41" y="217" backgroundColor="#FDFBFB" fontWeight="bold" fontSize="12">
+		<mx:Repeater id="tractCheckboxes" dataProvider="{mainData.@source}" >
+			<mx:Text text="{tractCheckboxes.currentItem}"/>
+		</mx:Repeater>
+	</mx:HBox>
+</mx:Canvas>

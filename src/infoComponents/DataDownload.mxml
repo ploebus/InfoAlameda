@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   title="Download Data" width="400" height="300" 
+			   close="titleWin_close(event)" initialize="titlewindow1_initializeHandler(event)">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="CSVExport", type="flash.events.Event")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import classes.ExportGeography;
+			import classes.events.CustomEvents;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			public static const EXPORT:String = 'CSVExport';
+			private var exportGeography:ExportGeography;
+			
+			[Bindable] private var dataCollection:ArrayCollection = new ArrayCollection();
+			
+			private function titleWin_close(evt:CloseEvent):void {
+				PopUpManager.removePopUp(evt.target as IFlexDisplayObject);
+			}
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var evt:Event = new Event(EXPORT,true);
+				this.dispatchEvent(evt);
+			}
+			
+			protected function combobox1_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				btnExportGeography.enabled = true;
+				
+			}
+			
+			protected function titlewindow1_initializeHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				//dataCollection.addEventListener(CollectionEvent.COLLECTION_CHANGE,cbxFormat_valueCommitHandler);
+				var params:Object = {
+					'f':'json'
+				}
+				exportGeography = new ExportGeography();
+					exportGeography.setURLVariables(params);
+					exportGeography.addEventListener("dataLoaded",loadFormats);
+					
+			}
+			protected function loadFormats(e:Event):void{
+				dataCollection = exportGeography.getFormats();
+			}
+			
+			protected function btnExportGeography_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var data:Object = {
+					"format":cbxFormat.selectedItem
+				};
+				var myEvent:CustomEvents = new CustomEvents(CustomEvents.FORMAT_SELECTED,data,true);
+				dispatchEvent(myEvent);
+				lblPleaseWait.visible = true;
+			}
+			
+			protected function cbxFormat_valueCommitHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Resize");
+				cbxFormat.validateNow();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer left="2" right="2" top="2" bottom="2" backgroundAlpha="0" cornerRadius="10"
+					   dropShadowVisible="true" textAlign="center">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+		</s:layout>
+		
+		<s:Label fontSize="18" paddingBottom="10" text="Download Map Data"
+				 verticalAlign="middle"/>
+		
+		
+		<s:Label fontSize="14" text="Download attribute data as .csv"/>
+		<s:Button label="Download CSV" click="button1_clickHandler(event)" fontSize="14"/>
+		<mx:HRule/>
+		<s:Label fontSize="14" paddingTop="10" text="Export Current Boundary"/>
+		<s:ComboBox id="cbxFormat" width="285" prompt="Select data type" change="combobox1_changeHandler(event)"
+					dataProvider="{dataCollection}"/>
+		<s:Button id="btnExportGeography" label="Export"
+				  click="btnExportGeography_clickHandler(event)" enabled="false" fontSize="14"/>
+		<s:Label id="lblPleaseWait" text="Please wait...data is loading." visible="false"/>
+	</s:BorderContainer>	
+	
+</s:TitleWindow>

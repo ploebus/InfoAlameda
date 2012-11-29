@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:renderers="widgets.IdentifyTool.renderers.*">
+	<!-- host component -->
+	<fx:Metadata>
+		[HostComponent("spark.components.DataGrid")]
+	</fx:Metadata>
+	
+	<!-- states -->
+	<s:states>
+		<s:State name="disabled" />
+		<s:State name="normal" />
+	</s:states>
+	
+	<!-- SkinParts
+	name=selectionIndicator, type=mx.core.IFactory, required=false
+	name=scroller, type=spark.components.Scroller, required=false
+	name=rowBackground, type=mx.core.IFactory, required=false
+	name=hoverIndicator, type=mx.core.IFactory, required=false
+	name=editorIndicator, type=mx.core.IFactory, required=false
+	name=alternatingRowColorsBackground, type=mx.core.IFactory, required=false
+	name=columnSeparator, type=mx.core.IFactory, required=false
+	name=grid, type=spark.components.Grid, required=false
+	name=columnHeaderGroup, type=spark.components.GridColumnHeaderGroup, required=false
+	name=caretIndicator, type=mx.core.IFactory, required=false
+	name=rowSeparator, type=mx.core.IFactory, required=false
+	-->
+	<s:GridColumnHeaderGroup id="headerRenderer">
+		<s:headerRenderer>
+			<fx:Component>
+				<renderers:IdentifyHeaderRenderer/>
+			</fx:Component>
+		</s:headerRenderer>
+	</s:GridColumnHeaderGroup>
+</s:Skin>

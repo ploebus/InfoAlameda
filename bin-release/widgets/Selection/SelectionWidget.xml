@@ -1,0 +1,219 @@
+<?xml version="1.0" ?>
+<configuration>
+
+<!-- override the default selection symbology -->
+<!--
+	<symbols>
+		<picturemarkersymbol height="30" width="30" xoffset="0" yoffset="0"
+				url="widgets/Selection/assets/images/i_pin3.png" />
+									
+		<simplelinesymbol color="0xFF0000" alpha="0.8" width="2" />
+	
+		<simplefillsymbol color="0xFF0000" alpha="0.5">
+			<outline color="0xFF0000" alpha="0.8" width="2" />
+		</simplefillsymbol>
+	</symbols>
+-->
+
+<!--  Override the default Datagrid style -->
+<!-- 
+	<datagrid   alternatingColor1="0xeff3fa"
+				alternatingColor2="0xffffff"
+				backgroundAlpha="0"
+				horizontalGridLines="true"
+				horizontalGridLineColor="0x666666">
+	</datagrid>
+-->
+ 
+<!-- add the layers to query -->   
+<!-- minscale and maxscale are optional to override the arcGIS settings. 
+ 	 minscale = 0 and maxscale = 0 will display the selected features at all scales -->
+<!-- linkfield has an optional linkprefix="" and linksuffix="" attribute -->
+<!-- fields has an optional all="true" attribute. Use this if you want to search all fields. -->
+<!-- field has an optional alias attribute. This will override the arcGIS alias. 
+     alias can be set in either the fields - field or the infowindowfields - field -->
+ 
+    <layers>
+    <!--
+    	<layer>
+            <name>MyParks</name>
+            <url>http://gis/ArcGIS/rest/services/Parks_General/MapServer/6</url>
+            <minscale>500000</minscale>
+            <maxscale>10</maxscale>
+            <fields>
+                <field name="Site_name" alias="Site Name"/>
+                <field name="spatial.GIS.LandSites_poly.Site_Code" alias="Site Code"/>
+                <field name="spatial.GIS.LandSites_poly.OBJECTID" alias="ObjectID"/>
+                <field name="URL_FIELD" alias="URL"/>
+            </fields>
+            <titlefield>Site_name</titlefield>
+            <linkfield linkprefix="http://www.test1.com." linksuffix=".txt">URL_FIELD</linkfield>
+            <infowindowfields>
+            	<field name="Site_name"/>
+     			<field name="spatial.GIS.LandSites_poly.Site_Code" alias="Site Code"/>
+     			<field name="spatial.GIS.LandSites_poly.OBJECTID"/>
+			</infowindowfields>
+        </layer>
+    
+        
+        <layer>
+            <name>City County Neighborhood Initiatives</name>
+            <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/0</url>
+            <fields>
+                <field name="APN"/>
+                <field name="StNo"/>
+                <field name="StName"/>
+                <field name="City"/>
+                <field name="Zip"/>
+                <field name="NetVal"/>
+            </fields>
+            <titlefield>APN</titlefield>
+            <linkfield></linkfield>
+        </layer> -->
+      
+        <layer>
+        	<name>Health By Census Tract</name>
+        	<url>http://209.119.63.162/InfoAlameda/rest/services/Thematics/Tracts/MapServer/0</url>
+        	<fields>
+        		<field name="Tracts" alias="Census Tract"/>
+        		<field name="H_MO_ALL_R" alias="All-Cause Mortality Rate 2006-2008"/>
+        		<field name="H_MO_CAN_R" alias="All Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_M0_BRE_R" alias="Female Breast Cancer Mortality 2006-2008"/>
+        		<field name="H_MO_COL_R" alias="Colorectal Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_MO_COR_R" alias="Coronary Heart Disease Mortality Rate 2006-2008"/>
+        		<field name="H_MO_DIA_R" alias="Diabetes Mortality Rate 2006-2008"/>
+        		<field name="H_MO_PRO_R" alias="Prostate Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_MO_STR_R" alias="Stroke Mortality Rate 2006-2008"/>
+        		<field name="H_MO_SUI_R" alias="Suicde Mortality Rate 2006-2008"/>
+        		<field name="H_MO_UNI_R" alias="Unintentional Injury Mortality Rate 2006-2008"/>
+        	</fields>
+        	<infowindowfields>
+        		<field name="Tracts" alias="Census Tract"/>
+        		<field name="H_MO_ALL_R" alias="All-Cause Mortality Rate 2006-2008"/>
+        		<field name="H_MO_CAN_R" alias="All Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_M0_BRE_R" alias="Female Breast Cancer Mortality 2006-2008"/>
+        		<field name="H_MO_COL_R" alias="Colorectal Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_MO_COR_R" alias="Coronary Heart Disease Mortality Rate 2006-2008"/>
+        		<field name="H_MO_DIA_R" alias="Diabetes Mortality Rate 2006-2008"/>
+        		<field name="H_MO_PRO_R" alias="Prostate Cancer Mortality Rate 2006-2008"/>
+        		<field name="H_MO_STR_R" alias="Stroke Mortality Rate 2006-2008"/>
+        		<field name="H_MO_SUI_R" alias="Suicde Mortality Rate 2006-2008"/>
+        		<field name="H_MO_UNI_R" alias="Unintentional Injury Mortality Rate 2006-2008"/>
+        	</infowindowfields>
+        </layer>
+          <layer>
+        <name>City County Neighborhood Initiatives</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/0</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+         <layer>
+        <name>Promise Neighborhoods</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/1</url>
+        	<fields>
+	        	<field name="name"/>
+	        </fields>
+        </layer>
+        <layer>
+        <name>Violence Prevention Neighborhoods</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/2</url>
+        	<fields>
+	        	<field name="Neighborho"/>
+	        </fields>
+        </layer>
+         <layer>
+        <name>Oakland Gang Injunction Zone</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/3</url>
+        	<fields>
+	        	<field name="Name"/>
+	        </fields>
+        </layer>
+         <layer>
+        <name>Making Connections</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/4</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+         <layer>
+        <name>Neighborhood Stabilization Zone NSP 1</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/5</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+        <layer>
+        <name>Oakland Redevelopment Zones</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/6</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+        <layer>
+        <name>TCE Healthy Communities</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/7</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+        <layer>
+        <name>Urban Communities Collaborative</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/7</url>
+        	<fields>
+	        	<field name="Init"/>
+	        </fields>
+        </layer>
+        <layer>
+        <name>Business Improvement Districts</name>
+        <url>http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer/7</url>
+        	<fields>
+	        	<field name="name"/>
+	        </fields>
+        </layer>
+        
+        <!--<layer>
+        	<name>Census Tracts 2010</name>
+        	<url>http://infogis/InfoAlameda/rest/services/Thematics/Tracts2010/MapServer/0</url>
+        	<fields>
+        		<field name="Tracts2010" alias="Census Tract"/>
+        	</fields>
+        	<infowindowfields>
+        		<field name="Tracts2010"/>
+        	</infowindowfields>
+        </layer>
+        <layer>
+        	<name>Census Designated Places</name>
+        	<url>http://infogis/InfoAlameda/rest/services/Summary/Summary/MapServer/3</url>
+        	<fields>
+        		<field name="Places"/>
+        	</fields>
+        	<infowindowfields>
+        		<field name="Places"/>
+        		
+        	</infowindowfields>
+        </layer>-->
+    </layers>    
+        
+    <zoomscale>5000</zoomscale>
+    <info>widgets/InfoTemplates/InfoPopupWidget.swf</info>
+    <pages>
+    <page name="selectattributes">
+	    <width>500</width>
+		<height>400</height>
+		<video></video>
+		<content>
+	        <![CDATA[<br><p align='center'><font size="16"><b>Selection Tool</b></font></p>
+	        <textformat leftmargin="5" rightmargin="5"><p>On this page, you can find census tracts that meet criteria that you set.</p>
+	        <p><b>1.</b> To begin, select the layer from the Target Layer drowdown that you are interested in querying.<p>
+	        <p><b>2.</b> Once you select the layer, the Fields box will show a list of variables available to query for that layer. Double click the value to select.<p>
+	        <p><b>3.</b> Once you have selected the variable, the values box will populate with the values for that variables. Use the calculator button to select what operation you want to perform<p>
+	        <p><b>3.</b> You can see your query building in the dialog box. The last step is to select some value to set as your search parameter.<p>
+	        <br>
+	        <p>For example, let's say you want to find the census tracts in Alameda that have mortality rates greater than 800 mortalities per 100,000 people. You would double click 'All-Cause Mortality Rate 2006 - 2008'. Then you would click the greater than button from the calculator. Finally, you would click in the dialog box and write in 800.</p>
+	        </textformat>]]>
+		</content>
+	    		<btnlabel>Click to continue</btnlabel>
+	    </page>
+    </pages>
+</configuration>

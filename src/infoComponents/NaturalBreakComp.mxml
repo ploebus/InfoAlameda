@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 creationComplete="group1_creationCompleteHandler(event)" 
+		 addedToStage="group1_focusInHandler(event)" width="500" height="274" xmlns:local="*" 
+		>
+	<fx:Script>
+		<![CDATA[
+			import assets.skins.NaturalBreakSliderSkin;
+			
+			import classes.events.CustomEvents;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.events.SliderEvent;
+			
+			import myUtils.johnUtils;
+			
+			import spark.collections.SortField;
+			
+			[Bindable]
+			public var theHigh:Number;
+			
+			private var theLow:Number;
+			
+			[Bindable]
+			public var theColl:ArrayCollection;
+		
+			private var _arrColl:ArrayCollection; 
+			
+			private var theArray:Array;
+			
+			[Bindable]
+			public function get arrColl():ArrayCollection
+			{
+				return _arrColl;
+			}
+
+			public function set arrColl(value:ArrayCollection):void
+			{
+				//var dataSortField:SortField = new SortField();
+				//dataSortField.name = "value";
+				//dataSortField.numeric = true;
+				_arrColl = value;
+				sortArray(_arrColl.source,"value");
+				_arrColl.refresh();
+			}
+			
+			protected function sortArray(arr:Array,value:String):void{
+				var dataSortField:SortField = new SortField();
+				dataSortField.name = value;
+				dataSortField.numeric = true;
+				arr.sortOn(value, Array.NUMERIC);
+				//return arr
+				//_arrColl.source.sortOn('value',Array.NUMERIC);
+				//_arrColl.refresh();
+			}
+
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				arrColl.addEventListener(CollectionEvent.COLLECTION_CHANGE,setValues);
+				
+				theHigh = johnUtils.getHigh(arrColl.source, "value");
+				theLow = johnUtils.getLow(arrColl.source,"value");
+				//theColl = new ArrayCollection(theSlider.values);
+			}
+			protected function setValues(evt:CollectionEvent):void{
+				theHigh = johnUtils.getHigh(arrColl.source, "value");
+				theLow = johnUtils.getLow(arrColl.source,"value");
+				sortArray(_arrColl.source,"value");
+			}
+			protected function theSlider_changeHandler(event:SliderEvent):void
+			{
+				var valLength:int = theSlider.thumbCount;
+				theArray = new Array();
+				theArray.push(theLow);
+				//WORKAROUND VALUES ARRAY CONTAINING ALL VALUES
+				for(var i:Number= 0;i < valLength;i++){
+					theArray.push(event.target.values[i]);
+				}
+				theArray.push(theHigh+1);
+				//theArray = event.target.values;
+				//Alert.show(theArray.toString());
+				
+				
+			}
+			
+			protected function commitChange_clickHandler(event:MouseEvent):void
+			{
+				theArray = theArray.sort(Array.NUMERIC);
+				var theData:Object = {
+					values: theArray
+				};
+				var theEvent:CustomEvents = new CustomEvents("sliderChange",theData,true);
+				this.dispatchEvent(theEvent);
+				
+			}
+			
+			protected function group1_focusInHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				//Alert.show("hello");
+				sortArray(_arrColl.source,"value");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Metadata>
+		[Event(name="sliderChange", type="classes.events.CustomEvents")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:BorderContainer width="100%" height="100%" backgroundAlpha="0" cornerRadius="10" dropShadowVisible="true">
+		<mx:ColumnChart id="valueHistogram" width="499" height="182" dataProvider="{arrColl}"
+						showDataTips="true">
+			<mx:horizontalAxis>
+				<mx:CategoryAxis 
+					dataProvider="{arrColl}" 
+					categoryField="name"/>
+			</mx:horizontalAxis>
+			<mx:series>
+				<mx:ColumnSeries displayName="Series 1" xField="name" yField="value"/>
+			</mx:series>
+			<mx:annotationElements>
+				<mx:VSlider id="theSlider" width="100%" change="theSlider_changeHandler(event)" liveDragging="false" maximum="{theHigh}"
+							snapInterval="1" thumbCount="{thumbCount.value -1}"
+							thumbSkin="{assets.skins.NaturalBreakSliderSkin}"/>
+			</mx:annotationElements>
+		</mx:ColumnChart>
+		<!--<mx:VSlider id="theSlider" x="81" y="10" width="347" height="161"
+					change="theSlider_changeHandler(event)" liveDragging="false" maximum="{theHigh}"
+					snapInterval="1" thumbCount="{thumbCount.value -1}"
+					thumbSkin="{assets.skins.NaturalBreakSliderSkin}"/>-->
+		
+		<s:Label x="10" y="190" color="#FEFBFB" fontWeight="bold"
+				 text="Select the number of classes"/>
+		<s:NumericStepper id="thumbCount" value="5" minimum="3" maximum="7" x="73" y="210"/>
+		<s:Button id="commitChange" x="9" y="245" width="134" label="Change"
+				  click="commitChange_clickHandler(event)"/>
+		<s:RichText x="201" y="190" width="288" height="72" color="#FEFCFC"
+					text="Drag up the blue lines to set your break points. The tool will automatically assign the lowest and the highest values. When finished, click 'Change'."
+					textAlign="center" verticalAlign="middle"/>
+		
+	</s:BorderContainer>
+	
+</s:Group>

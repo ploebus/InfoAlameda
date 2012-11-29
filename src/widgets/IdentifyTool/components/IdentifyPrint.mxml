@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="800" height="800">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Label x="104" y="45" color="#333333" fontSize="24" text="Summary Sheet"/>
+	<s:Image x="411" y="10" source="assets/images/InfoBetaFlex100.png"/>
+	<s:Label x="36" y="165" color="#033333" fontSize="16" text="Demographic"/>
+	<s:List id="listDemographic">
+		
+	</s:List>
+	<s:Label x="36" y="734" color="#033333" fontSize="16" text="Economic"/>
+	<s:List id="listEconomic">
+		
+	</s:List>
+	<s:Label x="37" y="555" color="#033333" fontSize="16" text="Housing"/>
+	<s:List id="listHousing">
+		
+	</s:List>
+	<s:Label x="35" y="390" color="#033333" fontSize="16" text="Safety"/>
+	<s:List id="listSafety">
+		
+	</s:List>
+	<s:Label x="36" y="234" color="#033333" fontSize="16" text="Health"/>
+	<s:List id="listHealth">
+		
+	</s:List>
+	
+	
+</s:Group>

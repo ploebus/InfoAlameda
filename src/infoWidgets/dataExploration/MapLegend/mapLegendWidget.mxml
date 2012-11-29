@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     ////////////////////////////////////////////////////////////////////////////////
+     //
+     // Copyright (c) 2010 ESRI
+     //
+     // All rights reserved under the copyright laws of the United States.
+     // You may freely redistribute and use this software, with or
+     // without modification, provided you include the original copyright
+     // and use restrictions.  See use restrictions in the file:
+     // <install location>/License.txt
+     //
+     ////////////////////////////////////////////////////////////////////////////////
+-->
+<viewer:BaseWidget xmlns:fx					="http://ns.adobe.com/mxml/2009"
+                   xmlns:s					="library://ns.adobe.com/flex/spark"
+                   xmlns:mx					="library://ns.adobe.com/flex/mx"
+                   xmlns:esri				="http://www.esri.com/2008/ags"
+                   xmlns:viewer				="com.esri.viewer.*"
+				   initialize				="basewidget1_creationCompleteHandler(event)"
+				   xmlns:infoComponents		="infoComponents.*" xmlns:utils="com.adobe.utils.*">
+    <fx:Script>
+		<![CDATA[
+			import classes.statUtils;
+			
+			import com.esri.ags.Map;
+			import com.esri.ags.events.LayerEvent;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.layers.supportClasses.LayerInfo;
+			import com.esri.ags.utils.GraphicUtil;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			
+			import infoComponents.Legend;
+			import infoComponents.MapSelected;
+			import infoComponents.printTemplateLandscape;
+			
+			import mx.charts.HitData;
+			import mx.charts.events.ChartItemEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			import mx.graphics.ImageSnapshot;
+			
+			import myUtils.UtilFunctions;
+			import myUtils.imageSaving;
+			
+			private const ICON_URL:String = "assets/images/";
+			
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSrc:String;
+			private var buttonIndex:int;
+			
+			private var legendArray:Array=new Array();
+			
+			
+			
+			[Bindable]
+			private var _alias:String;
+			
+			public var _selectedColor:int = 1;
+			
+			public var _selectedclassification:String = "Equal Interval";
+			
+			private var _layer:int;
+			
+			private var _boundary:String;
+			
+			private var _thematicLegend:infoComponents.Legend;
+			
+			private var _pointLegend:infoComponents.Legend;
+			
+			private var printBox:printTemplateLandscape;
+			
+			private var _yValue:String;
+			
+			private var _xValue:String;
+			
+			private var mapSelected:MapSelected;
+			
+			private var twoVariables:Boolean = false;
+			
+			private var tempState:String = 'legend';
+			
+			[Bindable]
+			private var twoVariableXML:XML;
+			
+			[Bindable]
+			private var panelTitle:String;
+			
+			[Bindable]
+			private var bestFitCollection:ArrayCollection;
+			
+			private function createLegend(e:AppEvent):void{
+				Alert.show("here");	
+			}
+
+			protected function basewidget1_creationCompleteHandler(event:Event):void
+				{
+				
+					wTemplate.addTitlebarButton(ICON_URL + "i_layers.png","Legend",goToLegend);
+					wTemplate.addTitlebarButton(ICON_URL + "i_print.png","Print", printMap);
+					wTemplate.addTitlebarButton(ICON_URL + "i_help.png","Help", showHelp);
+					wTemplate.addTitlebarButton(ICON_URL + "Scatter_plot_icon.jpg","Compare", compareVariables);
+					
+					wTemplate.addEventListener("closeme",removeLayer);
+					wTemplate.addEventListener("closed",closeLegend);
+					wTemplate.addEventListener("minimized",checkState);
+					wTemplate.addEventListener("open",checkPrintState);
+					
+					AppEvent.addListener(AppEvent.DATA_NEW_PUBLISHED,processData);
+					AppEvent.addListener(AppEvent.All_CLOSE,closeAll);
+					AppEvent.addListener(AppEvent.LEGEND_CHANGED,setDefaults);
+				}
+			
+			protected function setDefaults(e:AppEvent):void{
+				_selectedColor = e.data.color;
+				_selectedclassification = e.data.classification;
+			}
+			
+			protected function showHelp():void{
+				//Alert.show(tempState);
+				var tempXML:XMLList=configXML..page.(@name==tempState);
+				//Alert.show(tempXML.toString());
+				if(tempXML){
+					content = tempXML.content || "";
+					btnLabel = tempXML.btnlabel || "OK";
+					txtareaWidth = tempXML.width || 500;
+					txtareaHeight = tempXML.height || 500;
+					videoSrc = tempXML.video || "none";
+					//Alert.show("Content:"+content+"\nHeight:"+txtareaHeight);
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSrc);
+						hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+					wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+				}
+			}
+			
+			private function doThis(e:Event):void{
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+			}
+			
+			protected function checkState(event:Event):void{
+				reAddGraphics();
+				
+			}
+			
+			protected function checkPrintState(event:Event):void{
+				if(this.currentState=="print"){
+					printMap();
+				}
+			}
+			
+			private function closeLegend(e:Event):void
+				{
+					
+					reAddGraphics();
+				
+				}
+			private function removeLayer(e:Event):void{
+				if(printArea != null){
+				printArea.removeAllElements();
+				};
+				switch(e.target.specs.action)
+				{
+					case "first":
+						map.removeLayer(map.getLayer("graphicsLayer"));
+						thematicBox.removeAllElements();
+						//thematicBox.removeElementAt(0);
+						break;
+					case "second":
+						map.removeLayer(map.getLayer("graphicsLayer1"));
+						pointBox.removeAllElements();
+						//pointBox.removeElementAt(0);
+						break;
+				} 
+			}
+			private function closeAll(e:Event):void
+			{
+				thematicBox.removeAllElements();
+				pointBox.removeAllElements();
+					if(printArea != null){
+						printArea.removeAllElements();
+					} 
+				//wTemplate.closeButton.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+				/* var data:Object =
+					{
+						id: this.widgetId,
+						state: "closed"
+					};
+				AppEvent.dispatch(AppEvent.WIDGET_STATE_CHANGED, data); */
+				
+			}
+			
+			private function goToLegend():void
+				{
+				this.currentState="State1";
+				reAddGraphics();
+				}
+			
+			protected function reAddGraphics():void{
+				if(printBox){
+				if(printBox.mpPrintMap)
+				{
+					var mp:Map=printBox.mpPrintMap;
+					if(mp.getLayer("graphicsLayer")){
+					var ly:Layer=mp.getLayer("graphicsLayer");
+					map.addLayer(ly,3);
+					}
+					if(mp.getLayer("graphicsLayer1")){
+						var ly1:Layer=mp.getLayer("graphicsLayer1");
+						map.addLayer(ly1,4);
+					}
+				}	
+				}
+			}
+			private function printMap():void{
+				this.currentState="print";
+				printBox=new printTemplateLandscape();
+				printBox.theExtent=map.extent;	
+				printArea.removeAllElements();
+				printArea.addElement(printBox);
+				
+				if(pointBox.numChildren>0){
+					var bmpMap2:BitmapData=ImageSnapshot.captureBitmapData(pointBox);
+					printBox.legendTitle2=_pointLegend.getVariableName()+"\n"+_pointLegend.getDataType();
+					var legendImage2:Bitmap=_pointLegend.getLegendImage();
+						printBox.Legend2=legendImage2;
+				}
+				printBox.theLayers=UtilFunctions.deepClone(this.map.layers) as ArrayCollection;
+				if(thematicBox.numChildren>0){
+					var legendImage:Bitmap=_thematicLegend.getLegendImage();
+					printBox.Title=_thematicLegend.getVariableName() +"\n"+_thematicLegend.getDataType();
+					printBox.Legend=legendImage;
+					}
+				}
+			private function compareVariables():void
+			{
+				//if(twoVariableXML.geo.@value1 && twoVariableXML.geo.@value2){	
+					if(twoVariables = true){
+						this.currentState="compare";
+						var _url:String = "http://209.119.63.162/InfoAlameda/rest/services/Thematics/" + _boundary + "/MapServer/0";
+						mapSelected=new MapSelected(_boundary,_layer.toString(),_url);
+						}
+					else
+						{
+							Alert.show("You can only select this feature when two variables are mapped");
+						}
+			}
+			private function processData(e:AppEvent):void{
+				this.currentState = "State1";
+				if(e.data.key=="first" || e.data.key=="second"){
+					var obj:Object=e.data.data.find(e.data.key);
+					
+					//NEED TO SEARCH LAYER INFOS FOR CORRECT NAME
+					var lyr:ArcGISDynamicMapServiceLayer = map.getLayer("Boundaries and Places") as ArcGISDynamicMapServiceLayer ;
+					for each(var lyrInfo:LayerInfo in lyr.layerInfos){
+						if(lyrInfo.name == obj.specs.boundaryLabel){
+							//Alert.show("Eureka");
+							_layer = lyrInfo.id
+						}
+					}
+					
+					//_layer=obj.specs.layer;
+					_boundary=obj.specs.boundary;
+					
+					var hello:Legend=new Legend();
+						hello.id=e.data.key;
+						hello.visible=true;
+						hello.transparencyValue = obj.graphics.alpha || 1;
+						hello.specs=obj.specs;
+						hello.name=obj.box;
+						hello.usertip=obj.usertip as String;
+						hello.variableSelected=obj.alias;
+						hello.theGraphic=obj.graphics;
+						hello.objectName=e.data.key;
+						hello.map=map;
+						hello.selectedClassification = _selectedclassification;
+						hello.selectedColor = _selectedColor;
+					//info Change
+						hello.mapObject=obj.features;
+									
+					
+					if(obj.alias){	
+					_alias=obj.alias;
+					}
+						if(e.data.key=="first"){
+							twoVariables = false;
+							
+							//CREATE NEW SCATTER PLOT COLLECTION;
+							twoVariableXML = <geos></geos>;
+							
+							//ADD TO SCATTER PLOT DATA SOURCE
+							for each(var ob:Object in obj.features.features){
+								var xmlString:XML=<geo place={ob.attributes[obj.specs.boundary]} value1={ob.attributes[obj.specs.field]}></geo>;
+								twoVariableXML.appendChild(xmlString);
+								}
+							
+							//CREATE SCATTER PLOT TITLE
+							_xValue=new String(obj.alias);
+							//panelTitle=_yValue+" (Y-Value) vs. ";
+						}
+						else{
+							//ADD TO SCATTER PLOT DATA SOURCE
+							for each(var ob1:Object in obj.features.features){
+								var filterName:String=ob1.attributes[obj.specs.boundary];
+								
+								if(ob1.attributes[obj.specs.field]){
+									twoVariableXML.geo.(attribute("place")==filterName).@value2=ob1.attributes[obj.specs.field];
+								}
+							
+							
+							}
+							
+							//CREATE SCATTER PLOT TITLE
+							_yValue=new String(obj.alias);	
+							panelTitle=_yValue+" (Y-Value) vs. "+_xValue+" (X-Value)";
+						}
+					//create the legend	
+				
+						hello.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE,expandBox);
+						
+						
+						if(hello.classificationScheme)
+							{
+								hello.classificationScheme.selectedItem=obj.features.classificationscheme;
+							}
+						if (hello.id=="first")
+							{
+								_thematicLegend=hello;
+								
+							}
+						else
+							{
+								_pointLegend=hello;
+							}
+					addToBox();	
+					function addToBox():void{
+						if(hello){
+							
+							switch(e.data.key)
+								{
+									case "first":
+										thematicBox.removeAllElements();
+										thematicBox.addElement(hello as IVisualElement);
+										break;
+									case "second":
+										//wTemplate.addTitlebarButton(ICON_URL + "scatter_plot_icon.jpg","Compare", compareVariables);
+										twoVariables = true;
+										pointBox.removeAllElements();
+										pointBox.addElement(hello as IVisualElement);
+										wTemplate.height=650;
+										break;
+								}
+							}
+							else{
+								
+								addToBox();
+								
+							}
+							}
+						}
+					}	
+				
+			
+			private function legendIsReady(e:Event):void
+			{
+				Alert.show("Legend is ready")
+			}
+
+			private function changeLegend(e:AppEvent):void{
+				trace("hello");
+			}
+			protected function helloWorld_openHandler(event:Event):void
+			{
+			
+				
+			}
+
+			protected function expandBox(event:StateChangeEvent):void{
+				this.tempState = event.newState;
+				if(event.currentTarget.currentState=='edit'){
+					if(legendBox.getElementIndex(event.currentTarget.parent)==1)
+					{
+						legendBox.setElementIndex(legendBox.getElementAt(1),0);
+					}
+					wTemplate.height=450;
+				}
+				else{
+					if(pointBox.numChildren>0){
+							wTemplate.height=600;
+					}
+						else{
+							wTemplate.height=350;
+						}
+					
+				}
+			
+			
+			}
+			
+
+
+			protected function plotchart1_creationCompleteHandler(event:FlexEvent):void
+			{
+				plotchart1.dataProvider=twoVariableXML.geo;
+				var bestFit:statUtils=new statUtils(twoVariableXML.geo);
+			
+				bestFitCollection=bestFit.getLineFormula();
+				trace("hello");
+			}
+			
+			public function myDataTipFunction(e:HitData):String {
+				var s:String;
+					s = e.item.@place + "\n";
+					s += e.item.@value1 +"\n"+ e.item.@value2;
+				return s;
+			}
+
+			protected function plotchart1_itemClickHandler(event:ChartItemEvent):void
+			{
+				mapSelected.value=event.hitData.item.@place;
+				mapSelected.where=_boundary+" like '"+event.hitData.item.@place+"'";
+				mapSelected.doQuery();
+				
+				if(map.getLayer("SelectedItems")){
+					map.removeLayer(map.getLayer("SelectedItems"));
+					}
+				map.addLayer(mapSelected.getGraphics());
+				//var selectionLayer:Layer = map.getLayer("SelectedItems");
+					//selectionLayer.addEventListener(LayerEvent.UPDATE_END,zoomIn);
+			}
+			
+			protected function zoomIn(evt:LayerEvent):void{
+				var ac:ArrayCollection = (evt.layer as GraphicsLayer).graphicProvider as ArrayCollection;
+				map.extent = GraphicUtil.getGraphicsExtent(ac.toArray());
+				(evt.layer as GraphicsLayer).removeEventListener(LayerEvent.UPDATE_END,zoomIn);
+			}
+			
+			protected function btnPrintChart_clickHandler(event:MouseEvent):void
+				{
+					var bytes:ByteArray=imageSaving.getPNG(plotPanel);
+					var file:FileReference=new FileReference();
+						file.save(bytes,"comparisonPlot.png");
+				}
+			
+			protected function btnSendChartWidget_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var dataCollection:ArrayCollection = new ArrayCollection();
+				for each(var x:XML in plotchart1.dataProvider){
+					var obj1:Object = {
+						"Name":x[0].@place,
+						"Value1":x[0].@value1,
+						"Value2":x[0].@value2
+					};
+				dataCollection.addItem(obj1);
+				}
+				var obj:Object = {
+					"data":dataCollection,
+					"type":"plot",
+					"label":plotPanel.title,
+					"chartSeries": null
+				};
+				AppEvent.dispatch(AppEvent.ADD_CHART,obj);
+			}
+			
+		]]>
+	</fx:Script>
+    <viewer:states>
+        <s:State name="State1"/>
+        <s:State name="print"/>
+		<s:State name="compare"/>
+    </viewer:states>
+    <viewer:WidgetTemplate width="430" id="wTemplate" open="helloWorld_openHandler(event)"
+                           width.print="900" height.print="700">
+		
+		<s:VGroup  id="legendBox" includeIn="State1">
+			<s:VGroup id="thematicBox">
+				
+			</s:VGroup>
+			<s:VGroup id="pointBox">
+				
+			</s:VGroup>	
+		</s:VGroup>	
+		
+		<s:Group includeIn="print" id="printArea">
+			
+		</s:Group>	
+		
+		<s:Group includeIn="compare" width="100%" height="464">
+			<s:Panel title="{panelTitle}" id="plotPanel" width="100%">
+				<mx:PlotChart id="plotchart1" width="100%" itemClick="plotchart1_itemClickHandler(event)" dataTipFunction="myDataTipFunction" creationComplete="plotchart1_creationCompleteHandler(event)" showDataTips="true">
+				<mx:series>
+					<mx:PlotSeries xField="@value1" yField="@value2"/>
+					<mx:LineSeries dataProvider="{bestFitCollection}" xField="XValue" yField="YValue"/>
+				</mx:series>
+			</mx:PlotChart>
+			</s:Panel>
+			<s:Button id="btnSendChartWidget" x="225" y="441" click="btnSendChartWidget_clickHandler(event)" label="Send to Chart Widget"/>
+			<s:Button id="btnPrintChart" x="109" y="441" label="Print Chart"
+					  click="btnPrintChart_clickHandler(event)"/>
+			
+		</s:Group>		
+			
+			
+    </viewer:WidgetTemplate>
+</viewer:BaseWidget>

@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<configuration>
+    <layers>
+        <layer>
+            <name>Census Tracts</name>
+            <url>http://infogis/InfoAlameda/rest/services/Summary/Summary/MapServer/7</url>
+            <expression>Tract like '[value]'</expression>
+            <textsearchlabel>Search by Census Tract</textsearchlabel>
+            <titlefield>Tract</titlefield>
+            <linkfield></linkfield>
+            <fields all="true">
+                
+            </fields>
+        </layer>
+        <!--<layer>
+            <name>Louisville Police Facilities</name>
+            <url>http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Louisville/LOJIC_PublicSafety_Louisville/MapServer/3</url>
+            <expression>PD_NAME like '[value]'</expression>
+            <textsearchlabel>Search Police Stations by name... [ Example: 2ND DIVISION or 2%]</textsearchlabel>
+            <titlefield>PD_NAME</titlefield>
+            <linkfield></linkfield>
+            <fields all="false">
+                <field name="PD_NAME"/>
+                <field name="ADDRESS" alias="Address"/>
+            </fields>
+        </layer>-->
+    </layers>
+    <zoomscale>10000</zoomscale>
+</configuration>
+
+<!--
+    See Search widget documentation at
+    http://links.esri.com/searchwidget
+-->

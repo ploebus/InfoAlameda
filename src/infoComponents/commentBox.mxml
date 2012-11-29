@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow 
+				name="commentPopUp"
+				xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="400" close="ttlWndw_close(event);" title="Tell us the good and bad">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			protected function ttlWndw_close(evt:CloseEvent):void {
+				PopUpManager.removePopUp(evt.currentTarget as IFlexDisplayObject);
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup>
+		
+
+		<s:TextArea text="Type us a message giving as much details as possible; give us your email if you would like a response; and click submit."/>
+	
+	<mx:Form x="10" y="10" width="378" height="347">
+		<mx:FormItem>
+			<mx:FormItemLabel text="Comment"/>
+			<s:TextInput>
+				
+			</s:TextInput>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:FormItemLabel text="Email (optional)"/>
+			<s:TextInput>
+				
+			</s:TextInput>
+		</mx:FormItem>
+	</mx:Form>
+	</s:VGroup>
+</s:TitleWindow>

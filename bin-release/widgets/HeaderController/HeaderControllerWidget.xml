@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<configuration>
+    <about>
+       <label>About</label>
+       <visible>true</visible>
+       <width>375</width>
+       <height>375</height>
+       <content>
+        <![CDATA[<p align='center'><img src='assets/images/globe.png' width='140' height='140' /></p>
+        <font size="16"><b>Welcome to InfoAlamedaCounty</b></font>
+      
+  <p>This data warehouse and mapping system was built by <a href="http://www.urbanstrategies.org" target="_blank"><font color="#00FFFF">Urban Strategies Council's</a> <a href="http://www.urbanstrategies.org/programs/infotech/index1.php" target="_blank"><font color="#00FFFF">Research &amp; Tech</a> program. This tool is intended to further our goals of democratizing data and providing open government through transparency and accountability and the use of data to support data-driven decision making in our community.</p>
+  <p>(Our Map Room was built using <a href="http://beta.infoalamedacounty.org/aboutus/tools" target="_blank"><font color="#00FFFF">technology</a> generously donated by <a href="http://www.esri.com/grants/esri/nonprofit.html" target="_blank"><font color="#00FFFF">ESRI</a>)</p>
+          ]]>
+        </content>
+        <btnlabel>OK</btnlabel>
+    </about>
+    <help>
+    <label>About</label>
+       <visible>true</visible>
+       <width>400</width>
+       <height>400</height>
+       <content>
+        <![CDATA[
+        <textformat leftmargin="10" rightmargin="10">
+        <p align='center'><font size="16"><b>Welcome to InfoAlameda County</b></font><br></p>
+        <p>If you are having problems working the site, there are a couple of ways to find help.</p>
+        <p>On the website for this mapping tool <b>(infoalamedacounty.org)</b>, there is a comprehensive guide for the entire system. You can find this by going through the sites help option in the main menu.</p>
+        <p>In addition to this guide, each tool has a specific help menu that can be accessed by when the tool is opened by clicking on the question mark icon located at the top right corner of the tool.</p>
+        <p>Finally, we encourage you to either send us an email <b>(it(at)urbanstrategies.org)</b> or contact us directly (510.893.2404) to schedule a training.</p>
+  		</textformat>
+          ]]>
+        </content>
+        <btnlabel>OK</btnlabel>
+    </help>
+</configuration>
+
+<!--
+    See HeaderController widget documentation at
+    http://links.esri.com/headercontrollerwidget
+-->

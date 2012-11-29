@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<configuration>
+	<legendcolors>
+	  	<color label="green" code="0x005A32"/>
+	  	<color label="red" code="0xB10026"/>
+	  	<color label="purple" code="0x4A1486"/>
+	  	<color label="orange" code="0x8C2D04"/>
+	  	<color label="brown" code="0x993404"/>
+	  	<color label="blue" code="0x0C2C84"/>
+	</legendcolors>
+	<classificationschemes>
+		<scheme>Equal Interval</scheme>
+		<scheme>Quantiles</scheme>
+	</classificationschemes>
+	<pages>
+		<page name="legend">
+				<width>529</width>
+			    <height>400</height>
+			    <video></video>
+			    <content>
+			        <![CDATA[<br><p align='center'><font size="16"><b>Thematic Legend</b></font></p><br><textformat leftmargin="5" rightmargin="5"><p>Your map legend is dynamic- if you change the data you’re mapping this legend will also update. The information displayed tells you what the color ranges on the map correspond to in your data- typically lighter means less of something, darker show more. The year the data represent and the source are also shown- if you want to see more details about the data source just click on that text and a metadata page will popup.</p>
+			        <br><p><b>You have three main options to alter both this legend and the map:</b><br></p><textformat leftmargin="20"><p><b>1.</b> You can Change Map details- colors, ranges, transparency, the year of the data <br><b>2.</b> Show the Data on a chart- opens an interactive histogram (a bar graph that shows the distribution of the info) <br><b>3.</b> Remove the Layer- if you’re done with this map just hit this to clear it and continue with a new map</p></textformat><br><p><b>Along the top of the Thematic Legend window are icons that let you:</b><br><p><img src="assets/images/i_layers.png"/>_______Return to the Main Legend</p><p><img src="assets/images/i_print.png"/>______Go to the Print Map Customizer</p></p></textformat>]]>
+			    </content>
+	    		<btnlabel>Click to continue</btnlabel>
+	    	</page>
+	    <page name="edit">
+	    	<width>529</width>
+			<height>350</height>
+			<video></video>
+			<content>
+			        <![CDATA[<br><p align='center'><font size="16"><b>Thematic Legend Editor</b></font></p><br>
+			        <textformat leftmargin="5" rightmargin="5"><p>On this page you can edit how the data is classified and displayed on the map.</p>
+			        <p><b>1.</b> Use the category selector to show between 3 and 7 data ranges for the data.<p>
+			        <p><b>2.</b> Use the classification scheme drop down to change the way the data is sorted into your categories.<p>
+			        <p><b>3.</b> Use the color selector to change the color used to display your categories on the map.<p>
+			        <p><b>4.</b> The transparency slider will allow you to change the thematic legend so you can see underlying features.</p>
+			        <br>
+			        <p><b>* To apply your changes, you must click the 'Apply Changes' button</p>
+			        <br>
+			        <p>In some instances, we have multiple years of the selected variable. In these cases, you can use the dropdown year tool to switch between these years.</p>]]>
+			</content>
+	    		<btnlabel>Click to continue</btnlabel>
+	    </page>
+	    <page name="print">
+	    	<width>529</width>
+			<height>350</height>
+			<video></video>
+			<content>
+			        <![CDATA[<br><p align='center'><font size="16"><b>Print Map Editor</b></font></p>
+			        <textformat leftmargin="5" rightmargin="5"><p>On this page, you can customize you map in preparation for export.</p>
+			        <p><b>1.</b> Click on the title and subtitle to give your map the name you want. <p>
+			        <p><b>2.</b> Clcik in the description box to write any details or narrative you want to include with the map.<p>
+			        <p><b>3.</b> The map remains interactive, so click on the map to pan and scroll until you get the look you want.<p>
+			        <p><b>4.</b> You have three options for export. To print your map as a pdf, click print map. If you want to use your own layout tools or embed this map in a powerpoint, use the export just map and legend buttons to grab .png images.</p>
+			        </textformat>]]>
+			</content>
+	    		<btnlabel>Click to continue</btnlabel>
+	    </page>
+	    </pages>
+</configuration>

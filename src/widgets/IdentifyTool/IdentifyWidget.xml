@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<configuration>
+   <pages>
+    <page>
+     <width>529</width>
+	    <height>250</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <textformat indent="20">
+	        <p align='center'>
+	            <font size="16"><b>Identify Tool</b></font>
+	        </p>
+	        <p>
+	         Use this tool to select an area a get a summary of information for the selected variable. Use the icons on the top left to navigate between the search page, results table, and the help menu
+	        </p>
+	        <p><b> 1.</b> Select what geography you are interested in.</p>
+	        <p><b> 2.</b> Click the area on the map of interest</p>
+	        <p><b> 3.</b> Results are sorted by category</p>
+	        </textformat>
+	       ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+    </page></pages>
+</configuration>
+
+<!--
+    See Bookmark widget documentation at
+    http://links.esri.com/bookmarkwidget
+-->

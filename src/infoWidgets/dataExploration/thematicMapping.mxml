@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     ////////////////////////////////////////////////////////////////////////////////
+     //
+     // Copyright (c) 2010 ESRI
+     //
+     // All rights reserved under the copyright laws of the United States.
+     // You may freely redistribute and use this software, with or
+     // without modification, provided you include the original copyright
+     // and use restrictions.  See use restrictions in the file:
+     // <install location>/License.txt
+     //
+     ////////////////////////////////////////////////////////////////////////////////
+-->
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:mx="library://ns.adobe.com/flex/mx"
+                   xmlns:esri="http://www.esri.com/2008/ags"
+                   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+                   creationComplete="init()" 
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   xmlns:datalookup="services.datalookup.*">
+	<fx:Script>
+		<![CDATA[
+			import VO.chartVO;
+			
+			import classes.mapLegend;
+			
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.renderers.Renderer;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			import flexlib.containers.HAccordion;
+			import infoComponents.dataDetails;
+			import mx.collections.ArrayCollection;
+			import mx.controls.*;
+			import mx.events.DropdownEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ArrayUtil;
+		
+		[Bindable]
+		private var yearsAvailable:XMLList;
+		
+		[Bindable]
+		private var variableSelected:String;
+		
+		[Bindable]
+		private var variableSelected1:String;
+		
+		[Bindable]
+		private var subcategorySelected:String;
+		
+		[Bindable]
+		private var boundariesAvailable:XMLList;
+		
+		[Bindable]
+		private var categoryArray:Array=new Array('Health','Education','Safety','Demographic','Housing','Employment');
+		
+		[Bindable]
+		private var yearSelected:String;
+		
+		[Bindable]
+		private var subCategorySelected:String;
+		
+		
+		[Bindable]
+		private	var subCategoryList:ArrayCollection;
+			
+		[Bindable]
+		private var categorySelected:Number;
+		
+		[Bindable]
+		private var boundarySelected:String;
+		
+		public var dataObject:chartVO=new chartVO();
+		
+		private var dataXML:XMLList;
+		private var dataSelected:String;
+		private var boundaryType:String;
+		
+		public var catCount:Number=5;
+		
+		private static const LEGEND_CREATED:String="legendCreated";
+		private static const CHART_CREATED:String="chartCreated";
+		private static const URLSTART:String="http://67.91.201.5/infoalameda/rest/services";
+		
+		private var thismapLegend:mapLegend;
+		private var thatmapLegend:mapLegend;
+		
+		public var selectionObjects:Object={
+			category:categorySelected as String,
+			subcategory:subCategorySelected,
+			variable:variableSelected,
+			year:yearSelected,
+			boundary:boundarySelected,
+			data:dataSelected
+		}
+		private function init():void
+		{
+			ViewerContainer.addEventListener(AppEvent.LEGEND_CHANGED,clearGraphics);
+		}
+		
+		public function clearGraphics(event:AppEvent):void
+		{
+		var hello:mapLegend;
+		var whichLayer:String;
+		var layerIndex:Number;
+		switch (event.data.box)
+		{
+		case "thismapLegend":
+		hello=thismapLegend;
+		whichLayer="graphicsLayer";
+		layerIndex=map.layerIds.length-2;
+		break;
+		case "thatmapLegend":
+		hello=thatmapLegend;
+		whichLayer="graphicsLayer1";
+		layerIndex=map.layerIds.length;
+		break;
+		}
+		this.catCount=event.data.categories;
+		hello.color=event.data.color;
+		hello.classes=event.data.categories;
+		hello.classificationScheme=event.data.classification;
+		hello.setRanges();
+		hello.setRenderer();
+		
+		var layer:GraphicsLayer=map.getLayer(whichLayer)as GraphicsLayer;
+		layer.renderer=hello.Graphics as Renderer;
+		map.addLayer(layer,layerIndex);
+		//this.legendBoxes.mapObject=hello;
+		var legendObject:Object={
+		box:event.data.box,
+		features:hello,
+		alias:variableSelected
+		}
+		ViewerContainer.dispatchEvent(new AppEvent(AppEvent.LEGEND_CREATED, legendObject));
+		}
+		
+				
+		private function getVariablesList(event:MouseEvent):void{
+		var params:Object={subcategory:event.currentTarget.text};
+		getLayers.send(params);
+		subcategorySelected=event.currentTarget.text;
+		accordion.selectedIndex=1;
+		dataObject.label=event.currentTarget.text;
+		dataObject.theMap=this.map;
+		}
+		private function getTimeSpace(e:MouseEvent):void{
+		variableSelected=e.currentTarget.text;
+		yearsAvailable= getLayers.lastResult.layer.(label==e.currentTarget.text).year;
+		boundariesAvailable=getLayers.lastResult.layer.(label==e.currentTarget.text).boundaryLabel;
+		accordion.selectedIndex=2;
+		dataXML=getLayers.lastResult.layer;
+		dataObject.label=e.currentTarget.text;
+		
+		}
+		private function yearSelections(evt:ListEvent):void
+		{
+		
+		yearSelected=evt.currentTarget.yearList.selectedItem.year;
+		
+		}
+		private function boundarySelections(evt:ListEvent):void
+		{
+		
+		boundarySelected=evt.currentTarget.boundaryList.selectedItem;
+		boundaryType=getLayers.lastResult.layer.(boundaryLabel==boundarySelected).boundary[0];
+		dataSelected=getLayers.lastResult.layer.(label==variableSelected).data[0];
+		dataObject.boundaryLabel=boundarySelected;
+		dataObject.boundary=boundaryType;
+		
+		mapIT.enabled=true;
+		}
+		
+		private function chartIt():void{
+		ViewerContainer.dispatchEvent(new AppEvent(AppEvent.CHART_CREATED,dataObject));
+		}
+		private function mapIt(evt:MouseEvent):void
+		{
+			var query:Query=new Query();
+			query.returnGeometry=true;
+			query.outFields=["OBJECTID",dataSelected,"lat","long"];
+			query.where="OBJECTID<>0";
+			queryTask.useAMF=false;
+			queryTask.url=URLSTART+"/"+boundaryType+"/MapServer/"+categorySelected;
+			queryTask.execute(query);
+			dataObject.service=categorySelected as Number;
+			dataObject.variable=getLayers.lastResult.layer.(label==variableSelected).data[0];
+			mapAgain.enabled=true;
+			chartClick.enabled=true;
+		}
+			
+		private function mapItAgain(evt:MouseEvent):void{
+		
+		
+		var query:Query=new Query();
+			query.returnGeometry=true;
+			query.outFields=["OBJECTID",dataSelected,"lat","long"];
+			query.where="OBJECTID<>0";
+			queryTask1.url=URLSTART+"/"+boundaryType+"/MapServer/"+categorySelected;
+			queryTask1.execute(query);
+		
+		}
+		
+		private function onSuccess(event:QueryEvent):void{
+		
+		thismapLegend=new mapLegend(event.featureSet.features,dataSelected,5,"Equal Interval","First");
+		
+		//this.legendBoxes.mapObject=thismapLegend;
+		var features:Array=thismapLegend.features as Array;
+		
+		for(var i:Number=0;i<features.length;i++)
+		{
+			var graphic:Graphic=features[i];
+			graphic.toolTip=graphic.attributes[dataSelected];
+			graphicsLayer.add(graphic);
+		}
+		graphicsLayer.renderer=thismapLegend.Graphics as Renderer;
+		
+		map.addLayer(graphicsLayer,3)
+		//items=event.featureSet.features;
+		//binCount=new Array(thismapLegend.getBinCount());
+		
+		/* 	if(thismapLegend && thatmapLegend)
+		{
+		crosstabQuery();
+		map.addLayer(graphicsLayer,map.layerIds.length-2)
+		}
+		else
+		{
+		map.addLayer(graphicsLayer);
+		}*/
+		var legendObject:Object={
+			box:"thismapLegend",
+			features:thismapLegend,
+			graphics:graphicsLayer,
+			alias:variableSelected
+		} 
+		ViewerContainer.dispatchEvent(new AppEvent(AppEvent.LEGEND_CREATED, legendObject));
+		}
+		private function onSuccess1(event:QueryEvent):void{
+		
+		thatmapLegend=new mapLegend(event.featureSet.features,dataSelected,5,"Equal Interval","Second");
+		
+		//this.legendBoxes.mapObject=thismapLegend;
+		var features:Array=thatmapLegend.features as Array;
+		
+		for(var i:Number=0;i<features.length;i++)
+		{
+		var _attributes:Object=new Object();
+		_attributes[dataSelected]=features[i].attributes[dataSelected];
+		//trace(features[i].geometry.extent.centerX as String);
+		//var _point:MapPoint=new MapPoint(features[i].geometry.extent.centerX as Number,features[i].geometry.extent.centerY as Number)
+		var _point:MapPoint=features[i].geometry.extent.center;
+		//var _point:MapPoint=new MapPoint(features[i].attributes.long,features[i].attributes.lat);
+		
+		var graphic:Graphic=new Graphic(_point,null,_attributes);
+			graphicsLayer1.add(graphic);
+		}
+		graphicsLayer1.renderer=thatmapLegend.Graphics as Renderer;
+		
+		
+		
+		map.addLayer(graphicsLayer1,4);
+		
+		
+		var legendObject:Object={
+			box:"thatmapLegend",
+			features:thatmapLegend,
+			graphics:graphicsLayer1,
+			alias:variableSelected
+		} 
+		ViewerContainer.dispatchEvent(new AppEvent(AppEvent.LEGEND_CREATED, legendObject));
+		}
+		[Embed(	systemFont='Arial', 
+				fontName='accordionHeader', 
+				mimeType='application/x-font',
+				embedAsCFF="false",
+				advancedAntiAliasing='true')] 
+		private var font1:Class;
+			
+		
+				
+			
+			
+			
+		
+			
+
+			protected function cbxcategorySelect_changeHandler(event:ListEvent):void
+			{
+				subCategoryResult.token=datalookup.subCategory(event.currentTarget.selectedLabel);
+				
+				categorySelected=cbxcategorySelect.selectedIndex;
+				dataObject.subject=cbxcategorySelect.selectedLabel;
+				
+			}
+
+			
+			
+			
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+	
+				
+		<s:HTTPService 	id="getLayers"
+						url="php/layer.php"
+						useProxy="false"
+						method="POST" 
+						resultFormat="e4x" 
+						/>
+		
+		<s:CallResponder id="getDataResult"/>
+		
+		<esri:GeometryService id="geoProject"
+							  url=URLSTART+"/"+Geometry/GeometryServer"/>
+		
+		<esri:QueryTask id="queryTask" 
+						executeComplete="onSuccess(event)"/>
+		
+		<esri:QueryTask id="queryTask1" 
+						executeComplete="onSuccess1(event)"/>
+		
+		<s:CallResponder id="subCategoryResult"/>
+		<datalookup:Datalookup id="datalookup" 
+							   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" 
+							   showBusyCursor="true"/>
+		
+		
+		
+		
+	</fx:Declarations>
+	
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace esri "http://www.esri.com/2008/ags";
+		@namespace viewer "com.esri.viewer.*";
+		@namespace usc "infoComponents.*";
+		@namespace flexlib "http://code.google.com/p/flexlib/";
+		@namespace datalookup "services.datalookup.*";
+		
+		@font-face{
+			src: url("./assets/fonts/ARIALBD.TTF");
+			fontName:'accordionHeader';
+			fontFamily: alias;
+			fontStyle: italic;
+			fontWeight:bold;
+			advancedAntiAliasing: true;
+		}
+	</fx:Style>
+	
+	<esri:GraphicsLayer id="graphicsLayer" />	
+	<esri:GraphicsLayer id="graphicsLayer1" />	
+	
+	<viewer:WidgetTemplate id="helloWorld" width="300" height="300">
+        <viewer:layout>
+            <s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+        </viewer:layout>
+
+		<mx:VBox cornerRadius="5" width="100%" borderStyle="solid"  backgroundColor="#FFFFFF" backgroundAlpha="0.9">
+			
+			
+			<mx:ControlBar>
+				<mx:ComboBox x="28" y="10" width="190" id="cbxcategorySelect" dataProvider="{categoryArray}" fontSize="14" change="cbxcategorySelect_changeHandler(event)"></mx:ComboBox>
+				<mx:Button x="271" y="15" enabled="false" click="mapIt(event)" id="mapIT" label="Map It"/>
+				<mx:Button x="383" y="15" enabled="false" click="mapItAgain(event)" id="mapAgain" label="Add Second Map Layer"/>
+				<mx:Button x="602" y="15" enabled="false" click="chartIt()" id="chartClick" label="Chart It"/>
+			</mx:ControlBar>
+			
+			<flexlib:HAccordion id="accordion" y="66" width="703" height="224" x="10">
+				<mx:VBox label="SubCategory List" paddingTop="10" width="100%"  y="64" x="10" borderStyle="solid" borderColor="#198FE2">
+					<mx:Repeater id="myRepeater" dataProvider="{subCategoryResult.lastResult.item}">
+						<mx:HBox name="{myRepeater.currentItem}" styleName="RecordCanvas" width="95%"  color="#040404">
+							<mx:Label click="getVariablesList(event)"  text="{myRepeater.currentItem.subcategory}" width="233"/>
+						</mx:HBox>
+					</mx:Repeater>
+				
+				</mx:VBox>
+				<mx:VBox label="List of Variables" width="100%" x="320" y="10">
+					<mx:Repeater id="variableRepeater" dataProvider="{getLayers.lastResult.layer.label}">
+						<mx:HBox styleName="RecordCanvas" name="{variableRepeater.currentItem}"  width="95%" >
+							<mx:Label  click="getTimeSpace(event)" text="{variableRepeater.currentItem}"/>
+						</mx:HBox>
+					</mx:Repeater>
+				</mx:VBox>
+				<mx:VBox id="variableDetails" width="100%" label="Variable Details" x="320" y="10">
+					
+					<usc:dataDetails id="thisvariableDetail" yearSelected="yearSelections(event);" boundarySelected="boundarySelections(event);" paddingLeft="20"  boundary="{boundariesAvailable}" year="{yearsAvailable}" variable="{variableSelected}" />
+				</mx:VBox>
+			</flexlib:HAccordion>
+			
+		</mx:VBox>
+    </viewer:WidgetTemplate>
+</viewer:BaseWidget>

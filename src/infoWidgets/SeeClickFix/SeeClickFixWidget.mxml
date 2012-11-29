@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*" layout="absolute"
+				   creationComplete="basewidget1_creationCompleteHandler(event)" xmlns:esri="http://www.esri.com/2008/ags">
+	<fx:Script>
+		<![CDATA[
+			import assets.skins.SeeClickFix;
+			
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.events.DrawEvent;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.WebMercatorMapPoint;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.symbols.PictureMarkerSymbol;
+			import com.esri.ags.symbols.SimpleMarkerSymbol;
+			import com.esri.ags.utils.GraphicUtil;
+			import com.esri.ags.utils.WebMercatorUtil;
+			import com.esri.viewer.utils.GeoRSSUtil;
+			
+			import flashx.textLayout.events.FlowElementMouseEvent;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			import mx.collections.IViewCursor;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import myUtils.johnUtils;
+			
+			import spark.events.GridEvent;
+			
+			[Bindable] private var dataCollection:ArrayCollection;
+			
+			
+			
+			private var Hits:Array;
+			
+			
+			public static const STARTURL:String = "proxy.php?url=http://seeclickfix.com/api/issues.rss?";
+			
+			protected function httpservice1_resultHandler(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				SeeClickGraphic.clear();
+				this.currentState = "results";
+				if(!map.getLayer("seeClickGraphics")){
+					var gLayer:GraphicsLayer = new GraphicsLayer();
+					gLayer.id = "seeClickGraphics";
+				}
+					
+				else{
+					gLayer = map.getLayer("seeClickGraphics") as GraphicsLayer;
+					gLayer.clear();
+				}
+				dataCollection = johnUtils.parseRSS(event.result as XML);
+				//Alert.show(dataCollection.toXMLString());
+				dataCollection.refresh();
+				
+				this.currentState = 'results';
+				var iFactory:ClassFactory = new ClassFactory(infoWidgets.SeeClickFix.SeeClickFix);
+				var mp:WebMercatorMapPoint;
+				var sym:PictureMarkerSymbol = new PictureMarkerSymbol('assets/images/SeeClickFixMarker.png');
+				for each(var obj:XML in dataCollection){
+					//mp = GeoRSSUtil.toGeometry(obj) as WebMercatorMapPoint;
+					//mp = GeoRSSUtil.toGeometry(obj) as WebMercatorMapPoint;
+					mp = GeoRSSUtil.toGeometry(obj) as WebMercatorMapPoint;
+					//Alert.show(mp.lat.toString()+" , "+ mp.lon.toString());
+					var gr:Graphic= new Graphic(mp,sym,obj);
+					gr.infoWindowRenderer = iFactory;
+					gLayer.add(gr);
+				}
+				map.addLayer(gLayer);
+				//zoom to layer
+				var ac:ArrayCollection = gLayer.graphicProvider as ArrayCollection;
+				map.extent = GraphicUtil.getGraphicsExtent(ac.toArray());
+				wTemplate.selectedTitlebarButtonIndex = 1;
+				
+			}
+			
+			protected function openWindow(evt:MouseEvent):void{
+				
+			}
+			protected function getData_clickHandler(event:MouseEvent):void
+			{
+				var params:Object = {
+					at:placeToSearch.text
+				};
+				
+				seeClickCall.url = STARTURL;
+				//Alert.show(seeClickCall.url);
+				seeClickCall.send(params);
+				
+			}
+			
+			protected function seeClickCall_faultHandler(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show('did not work');
+			}
+			
+			protected function returnedValues_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			/* protected function searchGrid():void{
+			//CREATE A CURSOR
+			var myCursor:IViewCursor = dataCollection.createCursor();
+			//LOOP
+			while(!myCursor.afterLast){
+			if(myCursor.current.lyric.indexOf(criteria.text) > -1 && criteria.text.length > 1)
+			Hits.push(myCursor.current);  //add any hit to Hits Array
+			myCursor.moveNext();
+			}
+			
+			if(Hits.length == 0)
+			Alert.show("Search string not found!");
+			
+			//force redraw of grid rows
+			returnedValues.invalidateDisplayList();
+			} */
+			
+			protected function returnedValues_gridClickHandler(event:GridEvent):void
+			{
+				// TODO Auto-generated method stub
+				//var centerMP:WebMercatorMapPoint = GeoRSSUtil.toGeometry(event.item as XML) as WebMercatorMapPoint;
+				var centerMP:WebMercatorMapPoint = GeoRSSUtil.toGeometry(event.item as XML) as WebMercatorMapPoint;
+				//theMap.centerAt(centerMP);
+				map.scale = 5000;
+				map.centerAt(centerMP);
+			}
+			
+			protected function basewidget1_creationCompleteHandler(event:FlexEvent):void
+			{
+			wTemplate.addTitlebarButton('assets/images/i_edit.png',"Pick a City",gotoStart);
+			wTemplate.addTitlebarButton('assets/images/edit_attributes.png',"Pick a City",gotoResults);
+			wTemplate.addEventListener('closed', checkState);
+			map.addLayer(SeeClickGraphic);
+			}
+			
+			private function checkState(e:Event):void{
+				wTemplate.removeEventListener('closed',checkState);
+				//Alert.show("closed")
+				removeLayer_clickHandler();
+			}
+			private function gotoStart():void{
+				this.currentState = 'State1';
+				
+			}
+			private function gotoResults():void{
+				this.currentState = 'results';
+			}
+			
+			protected function richtext1_clickHandler(event:MouseEvent):void
+			{
+				event.stopPropagation();
+				event.preventDefault();
+				//var navNode:LinkElement = (event.target as RichText).getChildAt(0) as LinkElement;
+				navigateToURL( new URLRequest("http://seeclickfix.com/"), "_blank" );
+			}
+			
+			protected function removeLayer_clickHandler(event:MouseEvent= null):void
+			{
+				map.removeLayer(map.getLayer("seeClickGraphics"));
+				this.currentState = 'State1';
+			}
+			
+			protected function tbb_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				myDrawTool.activate(DrawTool.POLYGON);
+				
+			}
+			
+			protected function myDrawTool_drawEndHandler(event:DrawEvent):void
+			{
+				var gr:Geometry = WebMercatorUtil.webMercatorToGeographic(event.graphic.geometry);
+				var params:Object = {
+					lat_min:gr.extent.ymin,
+					lat_max:gr.extent.ymax,
+					lng_min:gr.extent.xmin,
+					lng_max:gr.extent.xmax
+				};
+				
+				seeClickCall.url = STARTURL;
+				myDrawTool.deactivate();
+				seeClickCall.send(params);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	<viewer:transitions>
+		
+	
+		<!--To: check-mark -->
+		<s:Transition toState="*" autoReverse="true">
+			<s:Fade targets="{ [ entryForm, returnedValues ] }" duration="500"/>
+		</s:Transition>
+		
+		
+	</viewer:transitions>
+	
+	<viewer:states>
+		
+	
+		<s:State name="State1"/>
+		<s:State name="results"/>
+	</viewer:states>
+	<fx:Declarations>
+		<esri:DrawTool id="myDrawTool"
+					   drawEnd="myDrawTool_drawEndHandler(event)"
+					   graphicsLayer="{SeeClickGraphic}"
+					   map="{map}">
+			<esri:fillSymbol>
+				<esri:SimpleFillSymbol id="yellowParcels"
+									   color="0xFFFF00"
+									   style="solid">
+					<esri:SimpleLineSymbol width="1"/>
+				</esri:SimpleFillSymbol>
+			</esri:fillSymbol>
+		</esri:DrawTool>
+		<esri:GraphicsLayer id="SeeClickGraphic"/>
+
+		<s:HTTPService 
+			method="GET" id="seeClickCall" resultFormat="e4x" 
+			result="httpservice1_resultHandler(event)" fault="seeClickCall_faultHandler(event)" showBusyCursor="true"/>
+		
+		
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	
+	<viewer:WidgetTemplate id="wTemplate"
+						   width="500" height="500">
+		<viewer:layout.State1>
+			<s:VerticalLayout horizontalAlign="center"/>
+		</viewer:layout.State1>
+		
+		<!--RESULT STATE-->
+		<s:VGroup left="5" includeIn="results" right="5" top="5" bottom="5" horizontalAlign="center"
+				  left.State1="10" right.State1="0" top.State1="8" bottom.State1="2"
+				  textAlign.State1="center">
+			
+			<s:Button label="Remove Layer" id="removeLayer" click="removeLayer_clickHandler(event)"/>
+			<s:DataGrid id="returnedValues" includeIn="results" width="100%" height="100%" dataProvider="{dataCollection}"
+						textAlign="center" gridClick="returnedValues_gridClickHandler(event)"
+						>
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn dataField="title" headerText="Title"></s:GridColumn>
+						<s:GridColumn dataField="pubDate" headerText="Date Created"></s:GridColumn>
+						<s:GridColumn dataField="description" headerText="Description"
+									  itemRenderer="infoWidgets.SeeClickFix.SeeClickFixDescription">
+						</s:GridColumn>
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+		</s:VGroup>
+		<!--FRONT PAGE-->
+	
+	<s:VGroup includeIn="State1" width="100%" horizontalAlign="center" paddingBottom="5" paddingLeft="5"
+			  paddingRight="5" paddingTop="5" textAlign="center">
+		<s:BorderContainer width="100%" horizontalCenter="center">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center"/>
+			</s:layout>
+			<s:Image source="assets/images/SeeClickFixLogo.png"/>
+		</s:BorderContainer>
+	<s:TabBar id="tabs" dataProvider="{vs}" width="400"/>	
+		<mx:ViewStack id="vs" width="400" borderColor="#ffffff">
+			<s:NavigatorContent label="Select by Place"  width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="center" />
+				</s:layout>
+				<s:Form id="entryForm" includeIn="State1" width="100%">
+					<s:layout>
+						<s:VerticalLayout gap="10" horizontalAlign="center" verticalAlign="middle"/>
+					</s:layout>
+					
+					<s:FormItem width="100%" backgroundAlpha="0.0" contentBackgroundColor="#FFFFFF">
+						<s:layout>
+							<s:VerticalLayout horizontalAlign="center"/>
+						</s:layout>
+						<s:Label fontSize="16" fontWeight.State1="bold" text="Select a city to search"/>
+						<s:Label fontSize="12" text="(eg. Oakland,CA)"/>
+					</s:FormItem>
+					
+					<s:FormItem>
+						<s:TextInput id="placeToSearch"/>
+					</s:FormItem>
+					
+					<s:FormItem>
+						<s:Button id="getData" width="92" height="29" label="Get Data"
+								  click="getData_clickHandler(event)"/>	
+					</s:FormItem>
+					
+				</s:Form>
+			</s:NavigatorContent>
+			<s:NavigatorContent label="Select on the Map"  width="100%" height="300">
+				<s:layout>
+					<s:VerticalLayout gap="10" horizontalAlign="center"/>
+				</s:layout>
+				<s:Label text.State1="Draw a shape to select an area" fontSize.State1="16"/>
+				<s:ButtonBar id="tbb" height="50"
+							 click.State1="tbb_clickHandler(event)">
+					<s:ArrayCollection>
+						<fx:Object icon="@Embed(source='assets/images/i_draw_poly.png')" label="POLYGON"/>
+					</s:ArrayCollection>
+				</s:ButtonBar>
+			</s:NavigatorContent>
+			
+		</mx:ViewStack>
+		<mx:HRule/>
+		<s:RichText includeIn="State1" click="richtext1_clickHandler(event)" fontSize="16"
+				fontWeight="bold">
+			<s:a  href='http://seeclickfix.com/'>
+				Go to See click fix website
+			</s:a>
+		</s:RichText>
+	</s:VGroup>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

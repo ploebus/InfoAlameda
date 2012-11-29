@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true">
+	<fx:Metadata>
+		
+	</fx:Metadata>
+	<fx:Script>
+	
+	</fx:Script>
+	
+	
+	<s:states> 
+		<s:State name="normal"/> 
+		<s:State name="hovered"/>
+		<s:State name="selected"/> 
+	</s:states> 
+	
+		<s:Rect height="50" width="100%">
+			<s:fill>
+				<s:SolidColor color="#ffffff" alpha=".8" alpha.hovered="1"/>
+			</s:fill>
+		</s:Rect>
+		<s:Ellipse left="5" height="20" visible.normal="false" visible.selected="true" visible.hovered="true" top="10" width="20">
+			<s:fill>
+				<s:SolidColor color="#ff0000"/>
+			</s:fill>
+		</s:Ellipse>
+		<s:Label text="{data.boundary}" paddingLeft="30" paddingRight="10" horizontalCenter="0" verticalCenter="0" color="#000000"/>
+	
+</s:ItemRenderer>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		xmlns:mx="library://ns.adobe.com/flex/mx"
+		xmlns:esri="http://www.esri.com/2008/ags"
+		xmlns:viewer="com.esri.viewer.*"
+		xmlns:usc="infoComponents.*" 
+		creationComplete="init()" 
+		width="100%" height="100%" cornerRadius="5" 
+		backgroundColor="#FFFFFF" alpha="0.8" 
+		borderColor="#0395FC" borderStyle="solid">
+	<fx:Script>
+		<![CDATA[
+			import classes.LegendChart;
+			
+			import mx.charts.ColumnChart;
+			import mx.charts.LineChart;
+			import mx.collections.ArrayCollection;
+			import mx.core.IVisualElement;
+			import mx.core.UIComponent;
+			import mx.events.ColorPickerEvent;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+		
+			private var _theChart:UIComponent;
+			[Bindable]
+			public var yAxis:String;
+			
+			[Bindable]
+			public var xAxis:String;
+			
+			[Bindable]
+			public var data:*;
+			
+			
+			
+			
+			[Bindable]
+			public var _theTitle:String;
+			
+			
+			private function init():void
+				{
+					
+						
+				}
+			
+			private function refresh():void
+				{
+					//chartPreview.removeAllChildren();
+					//theChart.createChart();
+					//chartPreview.addChild(theChart.getChart());
+				}
+			
+
+		
+
+
+			protected function colorPicker_changeHandler(event:ColorPickerEvent):void
+			{
+				//{col.setStyle('fill',colorPicker.selectedColor)}
+			}
+
+		]]>
+	</fx:Script>
+	<s:Group>
+		<s:layout>
+			<s:HorizontalLayout/>
+		</s:layout>
+	<s:VGroup id="chartPreview">
+		<s:Label text="{chartTitle.text}" width="505" height="38" color="#333333"/>
+	
+		
+		<mx:ColumnChart id="thisChart" dataProvider="{data}" width="495" height="300">
+			<mx:horizontalAxis>
+				<mx:CategoryAxis categoryField="label">
+				</mx:CategoryAxis> 
+			</mx:horizontalAxis>
+			
+			<mx:series>
+				<mx:ColumnSeries id="col" yField="data" displayName="{yTitle.text}">
+					
+				</mx:ColumnSeries>
+			</mx:series> 
+		</mx:ColumnChart>
+		<!--<mx:Legend dataProvider="{thisChart}" height="43" width="500"/>-->
+	</s:VGroup>
+	<s:VGroup>
+		
+	
+	<mx:Panel width="266" height="387" layout="absolute" title="Customize Chart" horizontalAlign="right" verticalAlign="middle">
+		<mx:ColorPicker id="colorPicker" x="161" y="10" width="45" change="colorPicker_changeHandler(event)" />
+		<mx:Label x="10" y="14" text="Select Chart Color"/>
+		<mx:TextInput id="chartTitle" x="10" y="47" text="Select Chart Title" width="210" textAlign="center"/>
+		<mx:TextInput id="xTitle" x="10" y="77" text="X-Axis Label" width="210" textAlign="center"/>
+		<mx:TextInput id="yTitle" x="10" y="107" text="Y-Axis Label" width="210" textAlign="center"/>
+		<mx:TextInput x="10" y="188" width="80" text="Width (px)" textAlign="center"/>
+		<mx:TextInput x="126" y="188" width="80" text="Height (px)" textAlign="center"/>
+	</mx:Panel>
+	
+	
+	<mx:Button label="Export Chart" width="185" x="10" y="415"/>
+	<mx:Button x="235" y="415" label="Close" width="104" click="{this.parent.removeChild(this)}">
+		<mx:icon>@Embed(source='assets/images/w_close_red.png')</mx:icon>
+	</mx:Button>
+	</s:VGroup>
+	</s:Group>
+</s:BorderContainer>

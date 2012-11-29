@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" 
+		 height="100%" xmlns:metadata="flex.lang.reflect.metadata.*">
+	<s:layout>
+		<s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5" paddingBottom="5"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.ColorPickerEvent;
+			
+			import myUtils.imageSaving;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var dataArr:ArrayCollection;
+				
+			
+			
+			[Bindable]
+			public var yField:String='data';
+			
+			[Bindable]
+			public var xField:String='label';
+			
+			[Bindable]
+			public var suggestedTitle:String;
+			
+			[Bindable]
+			private var fontFamily:String='Arial';
+			
+			[Bindable]
+			private var fontFamilyArr:ArrayCollection=new ArrayCollection(['Verdana','Arial','Georgia','Times New Roman','Courier New']);
+			
+			[Bindable]
+			private var chartTextAlignmentArr:ArrayCollection=new ArrayCollection(['left','center','right']);
+			
+			[Bindable]
+			private var fontSizeArr:ArrayCollection=new ArrayCollection([10,11,12,13,14,16,18,20]);
+			
+			
+			
+
+			protected function chartColor_changeHandler(event:ColorPickerEvent):void
+			{
+				columnSeries1.setStyle('fill',event.color);
+			}
+
+			protected function checkbox1_changeHandler(event:Event):void
+			{
+				if(columnSeries1.getStyle('labelPosition')=='none')
+					{
+						columnSeries1.setStyle('labelPosition','inside');
+					}
+				else
+					{	
+					columnSeries1.setStyle('labelPosition','none');
+					}
+			}
+			
+			protected function chartFontFamily_changeHandler(event:IndexChangeEvent):void
+			{
+				fontFamily=event.target.selectedItem;
+				
+			}
+			
+			protected function chartTextAlignment_changeHandler(event:IndexChangeEvent):void
+			{
+				title.setStyle('textAlign',event.target.selectedItem);
+				subTitle.setStyle('textAlign',event.target.selectedItem);
+				
+			}
+			
+			protected function exportButton_clickHandler(event:MouseEvent):void
+			{
+				//chartContainer.width=exportHeight.text as Number;
+				//chartContainer.height=exportWidth.text as Number;
+				
+				var bytes:ByteArray=imageSaving.getPNG(chartContainer);
+				var file:FileReference=new FileReference();
+				
+				file.save(bytes,"chart.png");
+				
+			}
+			
+			protected function backChart_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var changeState:Event = new Event("ChangeState",true,false);
+				dispatchEvent(changeState);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Metadata>
+		[Event(name="ChangeState", type="flash.events.Event")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+	</fx:Declarations>
+	<s:BorderContainer color="#000000" width="100%" height="65%" id="chartContainer"
+			 fontFamily="{fontFamily}" horizontalCenter="-4" contentBackgroundColor="#ffffff" borderVisible="false">
+		<mx:ColumnChart showDataTips="true" dataProvider="{dataArr}" width="100%" height="100%" y="61" id="columnChart">
+			<mx:horizontalAxis>
+				<mx:CategoryAxis dataProvider="{dataArr}" categoryField="{xField}"/>
+			</mx:horizontalAxis>
+			<mx:series>
+				<mx:ColumnSeries id="columnSeries1" labelPosition="none" displayName="" yField="{yField}"/>
+			</mx:series>
+		</mx:ColumnChart>
+		
+		<s:TextInput x="10" y="10" contentBackgroundAlpha="0" id="title" fontSize="{chartTitleSize.selectedItem}" width="100%" borderVisible="false" text="{chartTitle.text}"/>
+		<s:TextInput x="10" contentBackgroundAlpha="0" y="35" id="subTitle" fontSize="{chartSubTitleSize.selectedItem}" width="100%" borderVisible="false" text="{chartSubTitle.text}"/>
+	</s:BorderContainer>
+	
+	<s:BorderContainer width="100%" height="35%" color="#000000" horizontalCenter="0" cornerRadius="5" dropShadowVisible="true">
+		<s:layout>
+			<s:VerticalLayout gap="10"/>
+		</s:layout>
+		<s:VGroup width="100%" height="60" horizontalAlign="center" verticalAlign="middle">
+			<s:HGroup width="100%">
+				<s:TextInput id="chartTitle" contentBackgroundAlpha="0" width="90%" text="{suggestedTitle}"/>
+				<s:DropDownList id="chartTitleSize" color="#ffffff" dataProvider="{fontSizeArr}" selectedItem="14"/>
+			</s:HGroup>
+			<s:HGroup width="100%">
+				<s:TextInput id="chartSubTitle" contentBackgroundAlpha="0" width="90%" text="Chart Subtitle"/>
+				<s:DropDownList id="chartSubTitleSize" color="#ffffff" dataProvider="{fontSizeArr}" selectedItem="14"/>
+			</s:HGroup>
+		</s:VGroup>
+		<s:HGroup width="100%" height="119">
+			
+		
+		<s:VGroup width="30%" height="100%" horizontalAlign="center" textAlign="center"
+				  verticalAlign="middle">
+			
+			<s:Label x="13" width="204" fontWeight="bold" text="Select Font"/>
+			<s:ComboBox id="chartFontFamily" width="185" contentBackgroundColor="#ffffff"
+						change="chartFontFamily_changeHandler(event)" dataProvider="{fontFamilyArr}"
+						selectedIndex="1"/>
+			
+			<s:Label x="24" width="182" fontWeight="bold" text="Title Alignment"/>
+			<s:ComboBox id="chartTextAlignment" dataProvider="{chartTextAlignmentArr}" contentBackgroundColor="#ffffff" change="chartTextAlignment_changeHandler(event)" width="183"/>
+			
+		</s:VGroup>
+		<s:VGroup width="30%" height="100%" gap="10" horizontalAlign="center" textAlign="center"
+				  verticalAlign="middle">
+			<s:CheckBox x="8" width="142" label="Show Data Labels"
+						change="checkbox1_changeHandler(event)" fontWeight="bold" selected="false"/>
+			<s:VGroup y="37" height="68" horizontalAlign="center" verticalAlign="middle">
+				
+			
+			<s:Label width="129" height="20" fontWeight="bold" text="Change Chart Color"/>
+			<mx:ColorPicker id="chartColor" y="74" width="118" height="26"
+							change="chartColor_changeHandler(event)" selectedColor="#ff9933"/>
+			</s:VGroup>
+		</s:VGroup>
+		<s:VGroup width="30%" height="100%" horizontalAlign="center" textAlign="center"
+				  verticalAlign="middle">
+			
+			<s:TextArea height="65" editable="false" contentBackgroundAlpha="0" borderVisible="false" text="Image size will be the same as it appears on the screen. Adjust box size on screen to change exported image size"/>
+			<!--<s:TextInput id="exportWidth" width="85" text="Width" textAlign="center"/>
+			<s:TextInput id="exportHeight" width="85" text="Height" textAlign="center"/>-->
+			<s:HGroup>
+				
+			
+			<s:Button id="exportButton"  height="25" label="Export to PNG" click="exportButton_clickHandler(event)"/>
+				<s:Button id="backChart"  height="25" label="Back to Chart" click="backChart_clickHandler(event)"/>
+			</s:HGroup>
+		</s:VGroup>
+		</s:HGroup>
+	</s:BorderContainer>
+</s:Group>

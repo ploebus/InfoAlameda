@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				label="School Identify Tool"
+				autoDrawBackground="true" dataChange="itemrenderer1_creationCompleteHandler(event)" >
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			[Bindable] private var adminName:String;
+			[Bindable] private var scoreCollection:ArrayCollection;
+			
+			protected function itemrenderer1_creationCompleteHandler(event:Event):void
+				{
+					// TODO Auto-generated method stub
+				scoreCollection = new ArrayCollection();
+				for(var s:String in data){
+					switch(s){
+						case "API2010":case"API2011":
+							var obj:Object = {
+							'Name':s,
+							'Value':data[s]
+							}
+							scoreCollection.addItem(obj);
+						break;
+						
+					}
+					
+					
+				}
+				adminName = "Principal: " + data.AdmFName1+ " " + data.AdmLName1;
+				var myEvent:CustomEvents = new CustomEvents(CustomEvents.SCHOOL_EVENT,data,true,true);
+					dispatchEvent(myEvent);
+				}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup gap="10" creationComplete="itemrenderer1_creationCompleteHandler(event)">
+		
+	
+	<s:Label x="6" y="11" fontSize="18" text="{data.School}" textAlign="center"
+			 verticalAlign="middle"/>
+	<!--<mx:ColumnChart id="apiColumnChart" x="58" y="130" width="285" height="175"
+					dataProvider="{scoreCollection}" showDataTips="true">
+		<mx:horizontalAxis>
+			<mx:CategoryAxis id="ca"
+							 categoryField="Name" />
+		</mx:horizontalAxis>
+		
+		
+		<mx:series>
+			<mx:ColumnSeries displayName="API Scores" labelField="Name" yField="Value"/>
+			
+		</mx:series>
+	</mx:ColumnChart>
+	<mx:Legend x="105" y="97" width="198" height="26" dataProvider="{apiColumnChart}"/>-->
+	<s:Label x="11" y="36" text="{data.Street}"/>
+	<s:Label x="11" y="56" text="{data.City_1}"/>
+	<s:Label x="11" y="72" text="{data.zip_1}"/>
+	<s:Label x="11" y="72" color="#000000" text="{data.Phone}"/>
+	<s:Label x="11" y="72" color="#FFFFFF" text="{adminName}"/>
+	</s:VGroup>
+	
+</s:ItemRenderer>

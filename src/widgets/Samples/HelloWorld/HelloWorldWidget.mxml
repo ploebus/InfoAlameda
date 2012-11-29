@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     ////////////////////////////////////////////////////////////////////////////////
+     //
+     // Copyright (c) 2010 ESRI
+     //
+     // All rights reserved under the copyright laws of the United States.
+     // You may freely redistribute and use this software, with or
+     // without modification, provided you include the original copyright
+     // and use restrictions.  See use restrictions in the file:
+     // <install location>/License.txt
+     //
+     ////////////////////////////////////////////////////////////////////////////////
+-->
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:mx="library://ns.adobe.com/flex/mx"
+                   xmlns:esri="http://www.esri.com/2008/ags"
+                   xmlns:viewer="com.esri.viewer.*"
+				    widgetConfigLoaded="init()"
+                   >
+    <fx:Script>
+        <![CDATA[
+			import com.esri.ags.Graphic;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.events.WebMapEvent;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.WebMercatorMapPoint;
+			import com.esri.ags.utils.JSON;
+			import com.esri.ags.webmap.PopUpRenderer;
+			import com.esri.ags.webmap.supportClasses.PopUpInfo;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.events.Request;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			private var popUpRenderer:PopUpRenderer = new PopUpRenderer();
+			[Bindable] private var dgResultsSource:ArrayCollection;
+			//this function called when the widget's configuration is loaded
+            private function init():void
+            {
+                if (configXML) // checking for valid content in the configuration file
+                {
+                    map.addLayer(grLyrCouch);
+					lbl.text = configXML.content || getDefaultString("helloContent");
+					
+					
+                }
+				wTemplate.addTitlebarButton('assets/images/i_edit.png',"Pick a City",gotoStart);
+				wTemplate.addTitlebarButton('assets/images/edit_attributes.png',"Pick a City",gotoResults);
+				wTemplate.addEventListener('closed', checkState);
+            }
+			
+			private function checkState(e:Event):void{
+				wTemplate.removeEventListener('closed',checkState);
+				//Alert.show("closed")
+				removeLayer_clickHandler();
+			}
+			private function gotoStart():void{
+				this.currentState = 'State1';
+			}
+			
+			private function gotoResults():void{
+				this.currentState = 'Results';
+			}
+			
+			private function getCategories(evt:MouseEvent):void{
+				grLyrCouch.clear();
+				var params:Object ={
+					"url":"http://open211.org/api/search?q=services:"+escape(txtSearch.text)
+					};
+				//Alert.show("Get Categories");
+				dataFetcher.send(params);	
+			}
+		
+			
+			
+			protected function dataFetcher_resultHandler(event:ResultEvent):void
+			{
+				var rawData:String = String(event.result);
+				
+				var processedData:* = JSON.decode(rawData);
+				
+				/* if((processedData as Object).hasOwnProperty("_source")){
+					for each(var obj:Object in processedData._source){
+						var mp:WebMercatorMapPoint = new WebMercatorMapPoint(obj.geometry.coordinates[0], obj.geometry.coordinates[1]);
+					//Alert.show(obj.geometry.coordinates.toString());
+						Alert.show("hello");
+						var gr:Graphic = new Graphic(mp,sms1,obj); 
+						//gr.addEventListener(MouseEvent.CLICK, clickGraphic);
+						grLyrCouch.add(gr);
+					}
+				}
+				else
+				{
+					 */
+					dgResultsSource = new ArrayCollection();
+					for each(var obj:Object in processedData.hits.hits){
+						if(obj._source.source=='City of Oakland'){
+							dgResultsSource.addItem(obj._source);
+						var mp:WebMercatorMapPoint = new WebMercatorMapPoint(obj._source.geometry.coordinates[0], obj._source.geometry.coordinates[1]);
+						//Alert.show(obj.geometry.coordinates.toString());
+						
+						var gr:Graphic = new Graphic(mp,sms1,obj._source); 
+						var infoWindowRenderer:ClassFactory = new ClassFactory(PopUpRenderer);
+						//infoWindowRenderer.properties = { popUpInfo: gr.attributes};
+						
+						
+						var pInfo:PopUpInfo = new PopUpInfo();
+							pInfo.title = "{name}";
+							pInfo.description = "{address} \n {phone} \n {description}";
+							
+							infoWindowRenderer.properties = { popUpInfo: pInfo};
+						gr.infoWindowRenderer = infoWindowRenderer;
+						gr.addEventListener(MouseEvent.CLICK, clickGraphic);
+						grLyrCouch.add(gr);
+						}
+						
+					}	
+				
+				//Alert.show(typeof(processedData));
+				//AS3Corelib to parse results
+				
+				//Alert.show(rawData);
+				
+			}
+			
+			private function clickGraphic(evt:MouseEvent):void{
+				
+					map.infoWindow.label = "Open211";
+				
+			}
+			protected function dataFetcher_faultHandler(event:FaultEvent):void
+			{
+				
+				Alert.show(event.fault.faultString);
+				
+			}
+			
+			
+			
+			protected function linkbutton1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var targetURL:URLRequest = new URLRequest("http://open211.org");
+				navigateToURL(targetURL);
+			}
+			
+			protected function removeLayer_clickHandler(event:MouseEvent=null):void
+			{
+				map.removeLayer(map.getLayer("grLyrCouch"));
+				this.currentState = 'State1';
+				
+			}
+			
+		]]>
+    </fx:Script>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace esri "http://www.esri.com/2008/ags";
+		
+		esri|InfoWindow
+		{
+			background-color: #BDB76B; /* dark khaki */
+			border-color: #000000;
+			border-thickness: 3;
+			lower-left-radius: 20;
+			lower-right-radius: 20;
+			upper-left-radius: 20;
+			upper-right-radius: 0;
+			padding-bottom: 7;
+			padding-left: 7;
+			padding-right: 7;
+			padding-top: 4;
+		}
+		esri|InfoWindowLabel
+		{
+			color: #FFFFFF;
+			font-size: 15;
+			padding-left: 120;
+		}
+		s|BorderContainer
+		{
+			background-color: #F0E68C; /* light khaki */
+			corner-radius: 15;
+			content-background-color: #BDB76B;
+			padding-bottom: 5;
+		}
+	</fx:Style>
+	<viewer:states>
+		<s:State name="State1"/>
+		<s:State name="Results"/>
+	</viewer:states>
+	
+			
+	<fx:Declarations>
+		<s:HTTPService 	url="proxy.php" 
+						id="dataFetcher" method="POST" resultFormat="text" 
+						result="dataFetcher_resultHandler(event)" fault="dataFetcher_faultHandler(event)"/>
+		
+		<esri:SimpleMarkerSymbol id="sms1" color="0x3333CC" size="20" alpha="0.5" style="circle">
+			<esri:SimpleLineSymbol color="0x000066" width="2" alpha="1" style="solid" />
+		</esri:SimpleMarkerSymbol>
+		<esri:GraphicsLayer id="grLyrCouch"/>
+				
+	</fx:Declarations>
+    <viewer:WidgetTemplate id="wTemplate" width="400" height="300">
+		<viewer:layout.State1>
+			<s:VerticalLayout horizontalAlign="center"/>
+		</viewer:layout.State1>
+		<s:VGroup includeIn="State1" horizontalAlign="center">
+		<s:Image source="assets/images/logo_open211.png"/>
+		<s:RichText width="294" height="38"
+					text="Open211 is an open, free to use directory of service providers. "
+					textAlign="center" verticalAlign="middle"/>
+
+        <s:Label id="lbl"
+                 fontSize="18"
+                 fontStyle="italic"
+                 fontWeight="bold"/>
+		<s:Label fontSize="14" text="Enter A Search Term"/>
+		<s:TextInput id="txtSearch" width="250" fontSize="16" textAlign="center"/>
+		<s:Button label="Find Services" click="getCategories(event)" fontSize="14"/>
+		<mx:LinkButton label="Check Out Open 211" click="linkbutton1_clickHandler(event)"
+					   color="#1273F7" fontSize="14" fontWeight="bold"/>
+		</s:VGroup>
+	
+		<s:VGroup includeIn="Results" width="100%">
+		<s:Button label="Remove Layer" id="removeLayer" click="removeLayer_clickHandler(event)"/>
+		<s:DataGrid id="dgResults" width="397" height="262" dataProvider="{dgResultsSource}"
+					requestedRowCount="4">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="organization" headerText="Organization"></s:GridColumn>
+					<s:GridColumn dataField="address" headerText="Address"></s:GridColumn>
+					<s:GridColumn dataField="description" headerText="Description"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			
+		</s:DataGrid>
+		</s:VGroup>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

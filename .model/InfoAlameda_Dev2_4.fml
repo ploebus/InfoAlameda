@@ -1,0 +1,1095 @@
+
+<model xmlns="http://ns.adobe.com/Fiber/1.0">
+  <annotation name="ActionScriptGeneration">
+    <item name="FullyQualifyReferences">true</item>
+  </annotation>
+  <entity name="Xml3">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getSummary">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getBoundaries">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Fields">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Fields</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="item" type="string[]" required="true"/>
+  </entity>
+  <entity name="Type">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Type</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="name" type="string" required="true"/>
+    <property name="categoryid" type="string" required="true"/>
+    <property name="fields" type="Fields" required="true"/>
+  </entity>
+  <entity name="Boundary">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Boundary</item>
+    </annotation>
+    <annotation name="service Group"/>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="name" type="string" required="true"/>
+    <property name="datafield" type="string" required="true"/>
+    <property name="type" type="Type" required="true"/>
+  </entity>
+  <entity name="Xml4">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBoundaries">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Xml6">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Xml9">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getSchoolByTract">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="item" type="Item"/>
+  </entity>
+  <service name="Datalookup">
+    <annotation name="ActionScriptGeneration">
+      <item name="ServiceType">HTTPMultiService</item>
+      <item name="Package">services.datalookup</item>
+    </annotation>
+    <annotation name="ServiceTypeGroup">
+      <item name="ServiceBackendType">HTTPService</item>
+    </annotation>
+    <annotation name="ServiceConfig">
+      <item name="DEFAULT_ENTITY_PACKAGE">valueObjects</item>
+      <item name="LINKED_FILE"></item>
+    </annotation>
+    <function name="comment" return-type="Xml1">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">POST</item>
+        <item name="contentType">application/x-www-form-urlencoded</item>
+        <item name="requestBodyParameter">false</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/comment</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/comment</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">status</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">comment,email,category</item>
+        <item name="inputParams">string,string,string</item>
+      </annotation>
+      <parameter name="comment" type="string"/>
+      <parameter name="email" type="string"/>
+      <parameter name="category" type="string"/>
+    </function>
+    <function name="getSchools" return-type="Item[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/School</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/School</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">name</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/::item</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getAttendence" return-type="Xml[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/attendence</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/attendence</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">tract,count</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/::item</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">schoolName</item>
+        <item name="inputParams">string</item>
+      </annotation>
+      <parameter name="schoolName" type="string"/>
+    </function>
+    <function name="category" return-type="Xml">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/Categories</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/Categories</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="subCategory" return-type="Xml">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/Subcategories</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/Subcategories</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">category</item>
+        <item name="inputParams">string</item>
+      </annotation>
+      <parameter name="category" type="string"/>
+    </function>
+    <function name="variable" return-type="Xml">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/Variables</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/Variables</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">subCategory,boundary</item>
+        <item name="inputParams">string,string</item>
+      </annotation>
+      <parameter name="subCategory" type="string"/>
+      <parameter name="boundary" type="string"/>
+    </function>
+    <function name="variableDetail" return-type="Xml7">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/variableDetails</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/variableDetails</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">variable,variableCategory</item>
+        <item name="inputParams">string,string</item>
+      </annotation>
+      <parameter name="variable" type="string"/>
+      <parameter name="variableCategory" type="string"/>
+    </function>
+    <function name="secondVariable" return-type="Xml7">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/secondVariable</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/secondVariable</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">variable,boundary</item>
+        <item name="inputParams">string,string</item>
+      </annotation>
+      <parameter name="variable" type="string"/>
+      <parameter name="boundary" type="string"/>
+    </function>
+    <function name="getYears" return-type="Xml">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/years</item>
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/years</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">variableCategory,variable,boundary</item>
+        <item name="inputParams">string,string,string</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <parameter name="variableCategory" type="string"/>
+      <parameter name="variable" type="string"/>
+      <parameter name="boundary" type="string"/>
+    </function>
+    <function name="getSummary" return-type="Xml2">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/summary</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/summary</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">category,boundary</item>
+        <item name="inputParams">string,string</item>
+      </annotation>
+      <parameter name="category" type="string"/>
+      <parameter name="boundary" type="string"/>
+    </function>
+    <function name="getBoundaries" return-type="Xml5">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoAlamedaCounty.org/index.php/api/rest/Boundaries</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoAlamedaCounty.org/index.php/api/rest/Boundaries</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getDataObject" return-type="DataObject[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/data_object</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/data_object</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">ID,layerid,layer,category,subcategory,field,alias,boundary,coverage,source,year,priority,status,boundaryLabel,dataType,security,disclaimer,variablecategory,exclusion,usertip,summary,confidenceInterval</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/::item</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">field,boundary</item>
+        <item name="inputParams">string,string</item>
+      </annotation>
+      <parameter name="field" type="string"/>
+      <parameter name="boundary" type="string"/>
+    </function>
+    <function name="getChartData" return-type="Xml8">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/chartData</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/chartData</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">category,boundary,year</item>
+        <item name="inputParams">string,string,string</item>
+      </annotation>
+      <parameter name="category" type="string"/>
+      <parameter name="boundary" type="string"/>
+      <parameter name="year" type="string"/>
+    </function>
+    <function name="getIdentifyVariables" return-type="IdentifyVariables">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/identifytool</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/identifytool</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">boundaryLabel</item>
+        <item name="inputParams">string</item>
+      </annotation>
+      <parameter name="boundaryLabel" type="string"/>
+    </function>
+    <function name="getIdVariables" return-type="Xml8">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/IdVariables</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/IdVariables</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParamNames">boundaryLabel</item>
+        <item name="inputParams">string</item>
+      </annotation>
+      <parameter name="boundaryLabel" type="string"/>
+    </function>
+    <function name="getSchoolByTract" return-type="Schools[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://rest.infoalamedacounty.org/index.php/api/rest/SchoolByTract</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/rest/SchoolByTract</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">ID,CDESchoolCode,Name,Tract,Count</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/::item</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParamNames">tract</item>
+        <item name="inputParams">string</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="tract" type="string"/>
+    </function>
+  </service>
+  <entity name="Xml2">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,DatalookupDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getSummary">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item"/>
+  </entity>
+  <entity name="Xml1">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,DatalookupDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="comment">
+      <item name="propertySpecifier">status</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="status" type="string" required="true"/>
+  </entity>
+  <entity name="Xml">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,DatalookupDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="category">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getSchools">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="getAttendence">
+      <item name="propertySpecifier">tract,count</item>
+    </annotation>
+    <annotation name="subCategory">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="variable">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="secondVariable">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="getYears">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="getBoundaries">
+      <item name="propertySpecifier">layerId,boundary,field</item>
+    </annotation>
+    <property name="tract" type="string" required="true"/>
+    <property name="count" type="integer" required="true"/>
+    <property name="layerId" type="string" required="true"/>
+    <property name="boundary" type="string" required="true"/>
+    <property name="field" type="string" required="true"/>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Schools">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Item</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,DatalookupDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getSchoolByTract">
+      <item name="propertySpecifier">ID,CDESchoolCode,Name,Tract,Count</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="ID" type="string"/>
+    <property name="CDESchoolCode" type="string"/>
+    <property name="Name" type="string"/>
+    <property name="Tract" type="string"/>
+    <property name="Count" type="double"/>
+  </entity>
+  <entity name="Xml5">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBoundaries">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getDataObject">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item"/>
+  </entity>
+  <entity name="DataObject">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Item</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getDataObject">
+      <item name="propertySpecifier">ID,layerid,layer,category,subcategory,field,alias,boundary,coverage,source,year,priority,status,boundaryLabel,dataType,security,disclaimer,variablecategory,exclusion,usertip,summary,confidenceInterval</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="ID" type="string" required="true"/>
+    <property name="layerid" type="string" required="true"/>
+    <property name="layer" type="string" required="true"/>
+    <property name="category" type="string" required="true"/>
+    <property name="subcategory" type="string" required="true"/>
+    <property name="field" type="string" required="true"/>
+    <property name="alias" type="string" required="true"/>
+    <property name="boundary" type="string" required="true"/>
+    <property name="coverage" type="string" required="true"/>
+    <property name="source" type="string" required="true"/>
+    <property name="year" type="string" required="true"/>
+    <property name="priority" type="string" required="true"/>
+    <property name="status" type="string" required="true"/>
+    <property name="boundaryLabel" type="string" required="true"/>
+    <property name="dataType" type="string" required="true"/>
+    <property name="security" type="string" required="true"/>
+    <property name="disclaimer" type="string" required="true"/>
+    <property name="variablecategory" type="string" required="true"/>
+    <property name="exclusion" type="string" required="true"/>
+    <property name="usertip" type="string" required="true"/>
+    <property name="summary" type="string" required="true"/>
+    <property name="confidenceInterval" type="string" required="true"/>
+  </entity>
+  <entity name="Xml7">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,DatalookupDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="secondVariable">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Xml8">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getChartData">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getIdVariables">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <service name="GeoCommons">
+    <annotation name="ActionScriptGeneration">
+      <item name="ServiceType">HTTPMultiService</item>
+      <item name="Package">services.geocommons</item>
+    </annotation>
+    <annotation name="ServiceTypeGroup">
+      <item name="ServiceBackendType">HTTPService</item>
+    </annotation>
+    <annotation name="ServiceConfig">
+      <item name="DEFAULT_ENTITY_PACKAGE">valueObjects</item>
+      <item name="LINKED_FILE"></item>
+    </annotation>
+    <function name="getGeoCommonLayer" return-type="GeoCommonJson">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.json.JSONSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">http://geocommons.com/datasets/98696/features.json</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://geocommons.com/datasets/98696/features.json</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">features,type</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParamNames">geojson</item>
+        <item name="inputParams">string</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="geojson" type="string"/>
+    </function>
+  </service>
+  <entity name="GeoCommonJson">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">GeoCommonJson</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">GeoCommons</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getGeoCommonLayer">
+      <item name="propertySpecifier">features,type</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="features" type="Features[]" required="true"/>
+    <property name="type" type="string" required="true"/>
+  </entity>
+  <entity name="Geometry">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Geometry</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">GeoCommons</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="type" type="string" required="true"/>
+    <property name="coordinates" type="double[]" required="true"/>
+  </entity>
+  <entity name="Features">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Features</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">GeoCommons</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="properties" type="Properties" required="true"/>
+    <property name="type" type="string" required="true"/>
+    <property name="geometry" type="Geometry" required="true"/>
+  </entity>
+  <entity name="Properties">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Properties</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">GeoCommons</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="dec_col" type="double" required="true" default="0"/>
+    <property name="sortable" type="string" required="true"/>
+    <property name="name" type="string" required="true"/>
+    <property name="longitude" type="double" required="true" default="0"/>
+    <property name="latitude" type="double" required="true" default="0"/>
+    <property name="int_col" type="integer" required="true"/>
+    <property name="geometry" type="string" required="true"/>
+  </entity>
+  <service name="Acreentry">
+    <annotation name="ActionScriptGeneration">
+      <item name="ServiceType">HTTPMultiService</item>
+      <item name="Package">services.acreentry</item>
+      <item name="rootURL">http://rest.infoalamedacounty.org/index.php/api/reentry/</item>
+    </annotation>
+    <annotation name="ServiceTypeGroup">
+      <item name="ServiceBackendType">HTTPService</item>
+    </annotation>
+    <annotation name="ServiceConfig">
+      <item name="DEFAULT_ENTITY_PACKAGE">valueObjects</item>
+      <item name="LINKED_FILE"></item>
+    </annotation>
+    <function name="getServiceGroup" return-type="IdentifyVariables">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">servicegroup</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/reentry/servicegroup</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getServices" return-type="Xml10">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">services</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/reentry/services</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParamNames">categoryID</item>
+        <item name="inputParams">string</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="categoryID" type="string"/>
+    </function>
+    <function name="getLocations" return-type="Xml11">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ActionScriptGeneration">
+        <item name="SerializationFilter">com.adobe.serializers.xml.XMLSerializationFilter</item>
+        <item name="method">GET</item>
+        <item name="url">locations</item>
+      </annotation>
+      <annotation name="url group">
+        <item name="completeURL">http://rest.infoalamedacounty.org/index.php/api/reentry/locations</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">item</item>
+      </annotation>
+      <annotation name="Properties">
+        <item name="xPath">/</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParamNames">service</item>
+        <item name="inputParams">string</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="service" type="string"/>
+    </function>
+  </service>
+  <entity name="Variables">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Variables</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,Acreentry</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getIdVariables">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Item">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Item</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,Acreentry</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="variableDetail">
+      <item name="propertySpecifier">school,Tract,students,description,name,ID,layerid,layer,category,subcategory,alias,coverage,source,year,priority,status,dataType,security,disclaimer,variablecategory,exclusion,usertip,summary,boundaryLabel,boundary,field</item>
+    </annotation>
+    <annotation name="secondVariable">
+      <item name="propertySpecifier">year,boundaryLabel,coverage,boundary,layer,field,dataType</item>
+    </annotation>
+    <annotation name="getSchools">
+      <item name="propertySpecifier">name</item>
+    </annotation>
+    <property name="school" type="string" required="true"/>
+    <property name="students" type="string" required="true"/>
+    <property name="description" type="string" required="true"/>
+    <property name="ID" type="string"/>
+    <property name="layerid" type="string"/>
+    <property name="subcategory" type="string"/>
+    <property name="coverage" type="string"/>
+    <property name="source" type="string"/>
+    <property name="year" type="string"/>
+    <property name="priority" type="string"/>
+    <property name="status" type="string"/>
+    <property name="boundaryLabel" type="string"/>
+    <property name="dataType" type="string"/>
+    <property name="security" type="string"/>
+    <property name="disclaimer" type="string"/>
+    <property name="exclusion" type="string"/>
+    <property name="usertip" type="string"/>
+    <property name="summary" type="string"/>
+    <property name="confidenceinterval" type="string"/>
+    <property name="boundary" type="string"/>
+    <property name="variables" type="Variables" required="true"/>
+    <property name="category" type="string"/>
+    <property name="field" type="string"/>
+    <property name="layer" type="string"/>
+    <property name="alias" type="string"/>
+    <property name="variablecategory" type="string"/>
+    <property name="rank" type="double"/>
+    <property name="Tract" type="string"/>
+    <property name="item" type="opaque[]"/>
+    <property name="NA" type="string[]"/>
+    <property name="categoryID" type="string" required="true"/>
+    <property name="definition" type="string" required="true"/>
+    <property name="name" type="string"/>
+    <property name="LastUpdated" type="string" required="true"/>
+    <property name="address" type="string"/>
+    <property name="city" type="string"/>
+    <property name="zip" type="string"/>
+    <property name="phone" type="string"/>
+    <property name="email" type="string"/>
+    <property name="latitude" type="string"/>
+    <property name="longitude" type="string"/>
+    <property name="distance" type="string"/>
+  </entity>
+  <entity name="Xml11">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Acreentry</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getLocations">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="Xml10">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Acreentry</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getServices">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getLocations">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+  <entity name="IdentifyVariables">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Xml</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">Datalookup,Acreentry,AcreentryDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getIdentifyVariables">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getServiceGroup">
+      <item name="propertySpecifier">item</item>
+    </annotation>
+    <property name="item" type="Item[]"/>
+  </entity>
+</model>

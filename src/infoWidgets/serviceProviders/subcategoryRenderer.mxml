@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" width="333" height="81"
+				click="sendData()"
+			 	>
+	<fx:Script>
+		<![CDATA[
+			private function sendData():void
+			{
+				var eventObject:Event=new Event("showLocations");
+				dispatchEvent(eventObject);
+			}
+		]]>
+	</fx:Script>
+	<fx:Metadata>
+		[Event(name="showLocations", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:Label text="{data.name}" width="287" x="10" y="10" color="#FFFFFF" verticalAlign="top" textAlign="center"/>
+	<s:Label x="10" y="30" text="{data.definition}" height="41" width="313" color="#FFFFFF" textAlign="center"/>
+	
+</s:ItemRenderer>

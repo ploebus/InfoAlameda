@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*"
+				   layout="absolute" width="400" height="300"
+				   creationComplete="basewidget1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.utils.Hashtable;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			
+			private var _myArrayCollection:ArrayCollection = new ArrayCollection();
+			
+			protected function basewidget1_creationCompleteHandler(event:FlexEvent):void
+			{
+				AppEvent.addListener(AppEvent.DATA_NEW_PUBLISHED,parseResults);
+				// GATHER INFO FROM HASHTABLE
+					
+			}
+			
+			private function parseResults(e:AppEvent):void{
+				//Alert.show(e.data.key);
+				
+				var myHash:Hashtable = e.data.data as Hashtable;
+					
+				
+				var obj:Object = myHash.find(e.data.key);
+				Alert.show(obj.alias);
+				_myArrayCollection.addItem(obj.spec);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+</viewer:BaseWidget>

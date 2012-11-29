@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="400" height="352"
+		 height.Customize="450"
+		 height.State1="280"
+		 width.Table="586" height.Table="502">
+	<s:states>
+		<s:State name="State1"/>
+		<s:State name="Customize"/>
+		<s:State name="Table"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.ColorPickerEvent;
+			import mx.utils.ObjectUtil;
+			
+			import myUtils.imageSaving;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			
+			
+			[Bindable]
+			private var fontFamilyArr:ArrayCollection=new ArrayCollection(['Verdana','Arial','Georgia','Times New Roman','Courier New']);
+			
+			[Bindable]
+			private var chartTextAlignmentArr:ArrayCollection=new ArrayCollection(['left','center','right']);
+			
+			[Bindable]
+			private var chartLabelPositionArr:ArrayCollection=new ArrayCollection(['none','inside','outside']);
+			
+			[Bindable]
+			private var fontSizeArr:ArrayCollection=new ArrayCollection([10,11,12,13,14,16,18,20]);
+			
+			private var _dataCollection:ArrayCollection;
+			private var _chartLabel:String;
+			
+			private var _chartSeries:String;
+			
+			[Bindable]
+			public function get chartSeries():String
+			{
+				return _chartSeries;
+			}
+
+			public function set chartSeries(value:String):void
+			{
+				_chartSeries = value;
+			}
+
+			[Bindable]
+			public function get chartLabel():String
+			{
+				return _chartLabel;
+			}
+			
+			public function set chartLabel(value:String):void
+			{
+				_chartLabel = value;
+			}
+			
+			[Bindable]
+			public function get dataCollection():ArrayCollection
+			{
+				return _dataCollection;
+			}
+			
+			public function set dataCollection(value:ArrayCollection):void
+			{
+				_dataCollection = value;
+			}
+			
+			protected function cbxFontSize_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				lblChartLabel.setStyle("fontSize",cbxFontSize.selectedItem);
+			}
+			
+			
+			
+			protected function cbxFontType_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				lblChartLabel.setStyle("fontFamily",cbxFontType.selectedItem);
+				series1.setStyle("fontFamily",cbxFontType.selectedItem);
+			}
+			
+			protected function chkShowLabels_changeHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				if(chkShowLabels.selected){
+					series1.labelField = "Value";
+					series1.setStyle("labelPosition","inside");
+				}
+				else{
+					series1.labelField = "";
+				}
+			}
+			
+			protected function cbxLabelPosition_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				series1.setStyle("labelPosition",cbxLabelPosition.selectedItem);
+			}
+			
+			protected function txtChangeLabel_changeHandler(event:TextOperationEvent):void
+			{
+				// TODO Auto-generated method stub
+				chartLabel = txtChangeLabel.text;
+			}
+			
+			protected function exportData(event:MouseEvent):void
+			{
+				var s:String=myUtils.CSVExport.exportCSV(dataTable);
+				var fs:FileReference=new FileReference();
+				fs.save(s,"dataTable.csv");
+			}
+			
+			protected function btnPrint_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var bytes:ByteArray=imageSaving.getPNG(pieChartPrintArea);
+				var file:FileReference=new FileReference();
+				file.save(bytes,"schoolPieChart.png");
+			}
+			
+			protected function cpSetBarColors_changeHandler(event:ColorPickerEvent):void
+			{
+				// TODO Auto-generated method stub
+				series1.setStyle('fill',event.color);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	
+	<s:BorderContainer id="pieChartPrintArea" width="100%" contentBackgroundAlpha="0.0"
+					   contentBackgroundColor="#FFFFFF"
+					   borderVisible.State1="false">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		
+		<mx:HRule includeIn="State1,Table" width="380" chromeColor="#333333"/>
+		<s:Label id="lblChartLabel" width="380" fontSize="18" text="{chartLabel}"
+				 textAlign="center" color="#333333"/>
+		<mx:HRule width="380" height="0"
+				  chromeColor="#333333"/>	
+		
+		<mx:ColumnChart id="columnChart1" color="#333333" showDataTips="true" width="290" height="227" dataProvider="{dataCollection}">
+			<mx:horizontalAxis>
+				<mx:CategoryAxis categoryField="Name"/>
+			</mx:horizontalAxis>
+			<mx:series >
+				<mx:ColumnSeries id="series1" color="#333333" displayName="{chartSeries}" labelPosition="none" yField="Value" labelField="Value">
+				</mx:ColumnSeries>
+			</mx:series>
+		</mx:ColumnChart>
+		
+		
+		<mx:Legend color="#333333" dataProvider="{columnChart1}"
+				   x.Customize="304" y.Customize="77"/>
+		<s:HGroup width="381" requestedColumnCount="2" textAlign="center"
+				  verticalAlign="middle" includeIn="State1,Table">
+			<s:Button id="btnPrint" label="Export Chart (png)" click="btnPrint_clickHandler(event)"/>
+			<s:Button label="Customize Chart" click="{this.currentState='Customize'}"/>
+		</s:HGroup>
+	</s:BorderContainer>
+	
+	
+	<s:HGroup id="customizeControls" x="9" y="283" width="381" includeIn="Customize">
+		<s:TextInput id="txtChangeLabel" toolTip="Change Chart Title" change="txtChangeLabel_changeHandler(event)" width="377" text="{chartLabel}"/>
+	</s:HGroup>
+	<s:ComboBox id="cbxFontSize" includeIn="Customize" dataProvider="{fontSizeArr}" x="10" y="319" width="41" change="cbxFontSize_changeHandler(event)"/>
+	<s:Label includeIn="Customize" x="62" y="326" text="Change Font Size"/>
+	<s:ComboBox id="cbxFontType" includeIn="Customize" dataProvider="{fontFamilyArr}" x="187" y="319" width="104" change="cbxFontType_changeHandler(event)"/>
+	<s:Label includeIn="Customize" x="309" y="330" text="Change Font"/>
+	<s:CheckBox id="chkShowLabels" includeIn="Customize" x="10" y="349" width="22" height="24"
+				change="chkShowLabels_changeHandler(event)"/>
+	<s:ComboBox id="cbxLabelPosition" includeIn="Customize" dataProvider="{chartLabelPositionArr}" x="187" y="350" width="104" change="cbxLabelPosition_changeHandler(event)"/>
+	<s:Label includeIn="Customize" x="310" y="361" text="Label Position"/>
+	<s:Button id="btnGoBack" includeIn="Customize" x="144" y="419" label="Go Back to Chart"
+			  click="{this.currentState = 'State1'}"/>
+	
+	<s:BorderContainer includeIn="Table" dropShadowVisible="true" left="5" right="5" top="5" bottom="5" cornerRadius="5">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<mx:HRule width="100%" strokeColor="#000000"/>
+		<s:Label text="{chartLabel}" width="100%" textAlign="center" color="#333333" fontSize="14"/>
+		<mx:HRule width="100%" strokeColor="#000000"/>
+		<s:HGroup gap="20" horizontalCenter="0" width="100%" horizontalAlign="center">
+			
+			
+			<mx:DataGrid id="dataTable" horizontalCenter="0" dataProvider="{dataCollection}"
+						 headerStyleName="headerStyle" height="430" width="249">
+				<mx:columns>
+					<mx:DataGridColumn dataField="Name" headerText="Name" textAlign="center"/>
+					<mx:DataGridColumn dataField="Value" headerText="Value" textAlign="center"/>
+				</mx:columns>
+			</mx:DataGrid>
+			<s:VGroup gap="20">
+				<s:Button label="Back to Chart" click="{this.currentState='State1'}" x="16" y="562" width="160" height="30"/>
+				<s:Button x="143" y="562" label="Export Data as CSV" click="exportData(event)" width="161" height="30"/>
+				
+				
+				<s:RichText width="200" >
+					<s:content>
+						<s:p color="#333333" >
+							Table data reflects the values in the big chart. If you used the slider to change
+							how much data is shown in the chart, than the data in this table will reflect those changes. 
+							To export the complete data set, make sure that the chart slider is pushed completely to the left and
+							making the chart show the complete set of data.
+						</s:p>
+					</s:content>
+				</s:RichText>
+			</s:VGroup>
+		</s:HGroup>
+	</s:BorderContainer>	
+	<mx:ColorPicker id="cpSetBarColors" includeIn="Customize" x="10" y="381"
+					change="cpSetBarColors_changeHandler(event)"/>
+	<s:Label includeIn="Customize" x="62" y="391" text="Bar Colors"/>
+	<s:Label includeIn="Customize" x="62" y="357" text="Show Labels"/>
+	
+</s:Group>

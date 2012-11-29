@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags" 
+				   xmlns:viewer="com.esri.viewer.*"
+				   widgetConfigLoaded="init()"
+				   creationComplete="addEventHandlers()"
+				   width="100%"
+				   height="100%"
+				   >
+	<fx:Script>
+		<![CDATA[
+			import infoWidgets.ProgressBar.ProgressBarImpl;
+			
+			private var _pbImpl:ProgressBarImpl = new ProgressBarImpl();
+			
+			private function init():void
+			{
+				if (configXML) 
+				{
+					pb_ProgressBar.label = configXML.label || "Loading map..."; 
+				}
+			}
+			
+			private function addEventHandlers():void{
+				_pbImpl.progressBar = pb_ProgressBar;
+				_pbImpl.registerHandlers(map);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<s:HGroup
+		width="100%"
+		height="100%"
+		horizontalAlign="center"
+		verticalAlign="middle">
+		<mx:ProgressBar
+			id="pb_ProgressBar"
+			width="200"
+			indeterminate="true"
+			visible="false"
+			/>	
+	</s:HGroup>
+		
+			
+	
+		
+</viewer:BaseWidget>

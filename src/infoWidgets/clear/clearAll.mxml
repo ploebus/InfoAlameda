@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:viewer="com.esri.viewer.*" xmlns:mx="library://ns.adobe.com/flex/mx"
+				  
+				   
+				  >
+
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.Map;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			import com.esri.viewer.WidgetStates;
+			import com.esri.viewer.managers.WidgetManager;
+			
+			import mx.collections.ArrayCollection;
+			
+			[Bindable] public var layerCount:int;
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				//clear infowindows
+				//map.infoWindow.hide();
+				// 	clear map layer
+				var tempCollection:ArrayCollection = map.layers as ArrayCollection;
+				//trace(tempCollection.length);
+				 for each (var obj:Layer in tempCollection){
+				
+					//if(obj.visible==true){
+						if(obj.className=="ArcGISTiledMapServiceLayer" || obj.className == "VETiledLayer"){
+							//do nothing to basemaps
+						}
+						else if(obj.className=="ArcGISDynamicMapServiceLayer"){
+							if(obj.visible==true){
+							obj.visible = false;
+								//(obj as ArcGISDynamicMapServiceLayer).visibleLayers.removeAll();
+							}
+						}
+						else if(obj.className=="GraphicsLayer"){
+							map.removeLayer(obj as GraphicsLayer);
+							//(obj as GraphicsLayer).clear();
+						}
+						else{
+							
+							map.removeLayer(obj);
+						}
+					//} 
+				 }
+					//}
+				// 	clear legends
+				//ViewerContainer.dispatchEvent(new AppEvent(AppEvent.All_CLOSE));
+				//AppEvent.dispatch(AppEvent.All_CLOSE);
+				// 	minimize all boxes
+				
+				
+				
+				//ViewerContainer.dispatchEvent(new AppEvent(AppEvent.WIDGET_STATE_CHANGED, data));
+				AppEvent.dispatch(AppEvent.All_CLOSE);
+				
+				//wTemplate.widgetState='closed';
+				/* var data:Object =
+					{
+						id: wTemplate.widgetId,
+							state: WidgetStates.WIDGET_CLOSED
+					};
+				AppEvent.dispatch(AppEvent.WIDGET_STATE_CHANGED, data); */
+				//	throw-out charts
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+<viewer:WidgetTemplate id="wTemplate">
+	
+	<s:VGroup horizontalAlign="center" verticalAlign="middle" height="100%" width="100%">
+		
+	
+	<s:Label paddingBottom="20" fontWeight="bold">
+		<s:text>Are you sure you want to clear the map?</s:text>
+	</s:Label>
+		
+		
+	<mx:Button icon="@Embed(source='assets/images/w_close_red.png')" paddingTop="5" paddingBottom="5" label="Yes" click="button1_clickHandler(event)"/>
+<s:BitmapImage source="assets.images.arrow.png"/>
+	</s:VGroup>	
+</viewer:WidgetTemplate>
+</viewer:BaseWidget>

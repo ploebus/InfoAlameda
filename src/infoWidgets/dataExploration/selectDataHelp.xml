@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<configuration>
+   <page name="action">
+	    <width>529</width>
+	    <height>350</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <p align='center'><font size="16"><b>Welcome to the Data Warehouse</b></font></p>
+	        <p>InfoAlameda hosts a wide array of data pertaining to Alameda County. To help you make use of it all, we have arranged the data and tools in a (hopefully) logical fashion.</p>
+			<textformat blockindent="4">	    
+	        <p><b>1. </b>To begin viewing and mapping data, you can select <b>'Create a Map'</b>- this will take you to the next screen to pick your first category.</p>
+	        <p><b>2. </b>If you have already made your first map above and you want to get creative and explore other data in combination, you can <b>'Add a Second Layer'</b>. Again, you get to narrow your options with a category on the next screen.</p>
+	        <p><b>3. </b>If you don't want a map, but prefer to build an interactive chart/graph of your data, select <b>'Make a Chart'</b>.</p> 
+	    	</textformat>
+	    	<p>As you move through the data selection process, click the help icon <img src='assets/images/i_help.png' /> to get informatin specific to the step you are on.</p>
+	    	]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	<page name="category">
+	    <width>529</width>
+	    <height>250</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <textformat indent="20">
+	        <p align='center'>
+	            <font size="16"><b> Pick a category</b></font>
+	        </p>
+	        <p>
+	          To help you find what you are searching for in our database we've grouped all the data into these categories.
+	          The details give you an indication of just what data variables are available within each category.
+	        </p>
+	        <p>Simply Click on the box of the category that interests you.</p>
+	        <p><b>Remember</b>: The ribbon of buttons above only lets you navigate backwards, so if you do not select an option on this page
+	        but rather hit the 'Pick a Subcategory' button, the tool will not let you select a subcategory.</p>
+	     	 </textformat>
+	       ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	<page name="subcategory">
+	    <width>529</width>
+	    <height>250</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <textformat indent="20">
+	        <p align='center'>
+	            <font size="16"><b> Pick a subcategory</b></font>
+	        </p>
+	        <p>Within each of our categories there are subcategories- these represent a more sensible grouping of the data elements. Here you can norrow down your field of interest to a specific disease type, economic condition or sub-population</p>
+	        <p>Simply Click on the box of the subcategory that interests you.</p>
+	        <p><b>Remember</b>: The ribbon of buttons above only lets you navigate backwards, so if you do not select an option on this page
+	        but rather hit the 'Pick a Subcategory' button, the tool will not let you select a subcategory.</p>
+	        </textformat>
+	     ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	<page name="variable">
+	    <width>529</width>
+	    <height>250</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <textformat indent="20">
+	        <p align='center'>
+	            <font size="16"><b> Pick a variable category</b></font>
+	        </p>
+	        <p><b>1. </b>To begin selecting your data click on the folder that fits your interest-sometimes there will only be one- just select the single folder in that case</p>
+	        <p><b>2. </b>Clicking the folder will open a tree of data variables available</p>
+	        <p><b>3. </b>Now you can choose a variable - click on the item</p>
+	        <p><b>4. </b>Since many of the variables are available for different geographies and years, you must select from the table the exact specs of the variable you want</p>
+	        <p><b>5. </b>When everything is selected, the blue <font color="0x0000ff">'Dispay the Data'</font> button will be active. Click this button to map or chart what you selected.</p>
+	       </textformat>
+	       <img src='assets/images/choose2.jpg'/>
+	       ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	
+</configuration>

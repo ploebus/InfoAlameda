@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			[Bindable] public var crosstabArray:ArrayCollection;
+		]]>
+	</mx:Script>
+	<mx:PlotChart id="chart1" dataProvider="{crosstabArray}" showDataTips="true" >
+		<mx:verticalAxis>
+			<mx:LinearAxis title="hello"/>
+		</mx:verticalAxis>
+		<mx:horizontalAxis>
+			<mx:LinearAxis title="goodby"/>
+		</mx:horizontalAxis>
+		<mx:series>
+			<mx:PlotSeries xField="x" yField="y" />
+		</mx:series>
+	</mx:PlotChart>
+</mx:Canvas>

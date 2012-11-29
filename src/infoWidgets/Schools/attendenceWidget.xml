@@ -1,0 +1,43 @@
+<configuration>
+	<category>Education</category>
+	<subCategory>Attendence</subCategory>
+	<variable></variable>
+	<coverage></coverage>
+	<boundary></boundary>
+	<year></year>
+	<action></action>
+	<layer>Oakland Public Schools</layer>
+	<field></field>
+	<theMap></theMap>
+	<specs></specs>
+	<dataType></dataType>
+	<variableCategory></variableCategory>
+	<alias></alias>
+	<usertip></usertip>
+	<source></source>
+	<disclaimer></disclaimer>
+	<url>http://209.119.63.162/InfoAlameda/rest/services/Projects/OaklandSchools/MapServer/0</url>
+	<confidenceInterval>0</confidenceInterval>
+	
+	<pages>
+    <page id="attendance">
+     <width>500</width>
+	    <height>400</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <p align='center'><font size="16"><b>Attendance</b></font></p><br>
+	        <textformat leftmargin="10" rightmargin="10">
+	        <p>This tool allows you to see where students reside from every public school in Oakland (more districts coming soon!).</p>
+			<p>Select the school you're interested in from the drop down list and a map will appear showing the census tracts shaded light to dark indicating the number of school students who live in each tract from the school you selected.  You can show this as a solid fill or just using the outline of each tract.  The school chosen will show as a black dot on the map - clicking on this will popup the school name.</p>
+			<p><img src="assets/images/i_selection.png" width="30" height="30"/>_______Returns you back to the select school page</p>
+			<p><img src="assets/images/i_layers.png"/>_______Take you to the legend page</p>
+			<p><img src="assets/images/i_print.png"/>_______Take you to the print page</p>
+			<p><img src="assets/images/i_piechart.png"/>_______Take you to the chart page</p>
+			</textformat>
+			]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+    </page>
+		</pages>
+</configuration>

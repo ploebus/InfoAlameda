@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<configuration>
+    <source>http://geocommons.com/search.atom</source>
+    <geosource>http://geocommons.com/datasets/</geosource>
+    <extent></extent>
+</configuration>

@@ -1,0 +1,386 @@
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+				   widgetConfigLoaded="init()"
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   xmlns:datalookup="services.datalookup.*">
+
+	<fx:Script>
+		<![CDATA[
+			import classes.IClassificationScheme;
+			import classes.equalInterval;
+			import classes.events.CustomEvents;
+			import classes.quantile;
+			import classes.thematicLegend;
+			import classes.thematicRenderer;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.components.AttributeInspector;
+			import com.esri.ags.events.FeatureLayerEvent;
+			import com.esri.ags.events.LayerEvent;
+			import com.esri.ags.geometry.Extent;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.renderers.ClassBreaksRenderer;
+			import com.esri.ags.utils.GraphicUtil;
+			import com.esri.ags.webmap.PopUpRenderer;
+			import com.esri.ags.webmap.supportClasses.PopUpInfo;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			
+			import infoWidgets.dataExploration.VO.ChartSpecs;
+			import infoWidgets.dataExploration.VO.DataObject;
+			import infoWidgets.dataExploration.chart.chartManager;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.containers.GridRow;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			
+			//MAINTAIN REFERENCE TO MAPPED LAYER
+			var selectedLayer:int;
+			var selectedBoundary:String;
+			
+			//WHAT WAS CLICKED
+			private var selectedObject:Object ={
+				'alias':null
+			};
+			
+			[Bindable] private var arrColl:ArrayCollection;
+			[Bindable] private var fieldColl:ArrayCollection;
+			[Bindable] private var linksColl:XMLListCollection;
+			[Bindable] private var dgProvider:ArrayCollection;
+			
+			private var popUpRenderer:PopUpRenderer= new PopUpRenderer();
+	
+	private function init():void
+	{
+		wTemplate.addTitlebarButton('assets/images/i_search.png',"Search",selectData);
+		wTemplate.addTitlebarButton('assets/images/i_layers.png',"Result",showFields);
+		wTemplate.addTitlebarButton('assets/images/i_legend2.png',"See resource links",showLinks);
+		wTemplate.addEventListener('closed', checkState);
+		
+		
+		
+		//LOAD WIDGET CONFIG IF AVAILABLE
+		if (configXML)
+			{
+			//labels
+			var lyrList:XMLList = configXML..layer;
+			
+			var numLayers:Number = lyrList.length();
+			arrColl = new ArrayCollection();
+			for (var i:int = 0; i < lyrList.length(); i++)
+				{
+					var tempObj:Object = {
+						"title":lyrList[i].name,
+						"description":lyrList[i].description,
+						"url":lyrList[i].url,
+						"image":lyrList[i].image,
+						"fields":lyrList[i]..field,
+						"links":lyrList[i]..link
+						
+					};
+					arrColl.addItem(tempObj);
+				}
+		
+			}
+		
+		myRepeater.addEventListener('loadLayer', loadLayer);
+	}
+	protected function showLinks():void{
+		this.currentState = "Links";
+	}
+	protected function checkState(e:Event):void{
+		wTemplate.removeEventListener('closed',checkState);
+		removeLayer_clickHandler();
+	}
+	protected function selectData():void{
+		this.currentState = "State1";
+		}
+	
+	protected function showFields():void{
+		this.currentState = "Legend";
+		}
+	
+	protected function loadLayer(evt:CustomEvents):void{
+		//clear feature layer renderer		
+		fLayer.renderer = null;
+		
+		//clear legend grid
+		if(legendGrid){
+		legendGrid.removeAllElements();
+		}
+		//layer list drop down
+		if(cbxFeatureFields){
+			cbxFeatureFields.selectedIndex = -1;
+		}
+		var tempArr:Array = new Array();
+		
+		//populate links for related articles
+		var linkArr:XMLList = evt.data.links as XMLList;
+		linksColl = new XMLListCollection(linkArr);
+		
+		//populate fields
+		var descField:String='';
+		fieldColl = new ArrayCollection();
+		
+		for each(var x:XML in evt.data.fields){
+			tempArr.push(x.@name);
+			
+			//include in popup fields
+			if(x.@popup=='true'){
+				descField += x.@alias+" {"+ x.@name +"}\n";
+				}
+			
+			//mappable layers for dropdown
+			if(x.@map=='true'){
+			var tObj:Object = {
+				'field':x.@name,
+				'alias':x.@alias
+				};
+			fieldColl.addItem(tObj);
+			}
+			//CATCH EMPTY COLLECTION
+			
+		}
+		
+		//LOOP LINKS
+		
+		
+		//Create Feature Layer
+		dgProvider = new ArrayCollection();
+		
+		//var fLayer:FeatureLayer = new FeatureLayer(evt.data.url);
+		fLayer.url = evt.data.url;
+		map.addLayer(fLayer);
+		
+		var attInspector:AttributeInspector=new AttributeInspector(fLayer.selectedFeatures);
+		//fLayer.mode = 'onDemand';
+		fLayer.outFields = tempArr;
+		var infoWindowFactory:ClassFactory = new ClassFactory(PopUpRenderer);
+		
+		
+		var pInfo:PopUpInfo = new PopUpInfo();
+			pInfo.title = evt.data.title;
+			pInfo.description = descField;
+		infoWindowFactory.properties = { popUpInfo: pInfo};
+			
+		fLayer.infoWindowRenderer = infoWindowFactory;
+		
+		//ZOOM TO LAYER	
+		fLayer.addEventListener(LayerEvent.UPDATE_END,zoomIn);
+		
+		//TAKE PERSON TO RIGHT SPOT
+		if(fieldColl.length == 0){
+			this.currentState = 'Links';
+			wTemplate.selectedTitlebarButtonIndex = 2;
+		}
+		else{
+			this.currentState = 'Legend';
+			wTemplate.selectedTitlebarButtonIndex = 1;
+		}
+		
+		//EXPAND EXTENT
+		map.extent = GraphicUtil.getGraphicsExtent(fLayer.graphicProvider as Array)
+		
+		
+	}
+
+	protected function zoomIn(evt:LayerEvent):void{
+		var ac:ArrayCollection = fLayer.graphicProvider as ArrayCollection;
+		map.extent = GraphicUtil.getGraphicsExtent(ac.toArray());
+		fLayer.removeEventListener(LayerEvent.UPDATE_END,zoomIn);
+	}
+	
+	protected function generatePopup(evt:FeatureLayerEvent):void{
+		Alert.show("hello");
+		
+		//map.infoWindow.show(evt.
+	}
+	
+	
+
+	protected function localDataFeatures_selectionCompleteHandler(event:FeatureLayerEvent):void
+		{
+			var att:AttributeInspector = new AttributeInspector(event.features);
+				map.infoWindow.label = "hello";
+				map.infoWindow.content = att;
+			
+		}
+		
+	protected function mapThis_clickHandler(event:MouseEvent):void
+		{
+			
+			var tempArr:Array = fLayer.graphicProvider.source;
+			//PRESERVE FIELD & Booundary
+			var selectedField:String = cbxFeatureFields.selectedItem.field;
+			
+			
+			var classification:IClassificationScheme = new quantile(tempArr,5,selectedField);
+			var rangeArr:Array = classification.getRanges();
+			//Alert.show(rangeArr.toString());
+			
+			var themeRenderer:thematicRenderer = new thematicRenderer(5, selectedField,rangeArr,"green");
+				fLayer.renderer = themeRenderer.getRenderer();
+				fLayer.refresh();
+			
+			var themeLegend:thematicLegend = new thematicLegend("thematic");
+				legendGrid.removeAllElements();
+			for each (var item:GridRow in themeLegend.getLegend((fLayer.renderer as ClassBreaksRenderer).infos)){
+				legendGrid.addElement(item);
+			}
+			
+			dgProvider = extractAttributesFromFeatures(ArrayCollection(fLayer.graphicProvider).toArray());
+			trace('hello');
+		}
+	protected function chartLayer_clickHandler(event:MouseEvent):void
+		{
+		var featureSet:FeatureSet = new FeatureSet(ArrayCollection(fLayer.graphicProvider).toArray());
+		AppEvent.dispatch(AppEvent.WIDGET_RUN,2);
+		
+		var chartSpecs:ChartSpecs = new ChartSpecs();
+			chartSpecs.field = cbxFeatureFields.selectedItem.field;
+			chartSpecs.alias = cbxFeatureFields.selectedItem.alias;
+			chartSpecs.boundary = 'CommunityPoliceBeats';
+			//chartSpecs.boundary = 
+		
+			var dataObj:Object={
+			'features':featureSet,
+			'specs':chartSpecs,
+			'theUrl':fLayer.url
+			};
+		
+		var obj:Object={
+			'key':'chart',
+			'collection':dataObj
+		};
+			
+		//STORE RESULTS IN DATAMANAGER
+		AppEvent.dispatch(AppEvent.DATA_PUBLISH,obj);
+			
+			//var tempChartManager:chartManager = new chartManager(obj,map);
+				
+			//var dataO:DataObject=new DataObject();
+				//dataO=_specs as DataObject;
+			//var ChartManager:chartManager=new chartManager(_specs,map);
+		}
+			
+			protected function mapTransparency_changeHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				fLayer.alpha = mapTransparency.value;
+			}
+			
+			protected function removeLayer_clickHandler(event:MouseEvent=null):void
+			{
+				// REMOVE GRAPHIC
+				
+				map.removeLayer(map.getLayer('fLayer'));
+				
+				this.currentState = 'State1';
+				wTemplate.selectedTitlebarButtonIndex = 0;
+			}
+			
+			protected function extractAttributesFromFeatures(features:Array):ArrayCollection {
+				var f:ArrayCollection = new ArrayCollection();
+				var g:Graphic;
+				for each (g in features) {
+					f.addItem(g.attributes);
+				}
+				return f;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<viewer:states>
+		<s:State name="State1"/>
+		<s:State name="Legend"/>
+		<s:State name="Links"/>
+	</viewer:states>
+	
+	<fx:Declarations>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		<s:CallResponder id="localdataResult2"/>
+		<esri:FeatureLayer id="fLayer" name="Local Data Features" 
+						   mode="snapshot" selectionComplete="localDataFeatures_selectionCompleteHandler(event)"/>
+			
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+	</fx:Declarations>
+	
+	
+	
+	
+	<viewer:WidgetTemplate id="wTemplate" width="400" height="400">
+		<viewer:layout>
+			<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+		</viewer:layout>
+		<s:Group includeIn="State1">
+			<s:DataGroup id="myRepeater" itemRenderer="infoWidgets.localData.LocalDataRenderer" 
+						 width="100%" height="100%" 
+						 dataProvider="{arrColl}">
+				<s:layout>
+					<s:TileLayout/>
+				</s:layout>
+			</s:DataGroup>
+		</s:Group>
+		
+		<!--SECOND STATE-->
+		<s:Group includeIn="Legend" width="100%">
+			<s:layout>
+				<s:VerticalLayout gap="10" horizontalAlign="center" paddingBottom="5" paddingLeft="5"
+								  paddingRight="5" paddingTop="5" verticalAlign="top"/>
+			</s:layout>
+			<mx:HRule/>
+			<s:Label includeIn="Legend" fontSize="16" fontWeight="bold" text="Select a Field to Map (not all layers have mappable data)"/>
+			
+			<s:ComboBox id="cbxFeatureFields" width="230" color="#333333"
+						contentBackgroundColor="#FFFFFF" dataProvider="{fieldColl}" fontSize="14"
+						labelField="alias"/>
+			<s:Button id="mapThis" label="Map This" chromeColor="#336D8E"
+					  click="mapThis_clickHandler(event)" color="#FFFFFF" enabled="true"
+					  fontSize="14"/> 
+			<mx:HRule/>
+			<mx:Grid id="legendGrid" width="100%" maxWidth.Legend="500" height="100%">
+				
+			</mx:Grid>
+			<s:Label text="Adjust Transparency"/>
+			<s:HSlider id="mapTransparency" includeIn="Legend" width="237"
+					   change="mapTransparency_changeHandler(event)" maximum="1" stepSize=".1" value="1"/>
+			<s:HGroup>
+				<s:Button id="removeLayer" label="Remove Layer" click="removeLayer_clickHandler(event)"/>
+				<!--<s:Button id="chartLayer" label="Chart Data" click="chartLayer_clickHandler(event)"/>-->
+			</s:HGroup>	
+		</s:Group>
+		
+		<!--THIRD STATE-->
+		
+			
+			<s:BorderContainer includeIn="Links" width.Links="100%" height.Links="100%">
+				<s:layout>
+					<s:VerticalLayout gap="10" horizontalAlign="center" paddingBottom="5" paddingLeft="5"
+									  paddingRight="5" paddingTop="5" verticalAlign="top"/>
+				</s:layout>
+				
+				<s:Label fontSize="16" color.Links="#333333" fontWeight="bold" text="Here are links to the reports and/or the project website"/>
+				<mx:HRule/>
+				<s:List dataProvider="{linksColl}" width.Links="600" itemRenderer="infoWidgets.localData.LinkListRenderer"
+					 borderVisible="false" contentBackgroundAlpha="0">
+				<s:layout>
+					<s:VerticalLayout gap="5"/>
+				</s:layout>
+				</s:List>
+			</s:BorderContainer>
+		
+		
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>
+

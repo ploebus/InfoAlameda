@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="300"
+		 >
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			import spark.events.GridEvent;
+	
+			
+			[Bindable] public var theData:ArrayCollection;
+			
+			protected function myDataGrid_selectionChangeHandler(event:GridEvent):void
+			{
+				// Pass Event Along
+				var gridEvent:GridEvent = new GridEvent(GridEvent.GRID_CLICK,true,true);
+				gridEvent.item = event.item;
+				dispatchEvent(gridEvent);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:DataGrid id="myDataGrid" height="100%" borderVisible="false" color="#333333"
+				contentBackgroundAlpha="0" dataProvider="{theData}" fontFamily="Verdana"
+				fontSize="12" gridClick="myDataGrid_selectionChangeHandler(event)"
+				textAlign="center" verticalScrollPolicy="on">
+		<s:columns>
+			<s:ArrayList>
+				<s:GridColumn width="350" dataField="Name" headerText="Variable"></s:GridColumn>
+				<s:GridColumn width="100" dataField="Value" headerText="Value"></s:GridColumn>
+				<s:GridColumn width="100" dataField="Year" headerText="Year"></s:GridColumn>
+			</s:ArrayList>
+		</s:columns>
+		
+	</s:DataGrid>
+</s:Group>

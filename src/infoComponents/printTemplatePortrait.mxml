@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="640" height="792" 
+		 initialize="group1_initializeHandler(event)" xmlns:esri="http://www.esri.com/2008/ags"
+		  creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.Map;
+			
+			import flash.display.Bitmap;
+			
+			import mx.containers.VBox;
+			import mx.controls.SWFLoader;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			public var theMap:Bitmap;
+			
+			public var theLegend:Bitmap;
+			public var theLegend2:Bitmap;
+			
+			[Bindable]
+			public var theTitle:String;
+			
+			[Bindable]
+			public var theSubTitle:String;[Bindable]
+			
+			[Bindable]
+			public var theLegend1:VBox;
+			
+			
+			
+			[Bindable]
+			public var theDescription:String;
+
+			protected function group1_initializeHandler(event:FlexEvent):void
+			{
+				// TODO Put stuff in each container box
+			}
+
+
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+			 	var loader:SWFLoader=new SWFLoader();
+					loader.source=theMap;
+					mapBox.addElement(loader);
+				
+				var loader1:SWFLoader=new SWFLoader();
+					loader1.source=theLegend;
+					//mapBox.addElement(loader1);
+					legend1.addElement(loader1);
+				if(theLegend2){
+					var loader2:SWFLoader=new SWFLoader();
+						loader2.source=theLegend2;
+						legend2.addElement(loader2);
+				}
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="640" height="782">
+		
+			<s:TextInput x="10" y="10" text="Title" fontSize="18" width="639" textAlign="center" height="30"/>
+			<s:TextInput text="SubTitle" height="24" fontSize="14" width="640" textAlign="center"/>
+			<s:BorderContainer x="10" y="95" id="mapBox" width="100%" height="100%">
+					<!--<s:Label x="301" y="36" text="Map"/>
+					<s:Label x="158" y="97" text="Width:" color="#333333"/>
+					<s:Label x="157" y="123" text="Height:" color="#333333"/>
+					<s:Label x="245" y="94" text="{mapBox.width}" color="#333333"/>
+					<s:Label x="244" y="121" text="{mapBox.height}" color="#333333"/>-->
+			</s:BorderContainer>
+			<s:HGroup x="10" y="615" width="637" height="167" id="legendBox" contentBackgroundColor="#FFFFFF">
+					<s:BorderContainer width="192" height="165" id="legend1">
+							<!--<s:Label x="69" y="10" text="Legend 1"/>-->
+					</s:BorderContainer>
+					
+					<s:BorderContainer width="192" height="165" id="legend2">
+							<s:Label x="79" y="10" text="Legend 2"/>
+					</s:BorderContainer>
+					
+					<s:BorderContainer width="242" height="165">
+							<s:Label x="111" y="5" text="Text"/>
+					</s:BorderContainer>
+			</s:HGroup>
+		
+	
+
+	
+	
+		
+	</s:VGroup>
+</s:Group>

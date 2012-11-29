@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<configuration>
+    <title>{Site}</title>
+    <description>
+        <![CDATA[	
+        	{ALIAS}
+			{ADDRESS_1}
+			{CITY}, {STATE} {ZIP_CODE}
+			{CATEGORY}, {CNTRL_CTGY}
+       ]]>
+    </description>
+    <fields>
+				<field name="ALIAS"/>
+        <field name="ADDRESS"/>
+        <field name="CITY"/>
+				<field name="STATE"/>
+        <field name="ZIP_CODE"/>
+				<field name="CATEGORY"/>
+				<field name="CNTRL_CTGY"/>
+     </fields>
+    <showattachments>true</showattachments>
+</configuration>

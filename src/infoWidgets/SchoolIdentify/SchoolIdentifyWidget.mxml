@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*" 
+				   layout="absolute" xmlns:esri="http://www.esri.com/2008/ags"
+				   widgetConfigLoaded="basewidget1_widgetConfigLoadedHandler(event)"
+				   creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.WebMercatorMapPoint;
+			import com.esri.ags.layers.supportClasses.FeatureCollection;
+			import com.esri.serialization.json.JSON;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			
+			import infoWidgets.SchoolIdentify.renderers.schoolInfoWindowRenderer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.effects.AnimateFilter;
+			import spark.events.IndexChangeEvent;
+			import spark.filters.GlowFilter;
+			
+			[Bindable] private var SchoolDistrict:ArrayCollection;
+			
+			[Bindable] private var Schools:ArrayCollection;
+			
+			[Bindable] private var resultCollection:ArrayCollection;
+			
+			//HELP MENU
+			private var yearObject:Object;
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSource:String;
+			private var buttonIndex:int;
+			private var dataModel:StatisticModel;
+			public static const STARTURL:String = "http://209.119.63.162/InfoAlameda/rest/services/Projects/AlamedaSchools/MapServer/0/query?text=&geometry=&geometryType=esriGeometryPoint&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&objectIds=&where=District+like+%27%25%27&time=&returnIdsOnly=false&returnGeometry=false&maxAllowableOffset=&outSR=&outFields=*&f=json";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				dataModel = StatisticModel.getInstance();
+				
+				//LOAD DATA MODEL
+				
+				
+				//ADD TITLEBAR BUTTONS
+				wTemplate.addTitlebarButton("assets/images/i_selection.png","Choose a School", changeStates);
+				wTemplate.addTitlebarButton('assets/images/edit_attributes.png',"See Results",gotoResults);
+				wTemplate.addTitlebarButton("assets/images/i_help.png","Help for this tool", showHelp);
+				
+				getData.url = SchoolIdentifyWidget.STARTURL;
+				map.addEventListener(CustomEvents.SCHOOL_EVENT, openInfoWindow);
+				
+				schoolFeatures.addEventListener(CustomEvents.SCHOOL_EVENT, openInfoWindow);
+							
+				wTemplate.addEventListener('closed', checkState);
+				getData.send();
+				
+			}
+			
+			protected function showHelp():void{
+				if(configXML.pages.page){
+					content = configXML.pages.page.content || "";
+					btnLabel = configXML.pages.page.btnlabel || "OK";
+					txtareaWidth = configXML.pages.page.width || 500;
+					txtareaHeight = configXML.pages.page.height || 500;
+					videoSource = configXML.pages.page.video || "none";
+					//change icon line back to selected state.
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSource) as HTMLHelpPopup;
+					hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+				}
+			}
+			
+			protected function doThis(e:Event):void{
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+			}
+			
+			protected function gotoResults():void{
+				this.currentState = "results";
+			}
+			protected function checkState(evt:Event):void{
+				if(showLayer.selected){
+				map.removeLayer(map.getLayer("schoolFeatures"));
+				};
+				map.removeLayer(map.getLayer("schoolGraphics"));
+			}
+			protected function httpservice1_resultHandler(event:ResultEvent):void
+			{
+				var tObj:Object = JSON.decode(event.result as String);
+				Schools = new ArrayCollection();
+				var tempArr:Array = new Array();
+				for each (var obj:Object in tObj.features){
+					if (tempArr.indexOf(obj.attributes.District)== -1){
+						tempArr.push(obj.attributes.District)
+					}
+					Schools.addItem(obj.attributes);
+				}
+				SchoolDistrict = new ArrayCollection(tempArr);
+			}
+			
+			protected function cbxSchoolDistrict_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				Schools.filterFunction = filterSchoolCollection;
+				Schools.refresh();
+			}
+			
+			protected function filterSchoolCollection(item:Object):Boolean{
+				var filterString:String = cbxSchoolDistrict.selectedItem;
+				var itemName:String = (item.District as String);
+				//var searchString:String = myTextInput.text.toLowerCase();
+				//var itemName:String = (item.product as String).toLowerCase();
+				return itemName.indexOf(filterString) > -1;
+			}
+			
+			protected function cbxSchool_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				map.removeLayer(map.getLayer("schoolGraphics"));
+				var mp:WebMercatorMapPoint = new WebMercatorMapPoint( cbxSchool.selectedItem.X, cbxSchool.selectedItem.Y)
+				
+				//center and zoom at school
+				map.centerAt(mp);
+				map.level = 17;
+				
+				//create school house graphic
+				var gr:Graphic = new Graphic(mp,symSchool,cbxSchool.selectedItem);
+					//gr.infoWindowRenderer = new ClassFactory(schoolInfoWindowRenderer);
+					gr.toolTip = cbxSchool.selectedItem.School;
+					
+								
+				var data:Object = (gr as Graphic).attributes;
+				var myEvent:CustomEvents = new CustomEvents(CustomEvents.SCHOOL_EVENT,data,true,true);
+				map.dispatchEvent(myEvent);
+				
+				schoolGraphics.clear();
+				schoolGraphics.add(gr);
+				//Alert.show("first here");
+				map.addLayer(schoolGraphics);
+				
+				map.addEventListener(Event.CLOSE, changeStates);
+			}
+			
+			protected function changeStates(evt:Event=null):void{
+				this.currentState = "State1";
+				wTemplate.width = 400;
+			}
+			protected function openInfoWindow(evt:CustomEvents):void{
+				//Alert.show("now here");
+				evt.stopPropagation();
+				trace(evt.target);
+				this.currentState = "results";
+				wTemplate.selectedTitlebarButtonIndex = 1;
+				resultCollection = new ArrayCollection();
+				resultCollection.addItem(evt.data);
+				
+			}
+			
+			protected function showLayer_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (showLayer.selected){
+					map.addLayer(schoolFeatures);
+				}
+				else{
+					map.removeLayer(map.getLayer("schoolFeatures"));
+				}
+				
+			}
+			
+			
+			protected function basewidget1_widgetConfigLoadedHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				if(configXML){
+					dataModel.countyDemographics = configXML..stat;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="State1"/>
+		<s:State name="results"/>
+	</viewer:states>
+	<viewer:transitions>
+		<s:Transition fromState="*" toState="*">
+				<s:Resize target="{wTemplate}" duration="500"/>
+		</s:Transition>
+	</viewer:transitions>
+	<fx:Declarations>
+		
+		<s:HTTPService id="getData" url="proxy.php?url=http://209.119.63.162/InfoAlameda/rest/services/Projects/AlamedaSchools/MapServer/0/query?"
+					   resultFormat="text" result="httpservice1_resultHandler(event)"  />
+	
+		<esri:GraphicsLayer id="schoolGraphics"/>
+		
+		<esri:FeatureLayer id="schoolFeatures" outFields="*" name="Schools in Identification Tool"
+						   infoWindowRenderer="infoWidgets.SchoolIdentify.renderers.schoolInfoWindowRenderer" 
+						   url="http://209.119.63.162/InfoAlameda/rest/services/Projects/AlamedaSchools/MapServer/0" />
+		<esri:PictureMarkerSymbol id="symSchool" source="assets/images/i_pin2.png"/>
+	</fx:Declarations>
+	<viewer:WidgetTemplate id="wTemplate"
+						   width.results="800" height.results="550"
+						   width.State1="500" height.State1="400"
+						   >
+				
+		<s:VGroup width="100%" height="100%"
+				  horizontalAlign="center" verticalAlign="middle" 
+				  paddingBottom="5" paddingTop="10"
+				  textAlign="center">
+			<s:BorderContainer width="98%" height="98%" cornerRadius="10">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" />
+				</s:layout>
+			
+			<s:Image includeIn="State1" width="105" height="105" source="assets/images/school.png"/>
+			<s:Label includeIn="State1" height="28" color="#333333" fontSize="18"
+					 text="Alameda County Public School Finder" verticalAlign="middle"/>
+			
+				<mx:HRule includeIn="State1" width="283" height="3"/>
+			<s:Label includeIn="State1" x="120" y="156" color="#333333" fontSize="14"
+					 fontWeight="bold" text="First, select a school district"/>
+			<s:ComboBox id="cbxSchoolDistrict" includeIn="State1" x="26" y="177" width="348"
+						height="35" change="cbxSchoolDistrict_changeHandler(event)" color="#333333"
+						contentBackgroundAlpha="1.0" contentBackgroundColor="#FFFFFF"
+						dataProvider="{SchoolDistrict}" fontSize="14" labelField="District"
+						rollOverColor="#CEDBEF"/>
+			<s:Label includeIn="State1" x="118" y="220" color="#333333" fontSize="14"
+					 fontWeight="bold" text="Now, select which school"/>
+			<s:ComboBox id="cbxSchool" includeIn="State1" x="25" y="242" width="351" height="34"
+						change="cbxSchool_changeHandler(event)" color="#333333"
+						contentBackgroundAlpha="1.0" contentBackgroundColor="#FFFFFF"
+						dataProvider="{Schools}" fontSize="14" labelField="School"
+						rollOverColor="#CEDBEF"/>
+			<s:CheckBox id="showLayer" includeIn="State1" label="Show All Schools"
+						click="showLayer_clickHandler(event)" color="#333333"/>
+			<s:List id="schoolsDataList" includeIn="results" y="56" width="98%" borderVisible="false"
+					contentBackgroundAlpha="0.0" dataProvider="{resultCollection}"
+					itemRenderer="infoWidgets.SchoolIdentify.renderers.schoolsDataListRenderer">
+				
+			</s:List>
+			</s:BorderContainer>
+		</s:VGroup>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

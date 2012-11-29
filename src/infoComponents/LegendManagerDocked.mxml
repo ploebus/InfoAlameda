@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx			="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s			="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx			="library://ns.adobe.com/flex/mx" 
+		 xmlns:esri			="http://www.esri.com/2008/ags" 
+		 xmlns:viewer		="com.esri.viewer.*"
+		 xmlns:code			="http://code.google.com/p/flexlib/"
+		 xmlns:usc			="infoComponents.*" 
+		 creationComplete="init()"
+		 width="100%" height="100%"  height.collapsed="768" width.collapsed="1024" width.maximized="1024" height.maximized="768">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace esri "http://www.esri.com/2008/ags";
+		@namespace viewer "com.esri.viewer.*";
+		@namespace code "http://code.google.com/p/flexlib/";
+		@namespace usc "infoComponents.*";
+		
+		.scrollbar {
+			up-arrow-skin:	ClassReference(null);
+			trackSkin:	ClassReference("assets.skins.TrackSkin");
+		}
+		
+		
+	</fx:Style>
+	<fx:Script>
+	
+		<![CDATA[
+			import classes.*;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Map;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.tasks.QueryTask;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			
+			import flash.events.*;
+			
+			import infoComponents.*;
+			
+			import mx.charts.events.ChartItemEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.rpc.AsyncResponder;
+			import mx.utils.ObjectUtil;
+			
+			[Bindable]
+			public var map:Map;
+			private static const URLSTART:String="http://67.91.201.5/infoalameda/rest/services";
+			private static const WIDGET_MINIMIZED:String = "widgetMinimized";
+			[Bindable]
+			[Embed(source="assets/images/i_globe.png")]
+			private var Globe:Class;
+			
+			[Bindable]
+			[Embed(source="assets/images/i_piechart.png")]
+			private var Piechart:Class;
+			
+			[Bindable]
+			private var qt:QueryTask;
+			
+			private function init():void
+			{
+				//ViewerContainer.addEventListener(AppEvent.LEGEND_CREATED,createLegend);
+				ViewerContainer.addEventListener(AppEvent.CHART_CREATED,createChart);
+				ViewerContainer.addEventListener(AppEvent.COMPARISON_CHART_CREATED,createComparisonChart);
+				ViewerContainer.addEventListener(AppEvent.SUMMARY_CREATED,createSummary);
+				
+			}
+			
+			private function mapThis(event:ChartItemEvent):void{
+				Alert.show("hello");
+			}
+			
+			private function createSummary(evt:AppEvent):void{
+				//Alert.show(ObjectUtil.toString(evt.data));
+				var theBox:VBox=new VBox();
+				theBox.label="Selected Tracts Summary";
+				var SummaryDetail:summaryDetail=new summaryDetail();
+				SummaryDetail.mainData=evt.data as XML;
+				SummaryDetail.title="Selected Tracts Summary";
+				theBox.addChild(SummaryDetail);
+				summaryData.addChild(theBox);
+			}
+			private function createChart(evt:AppEvent):void{
+				
+				var e:Object=new Object;
+				e=evt.data;
+				map=e.theMap;
+				var queryTask:QueryTask=new QueryTask(URLSTART+"/"+e.boundary+"/MapServer/"+e.layer);
+				var query2:Query=new Query();
+				query2.outFields=[e.boundary,e.field];
+				query2.returnGeometry=false;
+				query2.where="OBJECTID<>0";
+				
+				queryTask.execute(query2,new AsyncResponder( onResult, null ));
+				
+				function onResult(featureSet:FeatureSet,token:Object=null):void
+				{
+					var chartVBox:VBox=new VBox();
+					chartVBox.label=e.variable+" by "+e.boundary;
+					
+					//create the container
+					var thisChartPanel:chartTemplate1=new chartTemplate1();
+					thisChartPanel.addEventListener("highlightMap",highlighter);
+					//thisChartPanel.widgetTitle=e.label+" by "+e.boundary;
+					
+					chartVBox.addChild(thisChartPanel);
+					
+					//this class creates objects for the container
+					var thisChart:LegendChart=new LegendChart(featureSet as Object,e as Object);
+					thisChart.createChart();
+					chartVBox.icon=Piechart;
+					//thisChartPanel.addEventListener("customizeChart",customizer);
+					summaryData.addChild(chartVBox);
+					thisChartPanel.addEventListener(FlexEvent.CREATION_COMPLETE,addChart)	
+					
+					function addChart():void{
+						thisChartPanel.chart.addChild(thisChart.getChart());
+						thisChart.createDataGrid();
+						thisChartPanel.grid.addChild(thisChart.getDataGrid());
+						
+						
+					}
+					//multi-purpose container; add tab
+					
+					
+					//move to chart customization
+					function customizer(evt:Event):void
+					{
+						var chartBuilder:CustomizeChart=new CustomizeChart();
+						chartBuilder.theChart=thisChart;			
+						chartVBox.parentApplication.addChild(chartBuilder);
+					};
+					//var bytes:ByteArray=imageSaving.getPNG(chart);
+					//var file1:FileReference=new FileReference();
+					//file1.save(bytes,"test.png");
+					
+					
+					
+					
+					function onFault(info:Object,token:Object=null):void
+					{
+						Alert.show(info.toString(),"Oops");
+					}
+					
+				}
+			}
+			
+			private function highlighter(e:Event):void{
+				var theData:Object=ObjectUtil.getClassInfo(e.target.data);
+				
+				qt=new QueryTask();
+				
+				var summaryMap:Object={
+					"Cities":0,
+					"County":1,
+					"SchoolDistricts":2,
+					"Tracts":8,
+					"VotingPrecincts":3,
+					"ZipCodes05":4,
+					"Blocks":5,
+					"ZipCodes":6,
+					"BlockGroups":7,
+					"PoliceBeats":9
+				};
+				
+				
+				qt.url=URLSTART+"/Summary/MapServer/"+summaryMap[theData.properties[1].localName];
+				
+				//test
+				/* if(newLayer){map.removeLayer(newLayer);}
+				var newLayer:ArcGISDynamicMapServiceLayer=new ArcGISDynamicMapServiceLayer("http://infogis/InfoAlameda/rest/services/Summary/MapServer/6");
+				newLayer.layerDefinitions=["Tracts=40200"];
+				map.addLayer(newLayer); */
+				//end test
+				
+				var qry:Query=new Query();
+				qry.returnGeometry=true;
+				qry.outFields=["*"];
+				
+				qry.where=theData.properties[1].localName+" = '"+e.target.data[theData.properties[1].localName]+"'";
+				
+				qt.execute(qry,new AsyncResponder(onResult,onFault));
+				//var newLayer:FeatureLayer=new FeatureLayer("http://infogis/InfoAlameda/rest/services/Summary/MapServer/"+summaryMap[theData.properties[1].localName]);
+				//newLayer.definitionExpression=[theData.properties[1].localName+"= "+e.target.data[theData.properties[1].localName]];
+				//map.addLayer(newLayer);
+			}
+			
+			
+			private function onResult(ft:FeatureSet,token:Object=null):void{
+				
+				if(clickLayer){map.removeLayer(clickLayer);} 
+				map.addLayer(clickLayer);
+				// map.centerAt(ft.features[0].geometry.extent.center);
+				map.extent=ft.features[0].geometry.extent; 
+			}
+			
+			private function onFault(info:Object,token:Object=null):void{
+				Alert.show(info.toString(),"Oops");
+			}
+			
+			private function reshuffleChartBox(evt:Event):void{
+				summaryData.removeChild(evt.currentTarget as DisplayObject);
+			}
+			
+			
+			private function createComparisonChart(evt:AppEvent):void{
+				var comparisonChartVBox:VBox=new VBox();
+				var comparisonChart:comparisonPlotChart=new comparisonPlotChart();
+				comparisonChart.crosstabArray=evt.data as ArrayCollection;
+				comparisonChartVBox.addChild(comparisonChart);
+				summaryData.addChild(comparisonChartVBox);
+			}
+			private function createLegend(e:AppEvent):void
+			{
+				if(legendBox.numChildren>0)
+				{
+					var t:DisplayObject=legendBox.getChildByName(e.data.box);
+					if(t){
+						legendBox.removeChild(t);
+					}
+				}
+				var hello:Legend=new Legend();
+					hello.visible=true;
+					hello.specs=e.data.specs;
+					hello.name=e.data.box;
+					hello.variableSelected=e.data.alias;
+					hello.theGraphic=e.data.graphics;
+					hello.objectName=e.data.box;
+					hello._mapObject=e.data.features as mapLegend;
+				if(hello.classificationScheme){
+					hello.classificationScheme.selectedItem=e.data.features.classificationscheme;
+				}
+				
+				
+				if(hello.objectName=="thismapLegend")
+				{
+					legendBox.addChildAt(hello as DisplayObject,0);
+				}
+				else
+				{
+					legendBox.addChildAt(hello as DisplayObject,1);	
+				}
+				
+				hello.addEventListener(Event.CLOSE,function(event:Event):void
+				{
+					var num:int=legendBox.getChildIndex(event.currentTarget.toString())
+					legendBox.removeChildAt(num);
+				}
+				);
+				//summaryData.selectedIndex=0;
+				
+			}
+			private function removeTile(event:Event):void{
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="collapsed"/>
+		<s:State name="maximized"/>
+	</s:states>
+	
+	<s:transitions>
+		<s:Transition id="trans" fromState="*" toState="*">
+			<s:Move duration="500"/>
+		</s:Transition>
+		
+	</s:transitions>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:Move id="hideEffect" xTo="-500"/>
+		<s:Move id="showEffect" xFrom="500"/>
+		<esri:SimpleFillSymbol id="selectedSymbol">
+			<esri:SimpleLineSymbol style="solid" color="0xff0000" width="3"/>
+		</esri:SimpleFillSymbol>
+	</fx:Declarations>
+
+	<esri:GraphicsLayer id="clickLayer" symbol="{selectedSymbol}" graphicProvider="{qt.executeLastResult.features}"/>
+	
+		
+		<s:BorderContainer  styleName="BannerCanvas" id="vbox1" height="111" y.collapsed="492" dropShadowVisible.collapsed="true" height.collapsed="70" cornerRadius.collapsed="0" width.maximized="27" width.collapsed="25" y.maximized="377" height.maximized="65" x.maximized="689" backgroundColor.maximized="#C6C4C4" cornerRadius.maximized="0" x.collapsed="0">
+			<mx:Image id="btnExpand" alpha="0.9" source="assets/images/w_expand.png"  click="{currentState='maximized'}" useHandCursor="true" buttonMode="true"  x="-1" y="10" includeIn="collapsed"/>
+			<mx:Image id="btnCollapse" alpha="0.9" source="assets/images/w_collapse.png" click="{currentState='collapsed'}" useHandCursor="true" buttonMode="true" x="3" y="10" includeIn="maximized"/>
+			<!--<mx:Image id="btnUp" alpha="0.9" source="assets/images/w_up.png" click="{currentState='upHigh'}" useHandCursor="true" buttonMode="true"/>
+			<mx:Image id="btnDown" alpha="0.9" source="assets/images/w_down.png" click="{currentState='downLow'}" useHandCursor="true" buttonMode="true"/>-->
+		</s:BorderContainer>
+		<s:BorderContainer x="0" y="377" height="388" width="684" dropShadowVisible="true" contentBackgroundAlpha="0.6" includeIn="maximized">
+			
+		<code:FlowBox id="summaryData" direction="horizontal" width="100%" height="100%" creationPolicy="all">
+			<mx:VBox label="Map Legends" color="0x000000" height="100%" icon="{Globe}" id="legends" hideEffect="{hideEffect}" showEffect="{showEffect}" borderVisible="false">
+				<mx:Tile id="legendBox" color="0x000000"  label="Map Legends"  direction="horizontal" horizontalAlign="left" paddingRight="30" verticalScrollPolicy="off" horizontalScrollPolicy="off" borderVisible="false">
+				</mx:Tile>
+			</mx:VBox>
+		</code:FlowBox>
+		<!--<code:SuperTabNavigator id="summaryData" styleName="scrollbar" color="0x000000" height="100%" resizeToContent="true" dropShadowVisible="false" cornerRadius="5" creationPolicy="all"  borderVisible="false">
+			<mx:VBox label="Map Legends" color="0x000000" height="100%" icon="{Globe}" id="legends" hideEffect="{hideEffect}" showEffect="{showEffect}" borderVisible="false">
+				<mx:Tile id="legendBox" color="0x000000"  label="Map Legends"  direction="horizontal" horizontalAlign="left" paddingRight="30" verticalScrollPolicy="off" horizontalScrollPolicy="off" borderVisible="false">
+				</mx:Tile>
+			</mx:VBox>
+		</code:SuperTabNavigator>-->
+		</s:BorderContainer>
+	
+</s:Group>

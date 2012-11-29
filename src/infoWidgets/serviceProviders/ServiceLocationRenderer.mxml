@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" label="Open 211">
+	<mx:VBox label="Open 211">
+		
+	
+		
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center"/>
+	</s:layout>
+		
+	<s:Label text="{data.name}" color="0x000000" x="162" y="10" width="404" height="47" textAlign="center" fontSize="16" verticalAlign="middle"/>
+	<s:Label text="{data.address}" color="0x000000" width="275" height="14" verticalAlign="middle"/>
+	<s:Label text="{data.city}" color="0x000000" width="275" height="14" verticalAlign="middle"/>
+	<s:Label text="{data.zip}" color="0x000000" width="275" height="14" verticalAlign="middle"/>
+	<s:Label text="{data.phone}" color="0x000000" width="275" height="14" verticalAlign="middle"/>
+	<s:Label text="{data.email}" color="0x000000" width="275" height="14" verticalAlign="middle"/>
+	</mx:VBox>
+</s:ItemRenderer>

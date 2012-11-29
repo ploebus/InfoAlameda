@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+			 initialize="itemrenderer1_initializeHandler(event)"
+				autoDrawBackground="false" width="385" height="133"
+			    >
+	<s:layout>
+		<s:HorizontalLayout verticalAlign="middle" />       
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.Graphic;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.events.DrawEvent;
+			import com.esri.ags.geometry.Geometry;
+			
+			import mx.events.FlexEvent;
+			
+			protected function itemrenderer1_initializeHandler(event:FlexEvent):void
+			{
+				trace("hello");
+				/* if (configXML)
+				{
+					//labels
+					graphicalsearchLabel = configXML.labels.graphicalsearchlabel || "Graphical search";
+					textsearchLabel = configXML.labels.textsearchlabel || "Text search";
+					resultsLabel = configXML.labels.resultslabel || "Results";
+					layerLabel = configXML.labels.layerlabel || "Search layer:";
+					nolayerLabel = configXML.labels.nolayerlabel || "No search layer defined.";
+					submitLabel = configXML.labels.submitlabel || "Search";
+					pointLabel = configXML.labels.pointlabel || "Select by point";
+					lineLabel = configXML.labels.linelabel || "Select by line";
+					rectangleLabel = configXML.labels.rectanglelabel || "Select by rectangle";
+					polygonLabel = configXML.labels.polygonlabel || "Select by polygon";
+					clearLabel = configXML.labels.clearlabel || "Clear";
+					loadingLabel = configXML.labels.loadinglabel || "Loading...";
+					selectionLabel = configXML.labels.selectionlabel || "Features selected:";
+					
+					// infoUrl
+					infoUrl = configXML.info;
+					
+					configSearchGraphical = [];
+					configSearchText = [];
+					var lyrList:XMLList = configXML..layer;
+					for (var i:Number = 0; i < lyrList.length(); i++)
+					{
+						var lyrURL:String = lyrList[i].url;
+						var lyrLabel:String = lyrList[i].name;
+						var lyrTextLabel:String = lyrList[i].textsearchlabel;
+						var lyrGraphicalLabel:String = lyrList[i].graphicalsearchlabel;
+						var lyrExpr:String = lyrList[i].expression;
+						var lyrFields:XMLList = lyrList[i].fields;
+						var lyrTitleField:String = lyrList[i].titlefield;
+						var lyrLinkField:String = lyrList[i].linkfield;
+						var useProxy:Boolean = lyrList[i].useproxy[0] && lyrList.useproxy == "true";
+						var searchLayer:Object =
+							{
+								url: lyrURL,
+								label: lyrLabel,
+								textlabel: lyrTextLabel,
+								graphicallabel: lyrGraphicalLabel,
+								expr: lyrExpr,
+								fields: lyrFields,
+								titlefield: lyrTitleField,
+								linkfield: lyrLinkField,
+								useproxy: useProxy
+							};
+						configSearchGraphical.push(searchLayer);
+						if (lyrExpr)
+						{
+							configSearchText.push(searchLayer);
+						}
+					}
+				} */
+			}
+			
+			private function changeState(e:MouseEvent):void{
+				mapView.visible=false;
+				mapView_Close.visible=true;
+			}
+			
+			private function changeState1(e:MouseEvent):void{
+				mapView.visible=true;
+				mapView_Close.visible=false;
+			}
+		
+			
+/* 			private function activateDrawTool(value:String, mode:String):void
+			{
+				drawMode = mode;
+				var status:String;
+				switch (value)
+				{
+					case DrawTool.MAPPOINT:
+					{
+						var textSymbol:TextSymbol = new TextSymbol(txtLabel.text);
+						var txtFormat:TextFormat = new TextFormat("Arial", numGraphic.value, cpGraphic.selectedColor);
+						textSymbol.textFormat = txtFormat;
+						
+						status = (mode == TEXT_MODE) ? drawtextLabel : pointLabel;
+						drawSymbol = (mode == TEXT_MODE) ?
+							textSymbol :
+							new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, numGraphic.value, cpGraphic.selectedColor, 1, 0, 0, 0, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+					case DrawTool.POLYLINE:
+					{
+						status = lineLabel;
+						drawSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, numGraphic.value);
+						break;
+					}
+					case DrawTool.FREEHAND_POLYLINE:
+					{
+						status = freehandlineLabel;
+						drawSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, numGraphic.value);
+						break;
+					}
+					case DrawTool.EXTENT:
+					{
+						status = rectangleLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, cpGraphic.selectedColor, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+					case DrawTool.CIRCLE:
+					{
+						status = circleLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, cpGraphic.selectedColor, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+					case DrawTool.ELLIPSE:
+					{
+						status = ellipseLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, cpGraphic.selectedColor, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+					case DrawTool.POLYGON:
+					{
+						status = polygonLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, cpGraphic.selectedColor, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+					case DrawTool.FREEHAND_POLYGON:
+					{
+						status = freehandpolygonLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, cpGraphic.selectedColor, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, cpGraphic.selectedColor, 1, 1));
+						break;
+					}
+				}
+				setMapAction(value, status, drawSymbol, drawEnd);
+			}
+			
+			private function onFault(info:Object, token:Object = null):void
+			{
+				Alert.show(info.toString(), wTemplate.widgetTitle);
+			}
+			
+			private function drawEnd(event:DrawEvent):void
+			{
+				// deactivate the draw tool
+				event.target.deactivate();
+				var outSR:SpatialReference = new SpatialReference(spatialref);
+				var geom:Geometry= event.graphic.geometry;
+				var gra:Graphic = new Graphic(geom);
+				gra.symbol = drawSymbol;
+				switch (geom.type)
+				{
+					case Geometry.MAPPOINT:
+					{
+						if (chkMeasurements.selected)
+						{
+							measurePt = geom as MapPoint;
+							addDrawLabel(numFormatter.format(measurePt.x) + ", " + numFormatter.format(measurePt.y));
+						}
+						break;
+					}
+					case Geometry.POLYLINE:
+					{
+						if (chkMeasurements.selected)
+						{
+							geometryService.project([ geom ], outSR);
+							var polyline:Polyline = geom as Polyline;
+							measurePt = polyline.extent.center;
+						}
+						break;
+					}
+					case Geometry.POLYGON:
+					{
+						if (chkMeasurements.selected)
+						{
+							geometryService.project([ geom ], outSR);
+							var polygon:Polygon = geom as Polygon;
+							measurePt = polygon.extent.center;
+						}
+						break;
+					}
+					case Geometry.EXTENT:
+					{
+						if (chkMeasurements.selected)
+						{
+							geometryService.project([ geom ], outSR);
+							var extent:Extent = geom as Extent;
+							measurePt = extent.center;
+						}
+						break;
+					}
+				}
+				graphicsLayer.add(gra);
+			} */
+
+			
+
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="State1">
+		</s:State>
+		<s:State name="closeMap">
+		</s:State>
+		<s:State name="Edit"/>
+	</s:states>
+
+
+	<s:BorderContainer includeIn="State1" x="10" y="10" width="365" height="113" cornerRadius="10" dropShadowVisible="true">
+		<mx:Image x="19" y="10" width="73" height="91" source="assets/images/{data.image}"/>
+		<s:Label x="176" y="8" text="{data.name}" width="177" height="16" color="#060606"/>
+		<s:Label x="131" y="26" text="{data.description}" width="204" height="56" color="#060606"/>
+		<s:Button x="100" y="92" click="changeState(event)" id="mapView" label="View on Map"   x.State1="114" y.State1="82" width.State1="178" width.Edit="178" x.Edit="114" y.Edit="82"/>
+		<s:Button visible="false" id="mapView_Close" click="changeState1(event)" label="Remove from Map" x="85" y="91"/>
+	</s:BorderContainer>
+	<s:BorderContainer includeIn="Edit" x="10" y="10" width="365" height="113" cornerRadius="10" dropShadowVisible="true">
+		<!--<s:HGroup width="100%"
+				  gap="2"
+				  horizontalAlign="center">
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.MAPPOINT, null)}"
+					  source="assets/images/i_draw_point.png"
+					  toolTip="{pointLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.POLYLINE, null)}"
+					  source="assets/images/i_draw_line.png"
+					  toolTip="{lineLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.FREEHAND_POLYLINE, null)}"
+					  source="assets/images/i_draw_freeline.png"
+					  toolTip="{freehandlineLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.EXTENT, null)}"
+					  source="assets/images/i_draw_rect.png"
+					  toolTip="{rectangleLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.CIRCLE, null)}"
+					  source="assets/images/i_draw_circle.png"
+					  toolTip="{circleLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.ELLIPSE, null)}"
+					  source="assets/images/i_draw_ellipse.png"
+					  toolTip="{ellipseLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.POLYGON, null)}"
+					  source="assets/images/i_draw_poly.png"
+					  toolTip="{polygonLabel}"
+					  useHandCursor="true"/>
+			<mx:Image width="40" height="40"
+					  buttonMode="true"
+					  click="{activateDrawTool(DrawTool.FREEHAND_POLYGON, null)}"
+					  source="assets/images/i_draw_freepoly.png"
+					  toolTip="{freehandpolygonLabel}"
+					  useHandCursor="true"/>
+		</s:HGroup>-->
+		<s:Button x="9" y="83" label="Go Back" click="this.currentState='State1'" width="24" height="22"/>
+		<s:ComboBox x="78" y="77" width="245"/>
+		<s:Label x="129" y="55" text="Switch Available Layers"/>
+	</s:BorderContainer>
+</s:ItemRenderer>

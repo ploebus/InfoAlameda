@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<configuration>
+  <bookmarks>
+        <bookmark name="Alameda County">-13619376 4501303 -13516385 4566799</bookmark>
+        <bookmark name="Oakland City Council Distict 1">-13613440 4553776 -13602460 4563399</bookmark>
+        <bookmark name="Oakland City Council Distict 2">-13611692 4548116 -13605326 4554454</bookmark>
+        <bookmark name="Oakland City Council Distict 3">-13619127 4549510 -13607964 4556013</bookmark>
+        <bookmark name="Oakland City Council Distict 4">-13606411 4546965 -13599876 4558366</bookmark>
+        <bookmark name="Oakland City Council Distict 5">-13608386 4545160 -13603420 4553407</bookmark>
+        <bookmark name="Oakland City Council Distict 6">-13605258 4544356 -13595215 4552463</bookmark>
+        <bookmark name="Oakland City Council Distict 7">-13609283 4536638 -13593143 4547979</bookmark>
+        <bookmark name="Alameda County Supervisors District 1">-13585910 4501901 -13520955 4555008</bookmark>
+        <bookmark name="Alameda County Supervisors District 2">-13599425 4503236 -13566078 4536319</bookmark>
+        <bookmark name="Alameda County Supervisors District 3">-13618228 4531432 -13592178 4552993</bookmark>
+        <bookmark name="Alameda County Supervisors District 4">-13606683 4530528 -13561198 4558525</bookmark>
+        <bookmark name="Alameda County Supervisors District 5">-13619268 4548359 -13602405 4566389</bookmark>
+    </bookmarks>
+    <pages>
+    <page>
+     	<width>529</width>
+	    <height>250</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <p align='center'>
+	            <font size="16"><b>Bookmark Tool</b></font>
+	        </p>
+	        <p>Use this tool to save areas of interest on the map and to quickly zoom in to these places. Click the place that you want to go to.</p>
+	        <p><textformat leftmargin="20"><img src="assets/images/i_bookmark_add.png"/><b>If you want to make your own bookmark, click 'ADD BOOKMARK' icon</b></textformat></p>
+	        <p><img src="assets/images/i_bookmark.png"/><b>See existing bookmarks</b></p>
+	        <p>*Your new bookmark will appear at the bottom of the list and will remain their until you close the web page</p>
+	        
+	         ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+    </page>
+    </pages>
+</configuration>
+
+<!--
+    See Bookmark widget documentation at
+    http://links.esri.com/bookmarkwidget
+-->

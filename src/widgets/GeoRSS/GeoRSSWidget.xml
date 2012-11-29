@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<configuration>
+	<source>http://rest.infoalamedacounty.org/index.php/feed</source>
+    <!--<source>http://urbanstrategies.org/xml/CommunityIssues.xml</source>-->
+    <fields>
+        <field name="description" alias="Description"/>
+       
+    </fields>
+    <titlefield>title</titlefield>
+    <linkfield>link</linkfield>
+    <refreshrate></refreshrate>
+    <zoomscale>10000</zoomscale>
+    <info>widgets/InfoTemplates/InfoPopupWidget.swf</info>
+</configuration>

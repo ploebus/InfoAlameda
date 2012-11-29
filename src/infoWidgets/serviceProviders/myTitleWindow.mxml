@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="300" creationComplete="titlewindow1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.Graphic;
+			
+			import flash.utils.describeType;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			private var _theObject:Graphic;
+			[Bindable] private var theCollection:ArrayCollection = new ArrayCollection();
+			
+			
+			public function get theObject():Graphic
+			{
+				return _theObject;
+			}
+
+			public function set theObject(value:Graphic):void
+			{
+				_theObject = value;
+				var thisObject:XML = describeType(value.attributes);
+				trace('hello');
+				
+			}
+
+			
+			
+			protected function titlewindow1_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				for(var key:* in (_theObject as Graphic).attributes){
+					var tempObj:Object = {
+						'label': key,
+						'data': _theObject[key]
+					};
+					theCollection.addItem(tempObj);
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:DataGrid left="10" top="10" dataProvider="{theCollection}">
+		<s:columns>
+			<s:ArrayList>
+				<s:GridColumn dataField="label" headerText="Label"></s:GridColumn>
+				<s:GridColumn dataField="data" headerText="Value"></s:GridColumn>
+			</s:ArrayList>
+		</s:columns>
+		
+	</s:DataGrid>
+</s:TitleWindow>

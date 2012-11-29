@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*" layout="absolute" 
+				   xmlns:esri="http://www.esri.com/2008/ags" 
+				   widgetConfigLoaded="basewidget1_creationCompleteHandler()"
+				   
+				   creationComplete="basewidget2_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.events.MapMouseEvent;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.tasks.supportClasses.Query;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.rpc.AsyncResponder;
+			
+			private var theMP:MapPoint;
+			
+			[Bindable]private var layerCollection:ArrayCollection;
+			protected function btnMapClick_clickHandler(event:MouseEvent):void
+				{
+				// TODO Auto-generated method stub
+					map.addEventListener(MapMouseEvent.MAP_CLICK, getReps);
+				//change cursor
+					map.addEventListener(MouseEvent.MOUSE_OVER, changeCursor);
+					map.addEventListener(MouseEvent.MOUSE_OUT, setDefault);
+					
+				}
+			
+			protected function changeCursor(evt:MouseEvent):void{
+				
+				Mouse.cursor = MouseCursor.BUTTON;
+			}
+			protected function setDefault(evt:MouseEvent):void{
+				Mouse.cursor = MouseCursor.ARROW;
+			}
+			
+			protected function getReps(evt:MapMouseEvent):void
+				{
+					map.removeEventListener(MouseEvent.MOUSE_OVER,changeCursor);
+					map.removeEventListener(MouseEvent.MOUSE_OUT,setDefault);
+					grlMapClick.clear();
+					theMP = evt.mapPoint;
+					this.currentState = "Second";
+					var gr:Graphic = new Graphic(theMP);
+					var qry:Query = new Query();
+						qry.geometry = theMP;
+						qry.outFields = new Array("Name","Body","district","Phone","Email","bodyId");
+					qryTask.execute(qry);
+					grlMapClick.add(gr);
+					
+					//remove map event
+					map.removeEventListener(MapMouseEvent.MAP_CLICK,getReps);
+					//add listener to list renderer
+					this.addEventListener(CustomEvents.FORMAT_SELECTED, loadLayer);
+				}
+			
+			protected function loadLayer(Evt:CustomEvents):void{
+				Evt.stopPropagation();
+				
+				if(!map.getLayer("selectedDistrict")){
+					map.addLayer(selectedDistrict);
+				}
+				
+			
+				
+				for each(var obj:Object in layerCollection){
+					if (obj.id == Evt.data.layer){
+							qryTask2.url = obj.url;
+							}
+					}
+				
+				
+				
+				var qry:Query = new Query();
+					qry.geometry = theMP;
+					qry.returnGeometry = true;
+				
+				qryTask2.execute(qry);
+				
+				}
+			
+			protected function basewidget1_creationCompleteHandler():void
+			{
+							
+				//load config and get ids
+				if(configXML){
+					layerCollection = new ArrayCollection();
+					for each(var data:XML in configXML.layers.layer){
+						var tempObj:Object = {
+							'id':data.@id[0].toString(),
+							'url':data.@url[0].toString()
+						};
+						layerCollection.addItem(tempObj);
+						}
+					}
+				}
+			
+			
+			protected function basewidget2_creationCompleteHandler(event:FlexEvent):void
+			{
+				//Add map click Graphic
+				map.addLayer(grlMapClick);
+				//add widget buttons
+				wTemplate.addTitlebarButton("assets/images/i_selection.png","Choose a variable", changeState);
+				
+			}
+			
+			private function changeState():void{
+				this.currentState = "First";
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="First"/>
+		<s:State name="Second"/>
+	</viewer:states>
+	
+	<viewer:transitions>
+		<s:Transition fromState="*" toState="*">
+			<s:Fade/>
+		</s:Transition>
+	</viewer:transitions>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<esri:QueryTask id="qryTask" url="http://209.119.63.162/InfoAlameda/rest/services/Projects/Representatives/MapServer/0" />
+		<esri:QueryTask id="qryTask2" />
+		
+		
+		<esri:SimpleFillSymbol id="selectedSymbol">
+			<esri:SimpleLineSymbol color="#0000FF" width="3"/>
+		</esri:SimpleFillSymbol>
+		<esri:GraphicsLayer id="selectedDistrict" symbol="{selectedSymbol}" name="Representative District" 
+							graphicProvider="{qryTask2.executeLastResult.features}"/>
+		<esri:SimpleMarkerSymbol id="clickSymbol" color="#458B00">
+			<esri:outline>
+				<esri:SimpleLineSymbol color="#ffffff" width="2"/>
+			</esri:outline>
+		</esri:SimpleMarkerSymbol>
+		<esri:GraphicsLayer id="grlMapClick" symbol="{clickSymbol}"/>
+	</fx:Declarations>
+	
+	<viewer:WidgetTemplate id="wTemplate" width="600" resizable="true">
+		<viewer:layout>
+			<s:VerticalLayout horizontalAlign="center" paddingTop="10" paddingBottom="10"/>
+		</viewer:layout>
+		<s:Group includeIn="First" width="500" height="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<mx:HRule/>
+				<s:Label fontSize="24" text="Find your Representatives"/>
+				<s:RichText width="300" text="This tool allows you to click on the map and find all representatives for the selected spot"/>
+				<s:Button id="btnMapClick" label="Activate Map for Selection" chromeColor="#6885C8"
+						  click="btnMapClick_clickHandler(event)" color="#FFFFFF"/>
+			<mx:HRule/>
+		</s:Group>
+		<s:Group includeIn="Second" width="100%">
+			<s:List includeIn="Second" itemRenderer="infoWidgets.Representatives.RepRenderer" id="listRep" 
+					borderVisible="false" contentBackgroundAlpha="0"
+				 	height="100%" width="100%">
+				<s:layout>
+					<s:TileLayout/>
+				</s:layout>
+				<s:dataProvider>
+					<s:ArrayList source="{qryTask.executeLastResult.attributes}"/>
+				</s:dataProvider>
+			</s:List>
+		</s:Group>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

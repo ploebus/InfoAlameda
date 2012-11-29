@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" width="238" height="108">
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import mx.controls.CheckBox;
+			import mx.events.FlexEvent;
+			
+			import spark.components.VGroup;
+			[Bindable]
+			private var boundary:String;
+			private var arr:Array;
+			protected  static const YEAR_SELECTED:String='yearSelected';
+			protected function bordercontainer1_creationCompleteHandler(event:FlexEvent):void
+			{
+				boundary=data.boundary;
+				arr=data.year
+				for(var i:int=0;i<arr.length;i++){
+						
+					var lbl:Label=new Label();
+						lbl.setStyle('color','#333333');
+						lbl.text=arr[i].year;
+						lbl.id=i as String;
+						lbl.addEventListener(MouseEvent.CLICK,yearSelected);
+						lbl.addEventListener(MouseEvent.MOUSE_OVER,rollOver);
+						lbl.addEventListener(MouseEvent.MOUSE_OUT,rollOut);
+						lbl.useHandCursor=true;
+						
+						function yearSelected(event:MouseEvent):void{
+							var obj:Object={
+								year:event.target.text,
+									boundary:boundary,
+									coverage:arr[i].coverage,
+									dataType:arr[i].dataType,
+									layer:arr[i].layer,
+									field:arr[i].field
+							}
+							this.dispatchEvent(new CustomEvents(CustomEvents.YEAR_SELECTED,obj,true));
+						}
+					//box.addElement(chkBox);
+					checkBoxes.addElement(lbl);
+				}
+			}
+			
+			private function rollOver(event:MouseEvent):void{
+				event.target.setStyle('color','#0000ff');
+			
+				
+			}
+			private function rollOut(event:MouseEvent):void{
+				event.target.setStyle('color','#333333');
+			
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+	
+	</fx:Declarations>
+	
+	<s:BorderContainer creationComplete="bordercontainer1_creationCompleteHandler(event)" dropShadowVisible="true" width="227" x="4" height="94" y="4" cornerRadius="5">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<s:Label x="0" y="4" text="{data.boundary}" width="226" textAlign="center" color="#333333" height="23" fontWeight="bold" fontSize="14" verticalAlign="middle"/>
+		<s:Label text="Years Available (check one)" x="0" y="25" width="226" textAlign="center" height="16" color="#333333" fontSize="10"/>
+		<s:HGroup id="checkBoxes"  x="0" y="40" width="226" height="35" gap="1">
+		</s:HGroup>
+	</s:BorderContainer>
+	
+	
+</s:ItemRenderer>

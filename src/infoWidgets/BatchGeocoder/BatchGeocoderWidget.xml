@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<configuration>
+    <geocodeserver>http://tasks.arcgisonline.com/ArcGIS/rest/services/Locators/TA_Address_NA/GeocodeServer</geocodeserver>
+	<!-- web mercator wkid -->
+	<outputwkid>102100</outputwkid>
+	<pages>
+	<page>
+	<width>529</width>
+	    <height>350</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <textformat indent="20">
+	        <p align='center'>
+	            <font size="16"><b>BatchGeocoder</b></font>
+	        </p>
+	        <p>Use this tool to take a spreadsheet (.xls) with addresses and display records on our maps. To work, the file must be 97 - 2003 MS Excel format and have an address field, city field, and zip codes. For files over 200 records, results can take some time.</p>
+	        <p><img src="infoWidgets/BatchGeocoder/assets/images/ReportLoad32.png"/>--------->Upload your excel file; specify which columns contain the address fields. Once the addresses are loaded, you can export the file back to excel with the latitude coordinates or export to googles geographic format.</p>
+	        <p><img src="infoWidgets/BatchGeocoder/assets/images/TableExport32.png"/>--------->Download your data back to excel with geographic information tacked on.</p>
+	        <p><img src="infoWidgets/BatchGeocoder/assets/images/kmlExport32.png"/>--------->Download your data back to a .kml file, a geographic file that opens in google earth and other programs.</p>
+	        </textformat>
+	        <p><b>* </b> Uploaded files must be in 97 - 2003 .xls format and contain at least an address, city, and zip code field.</p>
+	       ]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	</pages>
+</configuration>

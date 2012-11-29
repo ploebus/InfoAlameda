@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*" layout="vertical" 
+				   xmlns:datalookup="services.datalookup.*" xmlns:esri="http://www.esri.com/2008/ags"
+				   creationComplete="basewidget1_creationCompleteHandler(event)" 
+				   xmlns:ns="library://ns.adobe.com/flashx/textLayout">
+
+	<fx:Script>
+		<![CDATA[
+			import classes.ILegend;
+			import classes.IRenderer;
+			import classes.equalInterval;
+			import classes.genericEqualInterval;
+			import classes.proportionalSymbolRenderer;
+			import classes.thematicLegend;
+			import classes.thematicRenderer;
+			
+			import com.adobe.serializers.utility.TypeUtility;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.layers.supportClasses.LayerInfo;
+			import com.esri.ags.renderers.Renderer;
+			import com.esri.ags.symbols.Symbol;
+			import com.esri.ags.tasks.QueryTask;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.ags.utils.JSON;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			import com.esri.viewer.components.HTMLPopup;
+			
+			import infoComponents.MapSelected;
+			import infoComponents.printTemplateLandscape;
+			
+			import mx.charts.events.ChartItemEvent;
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.containers.GridRow;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.SliderEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import myUtils.UtilFunctions;
+			import myUtils.imageSaving;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.filters.GlowFilter;
+			
+			import valueObjects.Schools;
+			
+			private const ICON_URL:String = "assets/images/";
+			private static const URLSTART:String=ViewerContainer.getInstance().configData.serverInstance+"InfoAlameda/rest/services/";
+			
+			[Bindable]
+			private var qt:QueryTask;
+			
+			[Bindable]
+			private var qt1:QueryTask;
+			private var schoolArr:Array;
+			private var schoolName:String;
+			private var thisArr:Array;
+			private var _legendCreated:Boolean=false;
+			private var printBox:printTemplateLandscape;
+			private var classification:genericEqualInterval;
+			
+			private var layerId:String;
+			
+			//HELP MENU
+			private var yearObject:Object;
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSource:String;
+			private var buttonIndex:int;
+			
+			//SchoolSearch
+			[Bindable]private var xCollection:ArrayCollection;
+			[Bindable]private var qt2:QueryTask;
+			private var myClassification:equalInterval;
+			private var schoolCounts:Array;
+			
+			protected function basewidget1_creationCompleteHandler(event:FlexEvent):void
+			{
+				wTemplate.addTitlebarButton(ICON_URL + "i_selection.png","Select",goToSearch);
+				wTemplate.addTitlebarButton(ICON_URL + "i_layers.png","Legend",goToLegend);
+				wTemplate.addTitlebarButton(ICON_URL + "i_print.png","Print", printMap);
+				wTemplate.addTitlebarButton(ICON_URL + "i_help.png","Help for this tool", showHelp);
+								
+				//Add layers to map
+				//scatter plot of schools
+				map.addLayer(schoolPoints);
+				//census tract for enrollment
+				map.addLayer(schooltracts);
+				//selected school
+				map.addLayer(schoolPoint);
+				
+				var params:Object = {
+					f:'json',
+					pretty:'true'
+					};
+				
+				getLayerId.send(params);
+				//Clean up
+				wTemplate.addEventListener('closed', checkState);
+			}
+			private function setDefaults(e:Event):void{
+				this.currentState = "select";
+				
+			}
+			private function checkState(e:Event):void{
+				this.currentState = "select";
+				//empty layers
+					schooltracts.clear();
+					schoolPoint.clear();
+					schoolPoints.clear();
+			}
+			
+			protected function showHelp():void{
+				if(configXML.pages.page){
+					content = configXML.pages.page.content || "";
+					btnLabel = configXML.pages.page.btnlabel || "OK";
+					txtareaWidth = configXML.pages.page.width || 500;
+					txtareaHeight = configXML.pages.page.height || 500;
+					videoSource = configXML.pages.page.video || "none";
+					//change icon line back to selected state.
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSource) as HTMLHelpPopup;
+						hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+				}
+			}
+			
+			protected function doThis(e:Event):void{
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+			}
+			
+			private function goToLegend():void{
+				this.currentState='legend';
+			}
+			private function goToSearch():void{
+				this.currentState='select';
+			}
+			private function chartData():void{
+				this.currentState="chart";
+				
+			}
+			private function printMap():void{
+				
+				this.currentState="print";
+				printBox=new printTemplateLandscape();
+				printBox.theExtent=map.extent;	
+				printArea.removeAllElements();
+				printArea.addElement(printBox);
+				printBox.theLayers=UtilFunctions.deepClone(this.map.layers) as ArrayCollection;
+				
+				
+				var legendImage:Bitmap=new Bitmap(imageSaving.getBitmapData(legendGrid));
+					printBox.Title='Count of Students By Census Tract';
+					printBox.Legend=legendImage;
+			}
+			protected function getAttendenceResult_resultHandler(event:ResultEvent):void
+				{
+				
+				//clear previous layer	
+				schooltracts.clear();
+				schooltracts.visible = true;
+				
+				//create array to zip together
+				var tractArr:Array=new Array();
+					schoolArr=new Array();
+					thisArr=new Array();
+				//parse result of rest api	
+					for each(var i:Object in event.result){
+						tractArr.push("'"+i.tract+"'");
+						schoolArr.push(i.count);
+						thisArr.push(i);
+					};
+					var thisStr:String=tractArr.toString();
+					//get school feature from arcServer
+					qt1=new QueryTask();
+						qt1.url=URLSTART+"Projects/OaklandSchools/MapServer/0";
+					var qy1:Query=new Query();
+					qy1.outFields=["Schools","Address","PhoneNumber","FaxNumber","Principal"];
+					qy1.outSpatialReference=map.spatialReference;
+					qy1.returnGeometry=true;
+					qy1.where="Schools like '"+schoolName+"'";
+					qt1.execute(qy1);
+					qt1.addEventListener(QueryEvent.EXECUTE_COMPLETE,addSchoolPoint);
+					
+					//get census tracts 
+					qt=new QueryTask();
+						qt.url=URLSTART+"Summary/Summary/MapServer/" + layerId;
+					var qy:Query=new Query();
+						qy.outFields=["Tract"];
+						qy.outSpatialReference=map.spatialReference;
+						qy.returnGeometry=true;
+						qy.where="Tract in ("+thisStr+")";
+					
+					qt.execute(qy)
+					qt.addEventListener(QueryEvent.EXECUTE_COMPLETE,getValues);
+				}
+			
+			private function addSchoolPoint(event:QueryEvent):void{
+			 	if(event.featureSet.features[0].geometry){
+				var geom:MapPoint = event.featureSet.features[0].geometry
+					map.centerAt(geom);
+				//schoolPoint.symbol = (event.featureSet.features[0] as Graphic).symbol;
+				}
+			}
+			
+			private function getValues(event:QueryEvent):void{
+				if(_legendCreated==true){
+					legendGrid.removeAllElements();
+				}
+				
+				this.currentState="legend";
+				classification=new genericEqualInterval(schoolArr,5,"count");
+				var renderer:thematicRenderer=new thematicRenderer(5,"count",classification.getRanges(),"red");
+				schooltracts.renderer=renderer.getRenderer();
+				getSwatches(renderer.getSymbol());
+				for each (var gr:com.esri.ags.Graphic in event.featureSet.features){
+					for each(var i:Object in thisArr){
+						if (gr.attributes.TRACT==i.tract){
+							gr.attributes.count=i.count;
+							gr.toolTip=gr.attributes.count;
+								
+						}
+					}
+				//gr.addEventListener(MouseEvent.CLICK,getOtherSchools);	
+				schooltracts.add(gr);
+				}
+				tractLegend.layers = [schooltracts];
+				tractLegend.map = map;
+				
+				
+				schooltracts.refresh();
+				wTemplate.selectedTitlebarButtonIndex = 1;
+				
+			}
+			public function getOtherSchools(evt:MouseEvent):void{
+				//CLEAR HIGHLIGHTS
+				schooltracts.removeEventListener(MouseEvent.CLICK,getOtherSchools);
+				evt.stopPropagation();
+				for each(var g:Graphic in schooltracts.graphicProvider){
+					g.filters = [];
+				}
+				//ADD GLOW TO SELECTED
+				(evt.target as Graphic).filters = [new spark.filters.GlowFilter(0x0000FF,1,10,10,4)];
+				getSchoolByTractResult.token = datalookup.getSchoolByTract(evt.target.attributes.TRACT);
+				//SEND SCHOOL ID TO DATABASE
+				//GET BACK NAME,COORDS,COUNT
+				//ADD GRAPHIC
+			}
+			public function getSwatches(a:Array):void
+			{
+				_legendCreated=true;
+				
+				var thematicLeg:ILegend=new thematicLegend("thematic");
+				var gridArr:Array=thematicLeg.getLegend(a);
+				
+				for each(var gr:GridRow in gridArr){
+					legendGrid.addElement(gr);
+					};
+			}
+						
+			protected function comboBox_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				
+				getSchoolsResult.token = datalookup.getSchools();
+				
+			}
+			
+
+			protected function comboBox_changeHandler(event:IndexChangeEvent):void
+			{
+				schoolPoints.clear();
+				//schoolPoint.visible = false;
+				schooltracts.clear();
+				
+				schoolName=event.currentTarget.selectedItem.name;
+				getAttendenceResult.token = datalookup.getAttendence(schoolName);
+				
+			}
+			
+			
+
+			protected function hslider1_changeHandler(event:SliderEvent):void
+			{
+				schooltracts.alpha=event.value;
+			}
+
+
+			
+
+
+			
+
+			protected function ccSchoolTract_itemClickHandler(event:ChartItemEvent):void
+			{
+				if(map.getLayer("SelectedItems")){
+					map.removeLayer(map.getLayer("SelectedItems"));
+				}
+				var mapSelected:MapSelected=new MapSelected("TRACT","8");
+					mapSelected.where="TRACT like '"+event.hitData.item.tract+"'";
+					mapSelected.doQuery();
+				map.addLayer(mapSelected.getGraphics());
+				
+			}
+			
+					
+			protected function btnSendtoChartWidget_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var dataCollection:ArrayCollection = new ArrayCollection();
+				for each(var x:* in TypeUtility.convertToCollection(getAttendenceResult.lastResult)){
+					var obj1:Object ={
+						"Name": x.tract,
+						"Value":x.count
+					}
+				dataCollection.addItem(obj1);
+				}
+				var obj:Object = {
+					"type":"column",
+					"data":dataCollection,
+					"label":"Enrollment Zone for " + comboBox.selectedItem.name,
+					"series":"Students"
+				};
+				
+				AppEvent.dispatch(AppEvent.ADD_CHART, obj);
+				AppEvent.dispatch(AppEvent.WIDGET_RUN,2);
+			}
+			
+			protected function btnExportPng_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var bytes:ByteArray=imageSaving.getPNG(chartArea);
+				var file:FileReference=new FileReference();
+				file.save(bytes,"schoolAttendenceZone.png");
+			}
+			
+			protected function getLayerId_resultHandler(event:ResultEvent):void
+			{
+				// GET POSITION OF LAYER IN SUMMARY MAP SERVICE
+				var objs:Object = JSON.decode(event.result as String);
+				for each (var obj:Object in objs.layers){
+					if (obj.name == 'Census Tracts 2000'){
+						layerId = obj.id;
+					}
+				}
+				//Alert.show(layerId);
+			}
+			
+			protected function getSchoolByTractResult_resultHandler(event:ResultEvent):void
+			{
+				// POPULATE DATA GRID
+				var countArray:Array = new Array();
+				var tempArray:Array = new Array();
+				schoolCounts = new Array();
+				xCollection = event.result as ArrayCollection;
+				
+				for each(var obj:Schools in xCollection){
+					tempArray.push("'" + obj.CDESchoolCode + "'");
+					countArray.push({"attributes":obj});
+					schoolCounts[obj.CDESchoolCode] = obj.Count;
+				}
+				//Alert.show("data grid populated");
+				//CREATE RENDERER BASED ON RETURNED COUNTS
+				myClassification = new equalInterval(countArray,5,"Count");	
+				var myRenderer:proportionalSymbolRenderer = new proportionalSymbolRenderer(5,"Count",myClassification.getRanges(),"green");	
+					schoolPoints.renderer = myRenderer.getRenderer();
+					//Alert.show("renderer created");
+				
+					
+				//ADD SCHOOL POINTS
+					
+				qt2= new QueryTask("http://209.119.63.162/InfoAlameda/rest/services/Projects/AlamedaSchools/MapServer/0");
+				var qry2:Query = new Query();
+					qry2.outFields = ["CDSCode","School"];
+					qry2.where = "CDSCode IN (" + tempArray.join(",") + ")";
+					qry2.returnGeometry = true;
+				qt2.execute(qry2);
+				qt2.addEventListener(QueryEvent.EXECUTE_COMPLETE,addCounts);
+				
+				
+			}
+			protected function addCounts(evt:QueryEvent):void{
+				//ZIP COUNTS TO POINTS 
+				for each(var g:Graphic in schoolPoints.graphicProvider){
+					g.attributes.Count = schoolCounts[g.attributes.CDSCode];
+					g.toolTip = "School:" + g.attributes.School + "\nCount:" + g.attributes.Count;
+				}
+				//REFRESH LEGENDS
+				schoolPoints.visible = true;
+				tractLegend.layers = [schooltracts];
+				tractLegend.map = map;
+				schoolLegend.layers = [schoolPoints];
+				schoolLegend.map = map;
+				schoolPoints.refresh();
+				map.addLayer(schoolPoints);
+			}
+			
+			
+			
+			protected function buttonbar1_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				var renderer:IRenderer;
+				
+				switch(btnBarChoice.selectedItem){
+					case 'Choose a different school':
+						schooltracts.clear();
+						schoolPoint.clear();
+						schoolPoints.clear();
+						
+						var iWindow:InfoWindow = map.infoWindow;
+							iWindow.hide();
+						legendGrid.removeAllChildren();
+						schoolLegend.visible = false;
+						if(map.getLayer("SelectedItems")){
+							var lyr:GraphicsLayer = map.getLayer("SelectedItems") as GraphicsLayer;
+							lyr.clear();
+						}
+						
+						this.currentState = 'select';
+						break;
+					case 'Clear Graphics':
+						schooltracts.clear();
+						schoolPoint.clear();
+						schoolPoints.clear();
+						this.currentState = 'select';
+						break;
+					case 'Outlined':
+						renderer = new thematicRenderer(5,"count",classification.getRanges(),"hollow");
+						schooltracts.renderer=renderer.getRenderer();
+						schooltracts.refresh();
+						tractLegend.layers = [schooltracts];
+						tractLegend.map = map;
+					
+						break;
+					case 'Solid':
+						renderer = new thematicRenderer(5,"count",classification.getRanges(),"red");
+						schooltracts.renderer=renderer.getRenderer();
+						schooltracts.refresh();
+						tractLegend.layers = [schooltracts];
+						tractLegend.map = map;
+						
+						break;
+						
+				}
+			}
+			
+			
+			
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				schooltracts.addEventListener(MouseEvent.CLICK,getOtherSchools);
+			}
+			
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="select"/>
+		<s:State name="legend"/>
+		<s:State name="chart"/>
+		<s:State name="print"/>
+	</viewer:states>
+
+	<fx:Declarations>
+		<s:CallResponder id="getAttendenceResult" result="getAttendenceResult_resultHandler(event)"/>
+		<s:CallResponder id="getSchoolByTractResult" result="getSchoolByTractResult_resultHandler(event)"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		<s:CallResponder id="getSchoolsResult"/>
+		<esri:PictureMarkerSymbol source="assets/images/school_16.png" id="SchoolSym"/>
+		<esri:SimpleMarkerSymbol id="schoolSymbols"/>
+		
+		<s:HTTPService id="getLayerId" url="http://209.119.63.162/InfoAlameda/rest/services/Summary/Summary/MapServer"
+					   result="getLayerId_resultHandler(event)" resultFormat="text"/>
+		
+		
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<esri:GraphicsLayer id="schooltracts" visible="false" name="Students by Census Tract" alpha=".8"/>
+	<esri:GraphicsLayer id="schoolPoints" visible="false" name="Student by School" graphicProvider="{qt2.executeLastResult.features}"/>	
+	<esri:GraphicsLayer id="schoolPoint" name="School Selected" graphicProvider="{qt1.executeLastResult.features}">
+	
+	
+		<esri:infoWindowRenderer>
+			<fx:Component>
+				
+				<esri:LabelDataRenderer label="{data.Schools}">
+					<esri:layout>
+						<s:VerticalLayout/>
+					</esri:layout>
+					
+							<s:Label text="Address: {data.Address}" />
+							<s:Label text="Phone Number: {data.PhoneNumber}" />	
+							<s:Label text="Fax Number: {data.FaxNumber}" />
+							<s:Label text="Principal: {data.Principal}" />
+							
+					
+				</esri:LabelDataRenderer>
+			</fx:Component>
+		</esri:infoWindowRenderer>
+	</esri:GraphicsLayer>
+	<viewer:WidgetTemplate id="wTemplate" width="450" height="400" creationPolicy="all"
+						   y.legend="66" width.legend="660" height.legend="424">
+		
+		<s:Group includeIn="select" height="232">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" clipAndEnableScrolling.select="true" verticalAlign="middle" gap="20"/>
+			</s:layout>
+			<s:RichText fontSize="14" textAlign="center" color="#FBF7F7" fontWeight="bold">
+				<s:textFlow>
+					<s:TextFlow textAlign="center">
+							<s:span fontSize="18">
+								Where do students live who <s:br></s:br> attend Oakland Public Schools?
+							</s:span> 
+						<s:br></s:br>(School Year 2011 - 2012)
+					</s:TextFlow>
+				</s:textFlow>
+			</s:RichText>
+			
+			<s:Label text="Choose a School " fontSize="14" fontWeight="bold" fontFamily="Verdana" width="139"/>		
+				<s:ComboBox width="298" id="comboBox" labelField="name" 
+						change="comboBox_changeHandler(event)" 
+						creationComplete="comboBox_creationCompleteHandler(event)" 
+						>
+					<s:AsyncListView list="{TypeUtility.convertToCollection(getSchoolsResult.lastResult)}"/>
+				</s:ComboBox>
+			
+		</s:Group>
+		
+		<s:Group includeIn="legend" contentBackgroundColor.legend="#FFFFFF" width="100%" height="334">
+			<s:layout.legend>
+				<s:VerticalLayout verticalAlign.legend="middle" horizontalAlign.legend="center"/>
+			</s:layout.legend>
+			
+			<!--Legend-->
+			
+			<s:HGroup horizontalAlign.legend="center" width.legend="100%" paddingTop.legend="10" gap.legend="10">
+				
+				<esri:Legend id="tractLegend" width="250" height="100%" visible="{schooltracts.visible}"
+							 layers="{[schooltracts]}" map="{map}"
+							 skinClass="assets.skins.ThematicLegendSkin"/>
+				
+				<esri:Legend id="schoolLegend" width="250" visible="{schoolPoints.visible}" height="100%"
+								 layers="{[schoolPoints]}" map="{map}"
+								 skinClass="assets.skins.ThematicLegendSkin"/>
+			</s:HGroup>
+					
+			<s:Label includeIn="legend" text="Transparency"/>
+			<mx:HSlider includeIn="legend" minimum="0" maximum="1" value="1" labels="['0%','100%']" height="49"  width.legend="263" change.legend="hslider1_changeHandler(event)"/>
+			
+			<!--Activate Map for selection-->
+			<s:VGroup horizontalAlign="center" width="100%">
+				<mx:HRule width="100%"/>
+				<s:Label fontWeight="bold" fontSize="14" text="Click on the map to see where OUSD students in a tract attend school"/>
+				<s:Button fontSize="14" label="Click here to activate map" click="button1_clickHandler(event)"/>
+				<mx:HRule width="100%"/>
+			</s:VGroup>
+			<s:Panel id="legendBox" visible.legend="false" includeInLayout.legend="false" width="270" title="Count of Students by Tract" height="210" x="10" y="0">
+				<s:layout.legend>
+					<s:HorizontalLayout/>
+				</s:layout.legend>
+				
+				<mx:Grid id="legendGrid" visible.legend="false" color="#333333" backgroundAlpha=".7" backgroundColor="#ffffff" left="3" right="3" top="10" bottom="3">
+				</mx:Grid>
+			</s:Panel>
+			
+			<s:HGroup horizontalAlign.legend="center" verticalAlign.legend="top">
+				<s:ButtonBar id="btnBarChoice" change.legend="buttonbar1_changeHandler(event)">
+					<mx:ArrayCollection>
+						<fx:String>Choose a different school</fx:String> 
+						<fx:String>Clear Graphics</fx:String> 
+						<fx:String>Outlined</fx:String> 
+						<fx:String>Solid</fx:String> 
+					</mx:ArrayCollection>
+				</s:ButtonBar>
+			</s:HGroup>
+		
+		
+		</s:Group>
+		
+		<s:Group includeIn="print" id="printArea">
+		</s:Group>
+		
+		<s:Group includeIn="chart" width="100%" id="chartArea">
+			<s:layout>
+				<s:VerticalLayout/>
+			</s:layout>
+			<s:Label width="443" fontSize="18" text="{comboBox.selectedItem.name}" textAlign="center"
+					 verticalAlign="middle"/>
+			<mx:Legend x="203" y="39" width="240" height="37" dataProvider="{ccSchoolTract}"/>
+			<mx:ColumnChart id="ccSchoolTract" x="0" y="24" width="100%" height="372"
+							itemClick="ccSchoolTract_itemClickHandler(event)"
+							itemSelectionColor="haloBlue" selectionMode="single" showDataTips="true">
+				<s:AsyncListView list="{TypeUtility.convertToCollection(getAttendenceResult.lastResult)}"/>
+				<mx:horizontalAxis>
+					<mx:CategoryAxis
+						 dataProvider="{getAttendenceResult.lastResult}"
+						 categoryField="tract"/>
+				</mx:horizontalAxis>
+				<mx:series>
+					<mx:ColumnSeries
+						xField="tract" 
+						yField="count"
+					 	displayName="Students"
+						/>
+				</mx:series>
+			</mx:ColumnChart>
+			<s:HGroup includeIn="chart" width="331" height="33" gap="60">
+				<s:Button id="btnExportPng" includeIn="chart" click="btnExportPng_clickHandler(event)" label="Export Chart (png)"/>
+				<s:Button id="btnSendtoChartWidget" label="Send to Chart Widget"
+						  click="btnSendtoChartWidget_clickHandler(event)"/>
+			</s:HGroup>
+			<s:DataGrid id="schoolReturned" width="291" dataProvider="{xCollection}">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn dataField="Name" headerText="School"></s:GridColumn>
+						<s:GridColumn dataField="Count" headerText="# Students"></s:GridColumn>
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+		</s:Group>	
+		
+		
+		<s:Label includeIn="select" x="77" y="378" text="Source:OUSD enrollment data school year 2011-2012" color="#FFFDFD"/>
+	</viewer:WidgetTemplate>
+	
+</viewer:BaseWidget>

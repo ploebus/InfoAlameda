@@ -1,0 +1,313 @@
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   xmlns:datalookup="services.datalookup.*"
+				   creationComplete="init()"
+				   widgetConfigLoaded="basewidget1_widgetConfigLoadedHandler(event)">
+	
+	
+
+	
+	
+	<fx:Script>
+		
+		
+		<![CDATA[
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.symbols.PictureMarkerSymbol;
+			import com.esri.ags.symbols.SimpleFillSymbol;
+			import com.esri.ags.symbols.SimpleLineSymbol;
+			import com.esri.ags.symbols.Symbol;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.IInfowindowTemplate;
+			import com.esri.viewer.ViewerContainer;
+			
+			import infoWidgets.serviceProviders.serviceProvidersInfoRenderer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			private const ICON_URL:String = "assets/images/";
+			
+			[Bindable]
+			private var arrColl:ArrayCollection;
+			
+			private static const SERVER:String=ViewerContainer._configData.serverInstance+"infoalameda/rest/services/LocalData";
+			
+			private var drawLabel:String;
+			private var configSearchGraphical:Array;
+			private var configSearchText:Array;
+			private var infoUrl:String;
+			private var graphicalsearchLabel:String;
+			private var graphicsLayer:GraphicsLayer;
+			private var loadingLabel:String;
+			private var nolayerLabel:String;
+			private var queryLayer:String;
+			private var queryGeom:Geometry;
+			private var queryExpr:String;
+			private var queryFields:XMLList;
+			private var queryTitleField:String;
+			private var queryLinkField:String;
+			private var resultsLabel:String;
+			private var selectionLabel:String;
+			private var textsearchLabel:String;
+			private var timer:Timer;
+			private var zoomScale:Number = 50000;
+			private var dateFormatter:DateFormatter = new DateFormatter();
+
+			//labels
+			[Bindable]
+			private var clearLabel:String;
+			[Bindable]
+			private var layerLabel:String;
+			[Bindable]
+			private var lineLabel:String;
+			[Bindable]
+			private var msgVisible:Boolean = false;
+			[Bindable]
+			private var pointLabel:String;
+			[Bindable]
+			private var polygonLabel:String;
+			[Bindable]
+			private var rectangleLabel:String;
+			[Bindable]
+			private var searchResultAC:ArrayCollection;
+			[Bindable]
+			private var submitLabel:String;
+			
+			// symbols
+			private var drawSymbol:Symbol;
+			private var resultMarkerSymbol:Symbol;
+			private var resultLineSymbol:Symbol;
+			private var resultFillSymbol:Symbol;
+
+	
+	private function init():void{
+		drawLabel="Draw";
+		localDataWidget.addTitlebarButton(ICON_URL + "i_draw.png", drawLabel, showStateDraw);
+	}
+			
+	private function showStateDraw(event:Event):void{
+		Alert.show("hello");
+	}
+
+	protected function myRepeater_creationCompleteHandler(event:FlexEvent):void
+		{
+			localdataResult2.token = datalookup.localdata();
+		}
+	
+
+	protected function ontheMap(event:MouseEvent):void
+	{
+		switch (event.target.id)
+		{
+		case 'mapView':
+			var theRenderer:ClassFactory=new ClassFactory(infoWidgets.serviceProviders.serviceProvidersInfoRenderer);
+			var theMap:FeatureLayer=new FeatureLayer(event.target.document.data.summary);
+			theMap.id=event.target.document.data.name;
+				theMap.infoWindowRenderer=theRenderer;
+				map.addLayer(theMap);
+			
+		break;
+		case 'dataView':
+			Alert.show("hello");
+		break;
+		case 'mapView_Close':
+			//var layer:Layer=map.getLayer(String(event.target.document.data.name));
+			map.removeLayer(map.getLayer(String(event.target.document.data.name)));
+			
+		break;
+		}
+	}
+
+
+			protected function basewidget1_widgetConfigLoadedHandler(event:Event):void
+			{
+				if (configXML)
+					{
+						//labels
+						graphicalsearchLabel = configXML.labels.graphicalsearchlabel || "Graphical search";
+						textsearchLabel = configXML.labels.textsearchlabel || "Text search";
+						resultsLabel = configXML.labels.resultslabel || "Results";
+						layerLabel = configXML.labels.layerlabel || "Search layer:";
+						nolayerLabel = configXML.labels.nolayerlabel || "No search layer defined.";
+						submitLabel = configXML.labels.submitlabel || "Search";
+						pointLabel = configXML.labels.pointlabel || "Select by point";
+						lineLabel = configXML.labels.linelabel || "Select by line";
+						rectangleLabel = configXML.labels.rectanglelabel || "Select by rectangle";
+						polygonLabel = configXML.labels.polygonlabel || "Select by polygon";
+						clearLabel = configXML.labels.clearlabel || "Clear";
+						loadingLabel = configXML.labels.loadinglabel || "Loading...";
+						selectionLabel = configXML.labels.selectionlabel || "Features selected:";
+						
+						// infoUrl
+						infoUrl = configXML.info;
+						
+						configSearchGraphical = [];
+						configSearchText = [];
+						var lyrList:XMLList = configXML..layer;
+						for (var i:Number = 0; i < lyrList.length(); i++)
+						{
+							var lyrURL:String = lyrList[i].url;
+							var lyrLabel:String = lyrList[i].name;
+							var lyrTextLabel:String = lyrList[i].textsearchlabel;
+							var lyrGraphicalLabel:String = lyrList[i].graphicalsearchlabel;
+							var lyrExpr:String = lyrList[i].expression;
+							var lyrFields:XMLList = lyrList[i].fields;
+							var lyrTitleField:String = lyrList[i].titlefield;
+							var lyrLinkField:String = lyrList[i].linkfield;
+							var useProxy:Boolean = lyrList[i].useproxy[0] && lyrList.useproxy == "true";
+							var searchLayer:Object =
+								{
+									url: lyrURL,
+									label: lyrLabel,
+									textlabel: lyrTextLabel,
+									graphicallabel: lyrGraphicalLabel,
+									expr: lyrExpr,
+									fields: lyrFields,
+									titlefield: lyrTitleField,
+									linkfield: lyrLinkField,
+									useproxy: useProxy
+								};
+							configSearchGraphical.push(searchLayer);
+							if (lyrExpr)
+							{
+								configSearchText.push(searchLayer);
+							}
+						}
+						
+						//marker symbol
+						const resultMarkerSymbolURL:String = configXML.symbols.picturemarkersymbol.@url || widgetIcon;
+						const resultMarkerSymbolHeight:Number = configXML.symbols.picturemarkersymbol.@height || 30;
+						const resultMarkerSymbolWidth:Number = configXML.symbols.picturemarkersymbol.@width || 30;
+						const resultMarkerSymbolXOffset:Number = configXML.symbols.picturemarkersymbol.@xoffset || 0;
+						const resultMarkerSymbolYOffset:Number = configXML.symbols.picturemarkersymbol.@yoffset || 0;
+						resultMarkerSymbol = new PictureMarkerSymbol(resultMarkerSymbolURL, resultMarkerSymbolWidth, resultMarkerSymbolHeight, resultMarkerSymbolXOffset, resultMarkerSymbolYOffset);
+						
+						//line symbol
+						const resultLineSymbolColor:uint = configXML.symbols.simplelinesymbol.@color || 0xFF0000;
+						const resultLineSymbolAlpha:Number = configXML.symbols.simplelinesymbol.@alpha || 0.8;
+						const resultLineSymbolWidth:Number = configXML.symbols.simplelinesymbol.@width || 2;
+						resultLineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, resultLineSymbolColor, resultLineSymbolAlpha, resultLineSymbolWidth);
+						
+						// fill symbol
+						const resultFillSymbolColor:uint = configXML.symbols.simplefillsymbol.@color || 0xFF0000;
+						const resultFillSymbolAlpha:Number = configXML.symbols.simplefillsymbol.@alpha || 0.5;
+						const resultFillSymbolOutlineColor:uint = configXML.symbols.simplefillsymbol.outline.@color || 0xFF0000;
+						const resultFillSymbolOutlineAlpha:Number = configXML.symbols.simplefillsymbol.outline.@alpha || 0.8;
+						const resultFillSymbolOutlineWidth:Number = configXML.symbols.simplefillsymbol.outline.@width || 2;
+						resultFillSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, resultFillSymbolColor, resultFillSymbolAlpha, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, resultFillSymbolOutlineColor, resultFillSymbolOutlineAlpha, resultFillSymbolOutlineWidth));
+						
+						graphicsLayer = new GraphicsLayer();
+						graphicsLayer.name = "Search Results";
+						graphicsLayer.symbol = resultMarkerSymbol;
+						map.addLayer(graphicsLayer);
+						
+						var data:Object =
+							{
+								id: String(this.widgetId),
+								url: infoUrl,
+								config: null
+							};
+						ViewerContainer.dispatchEvent(new AppEvent(AppEvent.DATA_CREATE_INFOWIDGET, data, infoReady));
+						
+						// TODO: for non-point, soom to feature extent
+						if (Number(configXML.zoomscale) > 0)
+						{
+							zoomScale = Number(configXML.zoomscale);
+						}
+					}
+					
+					//wTemplate.addTitlebarButton(ICON_URL + "i_searchgraphical.png", graphicalsearchLabel, showStateGraphicalSearch);
+					if (configSearchText.length)
+					{
+						//wTemplate.addTitlebarButton(ICON_URL + "i_searchtext.png", textsearchLabel, showStateTextSearch);
+					}
+					//wTemplate.addTitlebarButton(ICON_URL + "i_table.png", resultsLabel, showStateResults);
+					
+					//Setup Text Search
+					if (configSearchText.length)
+					{
+						//cboLayerText.dataProvider = configSearchText;
+						//txtLabelText.text = configSearchText[0].textlabel;
+						//if (configSearchText.length == 1)
+						//{
+							//boxText.visible = false;
+							//boxText.includeInLayout = false;
+						//}
+					}
+					else
+					{
+						//boxText.visible = false;
+						//txtLabelText.text = nolayerLabel;
+					}
+					
+					//Setup Graphical Search
+					if (configSearchGraphical.length)
+					{
+						//cboLayerGraphical.dataProvider = configSearchGraphical;
+						//txtLabelGraphical.text = configSearchGraphical[0].graphicallabel;
+						if (configSearchGraphical.length == 1)
+						{
+							boxGraphical.visible = false;
+							boxGraphical.includeInLayout = false;
+						}
+					}
+					else
+					{
+						boxGraphical.visible = false;
+						//txtLabelGraphical.text = nolayerLabel;
+					}
+				}
+			private var infoTemplate:IInfowindowTemplate;
+			private function infoReady(event:AppEvent):void
+			{
+				var id:Number = Number(event.data.id);
+				if (id == this.widgetId)
+				{
+					infoTemplate = event.data.infoWidget;
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		<s:CallResponder id="localdataResult2"/>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	
+	
+	
+	<viewer:WidgetTemplate id="localDataWidget">
+		<viewer:layout>
+			<s:VerticalLayout horizontalAlign="center" />
+		</viewer:layout>
+			<s:List id="myRepeater" click="ontheMap(event)" dataProvider="{localdataResult2.lastResult.item}" itemRenderer="infoWidgets.localIssues.localDataRenderer" creationComplete="myRepeater_creationCompleteHandler(event)">
+			</s:List>
+		<s:Group id="graphicalInput"
+				 width="100%" height="100%"
+				 visible="true"
+				 >
+			<s:HGroup id="boxGraphical"
+					  width="100%"
+					  gap="15"
+					  horizontalAlign="center">
+				<s:Label id="lblLayerGraphical" text="{layerLabel}"/>
+			</s:HGroup>
+			</s:Group>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>
+

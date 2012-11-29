@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+        xmlns:s="library://ns.adobe.com/flex/spark" 
+        xmlns:mx="library://ns.adobe.com/flex/mx">
+    <!-- host component -->
+    <fx:Metadata>
+        [HostComponent("spark.components.Button")]
+    </fx:Metadata>
+    
+    <!-- states -->
+    <s:states>
+        <s:State name="disabled" />
+        <s:State name="down" />
+        <s:State name="over" />
+        <s:State name="up" />
+    </s:states>
+    
+    <!-- SkinParts
+    name=labelDisplay, type=spark.components.supportClasses.TextBase, required=false
+    -->
+    <s:Rect left="1"
+            right="1"
+            top="1"
+            bottom="1"
+            width="100%">
+        <s:stroke>
+            <s:SolidColorStroke color="0xF0F6FC" weight="1"/>
+        </s:stroke>
+        <s:fill>
+            <s:SolidColor color="0x484A4C" color.over="0x525A62"/>
+        </s:fill>
+    </s:Rect>
+    <s:Group id="holder">
+        <!--- @copy spark.components.supportClasses.ButtonBase#labelDisplay -->
+        <s:Label id="labelDisplay"
+                 fontSize="10"
+                 textAlign="center"
+                 verticalAlign="middle"
+                 maxDisplayedLines="1"
+                 horizontalCenter="0" verticalCenter="1"
+                 left="5" right="5" top="2" bottom="2"/>
+    </s:Group>
+    
+    <s:transitions>
+        <s:Transition>
+            <s:CrossFade target="{holder}" />
+        </s:Transition>
+    </s:transitions>
+    
+</s:Skin>

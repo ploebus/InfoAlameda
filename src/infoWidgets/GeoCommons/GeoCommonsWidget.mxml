@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" 
+				   xmlns:viewer="com.esri.viewer.*" 
+				   layout="absolute" 
+				   widgetConfigLoaded="init()" xmlns:esri="http://www.esri.com/2008/ags">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.serializers.json.JSONDecoder;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.Polygon;
+			import com.esri.ags.geometry.WebMercatorMapPoint;
+			import com.esri.ags.utils.JSON;
+			import com.esri.ags.utils.WebMercatorUtil;
+			import com.esri.ags.webmap.WebMapUtil;
+			
+			import infoWidgets.GeoCommons.GeoCommonsUtils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import valueObjects.GeoCommonJson;
+			
+			
+			public var BASE_URL:String;
+			public var GEOBASE_URL:String;
+			
+			public var returnXML:XML;
+			
+			[Bindable] private var returnCollection:ArrayCollection;
+			
+			protected function init():void{
+				
+				//ADD WIDGET BUTTONS	
+				wTemplate.addTitlebarButton("assets/images/i_selection.png","Search the GeoCommons", showStateDefault);
+				wTemplate.addTitlebarButton("assets/images/i_table.png","Layers to Add", showResults);
+				wTemplate.addTitlebarButton("assets/images/i_table.png","Results Table Export", showTable);
+				wTemplate.addTitlebarButton("assets/images/i_legend2.png","Stylize Map", styleMap);
+				wTemplate.addTitlebarButton("assets/images/i_help.png","Results", showHelp);
+				
+				
+				if(configXML){
+					BASE_URL = configXML.source;
+					GEOBASE_URL = configXML.geosource;
+					}
+				this.addEventListener(GeoCommonsEvent.LAYER_SELECTED, getLayerData);
+					
+			}
+			
+			protected function styleMap():void{
+				this.currentState = "stylize";
+			}
+			
+			protected function showStateDefault():void{
+				this.currentState = "search";
+			}
+			
+			protected function showResults():void{
+				this.currentState = "results";
+			}
+			
+			protected function showTable():void{
+				this.currentState = "table"
+			}
+			
+			protected function showHelp():void{
+				Alert.show("We are still working on the help menu for this tool");
+			}
+			
+			
+			
+			protected function getLayerData(event:GeoCommonsEvent):void
+				{
+					if(event.data)
+						{
+						//GET GEOCOMMONS ID
+						var s:String = GeoCommonsUtils.getLayerId(event.data.toString());	
+						
+						//CONSTRUCT SEARCH URL
+						geoCommonsGeoSearch.url = GEOBASE_URL + s +"/features.json";
+						
+						//CONSTRUCT PARAMS
+						var params:Object = {
+							"geojson":1
+						}
+						
+						geoCommonsGeoSearch.send(params);
+						
+						}
+				}
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				if(searchInput.text.length > 0){
+					var params:Object = {
+						"query":searchInput.text
+					};
+					geoCommonsSearch.url = BASE_URL;
+					geoCommonsSearch.send(params);
+				}
+				else{
+					Alert.show("Please enter a search term");
+				}
+				this.currentState = "result";
+			}
+			
+			protected function httpservice1_resultHandler(event:ResultEvent):void
+			{
+				
+				searchResult.dataProvider = event.result.feed.entry;
+				
+			}
+			
+			protected function httpservice1_faultHandler(event:FaultEvent):void
+			{
+				Alert.show(event.fault.faultString, "geocommons error");
+				
+			}
+			
+			protected function button2_clickHandler(event:MouseEvent):void
+			{
+				this.currentState = "search";
+				
+			}
+			
+			protected function geoCommonsGeoSearch_resultHandler(event:ResultEvent):void
+			{
+				//Parse JSON
+				geoCommonsGraphics.clear();
+				var obj:Object = JSON.decode(event.result.toString());
+				var dpCollection:ArrayCollection = new ArrayCollection();
+				var theMp:MapPoint;
+				
+				//ITERATE RETURNED FEATURES AND CHECK FOR TYPE
+				for each(var o:Object in obj.features){
+					var gr:Graphic;
+					switch (o.geometry.type)
+					{
+					
+						case 'Point':
+							var mp:WebMercatorMapPoint=new WebMercatorMapPoint(o.geometry.coordinates[0],o.geometry.coordinates[1]);
+							gr = new Graphic(mp,sms1,o.properties);
+							break;
+						
+						case 'GeometryCollection':
+							for each (var obj:Object in o.geometry.geometries){
+								var polyArr:Array = new Array();
+								for each (var t:Array in obj.coordinates[0]){
+									var mpTemp:WebMercatorMapPoint = new WebMercatorMapPoint(t[0] ,t[1]);
+									polyArr.push(mpTemp);
+								}
+								var poly:Polygon = new Polygon();
+								poly.addRing(polyArr);
+								gr = new Graphic(poly,smFill1,o.properties);
+							}
+							break;
+					}
+					
+					//GENERATE TOOLTIP
+					var rollText:String = '';
+					for(var s:String in o.properties){
+						if(s != 'geometry'){
+							rollText += s + " : " +o.properties[s]+"\n";
+						}
+					}
+					gr.toolTip=rollText;
+					
+					//ADD CLICK EVENT
+					gr.addEventListener(MouseEvent.CLICK, Point_ClickHandler);
+					
+					//ADD TO GRAPHICS LAYER
+					geoCommonsGraphics.add(gr);
+					//ADD TO DATA TABLE
+					dpCollection.addItem(o.properties);
+					
+				}
+				
+				//POPULATE DATA PROVIDER FOR DATA TABLE
+				returnCollection = new ArrayCollection();
+				returnCollection = dpCollection;
+				
+				//ADD LAYER TO MAP
+				map.addLayer(geoCommonsGraphics);
+			}
+				
+		public function Point_ClickHandler(e:MouseEvent):void{
+			var infoWindowContent:DisplayObject;
+			var infoWindowRenderer:ClassFactory;
+			
+			if (e.currentTarget != null)
+				{
+					var recreate:Boolean = true;
+					var graphic:Graphic = Graphic(e.currentTarget);
+					infoWindowRenderer = new ClassFactory(GeoCommons_InfoWindowRenderer);
+					infoWindowContent = infoWindowRenderer.newInstance();
+					map.infoWindow.content = infoWindowContent as UIComponent;
+					map.infoWindow.data = graphic.attributes;
+					map.infoWindow.show(map.toMapFromStage(e.stageX, e.stageY));
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="search"/>
+		<s:State name="result"/>
+		<s:State name="stylize"/>
+		<s:State name="table"/>
+	</viewer:states>
+	
+	<fx:Declarations>
+		<s:HTTPService id="geoCommonsSearch" result="httpservice1_resultHandler(event)" method="GET" fault="httpservice1_faultHandler(event)"/>
+		<s:HTTPService id="geoCommonsGeoSearch" resultFormat="text" result="geoCommonsGeoSearch_resultHandler(event)" method="GET" fault="httpservice1_faultHandler(event)"/>
+		<esri:GraphicsLayer id="geoCommonsGraphics"/>
+		
+		<esri:SimpleFillSymbol id="smFill1"
+							   alpha="{fillAlpha.value}"
+							   color="{fillColor.selectedColor}"
+							   style="{fillStyle.selectedItem}">
+			<esri:SimpleLineSymbol width="{outlineWidth.value}"
+								   alpha="{outlineAlpha.value}"
+								   color="{outlineColor.selectedColor}"
+								   style="{outlineStyle.selectedItem}"/>
+		</esri:SimpleFillSymbol>
+		<esri:SimpleMarkerSymbol id="sms1" color="0x3366cc" size="20" alpha="1" style="circle">
+			<esri:SimpleLineSymbol color="0x000033" width="2" alpha="1" style="solid" />
+		</esri:SimpleMarkerSymbol>
+		<fx:Component className="GeoCommons_InfoWindowRenderer">
+			<mx:VBox verticalGap="0" autoLayout="true">
+				<fx:Script>
+					<![CDATA[
+						import mx.collections.ArrayCollection;
+						import mx.controls.Alert;
+						import mx.events.FlexEvent;
+						import mx.utils.ObjectUtil;
+						[Bindable] public var arrCollection:ArrayCollection;
+						
+						override public function set data(value:Object):void{
+							if(value != null){
+								super.data = value;
+								arrCollection = new ArrayCollection();
+								for (var s:String in value){
+									var tempObj:Object = {
+										"label": s,
+										"value" : value[s]
+									}
+									arrCollection.addItem(tempObj);
+								}
+								propertyData.dataProvider = arrCollection;
+							}
+						}
+						
+					]]>
+				</fx:Script>
+				<mx:DataGrid id="propertyData"/>
+				
+			</mx:VBox>
+		</fx:Component>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<viewer:WidgetTemplate id="wTemplate" width="400">
+		<viewer:layout>
+			<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+		</viewer:layout>
+				
+		<s:RichText width="350" fontSize="14" includeIn="search">
+			
+			<s:p>
+				
+			
+				The GeoCommons is a cool data repository and data visualization tool. Use this widget to get data from the geocommons and
+				display it.<s:br></s:br>
+				*Note:Some layers will not display
+			</s:p>
+		</s:RichText>
+				
+		
+		
+		<s:Form includeIn="search">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+		<mx:FormHeading label="Search the geocommons for data"/>
+		<s:FormItem label="Search Term">
+			<s:TextInput id="searchInput" text=""/>
+		</s:FormItem>
+		<s:FormItem>
+			<s:Button label="Search" click="button1_clickHandler(event)"/>	
+		</s:FormItem>
+		</s:Form>
+		<s:VGroup includeIn="result" horizontalAlign="center" verticalAlign="middle">
+			<s:DataGroup id="searchResult" width="100%" itemRenderer="infoWidgets.GeoCommons.GeoCommonsDataGroupRenderer">
+			<s:layout>
+				<s:VerticalLayout gap="1"/>
+			</s:layout>
+			</s:DataGroup>
+		<s:Button label="New Search" click="button2_clickHandler(event)"/>
+		</s:VGroup>
+		<s:VGroup includeIn="table">
+			<mx:DataGrid id="featureList" dataProvider="{returnCollection}">
+			</mx:DataGrid>
+		</s:VGroup>
+		<s:Panel includeIn="stylize" right="5" top="5"
+				 title="Simple Fill Properties">
+			<mx:Form alpha="0.8"
+					 backgroundColor="0xEEEEEE"
+					 paddingBottom="5"
+					 paddingTop="5">
+				<mx:FormItem label="Color">
+					<mx:ColorPicker id="fillColor" selectedColor="0x00FF66"/>
+				</mx:FormItem>
+				<mx:FormItem label="Alpha:">
+					<mx:HSlider id="fillAlpha"
+								width="100"
+								liveDragging="true"
+								maximum="1.00"
+								minimum="0.00"
+								snapInterval="0.01"
+								value="0.5"/>
+				</mx:FormItem>
+				<mx:FormItem label="Style:">
+					<s:DropDownList id="fillStyle"
+									top="35"
+									cornerRadius="0"
+									fontWeight="normal"
+									horizontalCenter="0"
+									selectedIndex="0">
+						<s:ArrayList>
+							<fx:String>solid</fx:String>
+							<fx:String>cross</fx:String>
+							<fx:String>diagonalcross</fx:String>
+							<fx:String>horizontal</fx:String>
+							<fx:String>vertical</fx:String>
+							<fx:String>backwarddiagonal</fx:String>
+							<fx:String>forwarddiagonal</fx:String>
+						</s:ArrayList>
+					</s:DropDownList>
+				</mx:FormItem>
+				<mx:FormItem label="Outline Color">
+					<mx:ColorPicker id="outlineColor" selectedColor="0x006600"/>
+				</mx:FormItem>
+				<mx:FormItem label="Outline Width:">
+					<mx:HSlider id="outlineWidth"
+								width="100"
+								liveDragging="true"
+								maximum="20"
+								minimum="0"
+								snapInterval="1"
+								value="4"/>
+				</mx:FormItem>
+				<mx:FormItem label="Outline Alpha:">
+					<mx:HSlider id="outlineAlpha"
+								width="100"
+								liveDragging="true"
+								maximum="1.00"
+								minimum="0.00"
+								snapInterval="0.01"
+								value="1"/>
+				</mx:FormItem>
+				<mx:FormItem label="Outline Style:">
+					<s:DropDownList id="outlineStyle"
+									top="35"
+									cornerRadius="0"
+									fontWeight="normal"
+									horizontalCenter="0"
+									selectedIndex="4">
+						<s:ArrayList>
+							<fx:String>dash</fx:String>
+							<fx:String>dashdot</fx:String>
+							<fx:String>dashdotdot</fx:String>
+							<fx:String>dot</fx:String>
+							<fx:String>solid</fx:String>
+						</s:ArrayList>
+					</s:DropDownList>
+				</mx:FormItem>
+			</mx:Form>
+		</s:Panel>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" 
+		 xmlns:code="http://code.google.com/p/flexlib/" 
+		 xmlns:esri="http://www.esri.com/2008/ags"
+		 xmlns:datalookup="services.datalookup.*" 
+		 xmlns:infoComponents="infoComponents.*"
+		 creationComplete="group1_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import assets.skins.sliderSkin;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Map;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.tasks.QueryTask;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.viewer.ViewerContainer;
+			
+			import infoComponents.ComparisonVariables;
+			import infoComponents.MapSelected;
+			
+			import infoWidgets.dataExploration.dataSelectionManager;
+			
+			import mx.charts.events.ChartItemEvent;
+			import mx.charts.series.LineSeries;
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.controls.Alert;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.events.SliderEvent;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			
+			import myUtils.imageSaving;
+			
+			import spark.events.IndexChangeEvent;
+			
+			import valueObjects.Item;
+			
+			private static const URLSTART:String = ViewerContainer.getInstance().configData.serverInstance+"infoalameda/rest/services/Thematics";
+			
+			private var _comparisonVariables:ComparisonVariables;
+			private var _mapSelected:MapSelected;
+			
+			private var chartQueryTask:QueryTask;
+			
+			[Bindable]
+			private var chartComparisonData:ArrayCollection;
+			
+			
+			[Bindable]
+			public var _bigChartData:ArrayCollection=new ArrayCollection();
+			
+			[Bindable]
+			private var _littleChartData:ArrayCollection=new ArrayCollection();
+			
+			[Bindable]
+			public var queryTask:QueryTask;
+			
+			[Bindable]
+			private var _sliderMax:int;
+			
+			[Bindable]
+			private var _trendChartSource:ArrayCollection;
+			
+			[Bindable]
+			private var _chartSpecs:Object;
+			
+			[Bindable]
+			private var _fieldName:String;
+			
+			private var _geography:String;
+			
+			[Bindable]
+			private var _description:String;
+			
+			[Bindable]
+			private var _comparisonDescription:String;
+			
+			private var sort:Sort=new Sort();
+			
+			private var dataSortField:SortField;
+			
+			public var theMap:Map;
+			
+			[Bindable]
+			private var startTitle:String;
+			[Bindable]
+			private var averageArr:Array;
+			
+			[Bindable]
+			private var sliderArr:Array;
+			
+			[Bindable]
+			private var dataGridCollection:ArrayCollection = new ArrayCollection();
+			
+			public var theUrl:String;
+			
+			//alert the charting Widget that a graphic is on the screen
+			public var hasGraphic:Boolean=false;
+			
+			public function set chartSpecs(o:Object):void{
+				_chartSpecs=o;
+			}
+			public function set fieldName(s:String):void{
+				_fieldName=s;
+			}
+			public function get fieldName():String{
+				return _fieldName;
+			}
+			
+			public function set geography(s:String):void{
+				_geography=s;
+			}
+			
+			public function set description(s:String):void{
+				_description=s;
+				
+			}
+			
+			[Bindable]
+			public function get description():String{
+				
+				return _description;
+			}
+			
+			public function set littleChartData(lcd:Object):void{
+				var firstArr:Array=lcd as Array;
+				
+				dataSortField=new SortField("data",false,true,true);
+				sort.fields=[dataSortField];
+				var i:int=0;
+				firstArr.sortOn(_fieldName,Array.DESCENDING|Array.NUMERIC);
+				
+				for each(var obj1:Object in firstArr){
+					var tempObj:Object={
+						index:i,
+						data:obj1[_fieldName],
+						label:obj1[_geography]						
+					};
+					_bigChartData.addItem(tempObj);
+					_littleChartData.addItem(tempObj);
+					i++
+				}
+				
+				sliderMax=_littleChartData.length;
+			
+				_bigChartData.filterFunction=filterResults;
+				_bigChartData.refresh();
+				averageArr=new Array();
+				getAvg();
+				startTitle=_chartSpecs.variable+" in "+_chartSpecs.coverage+" "+ _chartSpecs.year;
+			}
+			
+			public function set sliderMax(i:int):void{
+				_sliderMax=i;
+				sliderArr=[0,_sliderMax];
+			}
+			
+			private function filterResults(item:Object):Boolean{
+				
+				return(sliderArr[0] <= item.index && item.index <= sliderArr[1]);
+				
+			}
+
+			private function getAvg():void{
+				var avg:Number= new Number();
+				for each (var obj:Object in _littleChartData){
+					avg=avg+obj.data;
+				}
+				var avg1:Number=avg/_sliderMax;
+				for(var x:int=0;x<_littleChartData.length;x++){
+					var obj1:Object={
+						index:x,
+						value:avg1
+					}
+				averageArr.push(obj1);
+				}
+			}
+			protected function slider_changeHandler(event:SliderEvent):void
+			{
+				
+				_bigChartData.refresh();
+			}
+			
+			
+			protected function bigChart_itemClickHandler(event:ChartItemEvent):void
+			{
+				this.hasGraphic=true;
+				mapSelected.enabled=true;
+				//comparisonStateButton.enabled=true;
+				//create query for extended comparison chart
+				
+			
+				var tempArr:Array=[_chartSpecs.boundary,_chartSpecs.field];
+					_mapSelected=new MapSelected(_chartSpecs.boundary,_chartSpecs.layer,theUrl,tempArr);
+					_mapSelected.value=event.hitData.item.label;
+					_mapSelected.where=_geography+" like '"+event.hitData.item.label+"'";
+					_mapSelected.doQuery();
+				
+				if(theMap.getLayer("SelectedItems")){
+					theMap.removeLayer(theMap.getLayer("SelectedItems"));
+					}
+				theMap.addLayer(_mapSelected.getGraphics());
+				}
+
+			private function setChartData(e:Event):void
+			{
+				chartComparisonData=_comparisonVariables.getArray();
+				this.currentState="Comparison";	
+				//chartComparisonData=new ArrayCollection(_comparisonVariables.getArray().source);
+			}
+			
+			private function sortByAttribute(a:Object, b:Object):Object
+				{
+					var x:String = a.attributes[_fieldName].toString();
+					var y:String = b.attributes[_fieldName].toString();
+					return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+				}	
+		
+			
+
+			protected function button2_clickHandler(event:MouseEvent):void
+				{
+					//CAPTURE CURRENT ITEMS IN BIG CHART
+					var thisArr:Array=new Array();
+					
+					for each(var obj:Object in _bigChartData){
+						thisArr.push("'"+obj.label+"'");
+						}
+					var thisString:String=thisArr.toString();
+					
+					//CREATE SELECTION OBJECT FOR MAPPING
+					var tempArr:Array=[_fieldName,_geography];
+					
+					_mapSelected=new MapSelected(_chartSpecs.boundary,_chartSpecs.layer, theUrl,tempArr);
+					
+					_mapSelected.where=_geography+" in ("+thisString+")";;
+					_mapSelected.doQuery();
+					if(theMap.getLayer("SelectedItems")){
+						theMap.removeLayer(theMap.getLayer("SelectedItems"));
+					}
+					theMap.addLayer(_mapSelected.getGraphics());
+					
+					
+				}
+
+
+			
+
+			protected function button3_clickHandler(event:MouseEvent):void
+				{
+					this.hasGraphic=false;	
+					theMap.removeLayer(theMap.getLayer("SelectedItems"));
+					bigChart.clearSelection();
+					if(comparisonChart){
+						comparisonChart.clearSelection();
+					}
+				}
+
+			
+			protected function getYears():void
+				{
+					getYearsResult.token = datalookup.getYears(_chartSpecs.variablecategory,_chartSpecs.variable,_chartSpecs.boundary);
+				
+				}
+			
+			
+			protected function bordercontainer1_creationCompleteHandler(event:FlexEvent):void
+				{
+					theMap.addLayer(chartGraphicLayer);
+				}
+			
+			protected function exportData(event:MouseEvent):void
+				{
+					var s:String=myUtils.CSVExport.exportCSV(dataTable);
+					var fs:FileReference=new FileReference();
+					fs.save(s,"dataTable.csv");
+				}
+			
+			
+			protected function dataTable_itemClickHandler(event:ListEvent):void
+			{
+				var _geography:String=dataTable.columns[0].dataField;
+				//var _layer:String=dataTable.columns[1].dataField;
+				var queryTask:QueryTask=new QueryTask(URLSTART+"/"+_geography+"/MapServer/"+_chartSpecs.layer);
+					queryTask.useAMF=false
+				var query:Query=new Query();
+					query.where=_geography+" like '"+event.itemRenderer.data[_chartSpecs.boundary]+"'";
+					query.outSpatialReference=theMap.spatialReference;
+					query.returnGeometry=true;
+					query.outFields=[_chartSpecs.boundary,_chartSpecs.field];
+				var data:Object={
+					query:query,
+					queryTask:queryTask
+				} 
+				//this.dispatchEvent(new CustomEvents(CustomEvents.MAP_CHARTDATA,data,true));
+				
+			}
+			
+			protected function getChartData(category:String, boundary:String, year:String):void
+			{
+				getChartDataResult.token = datalookup.getChartData(category, boundary, year);
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				_bigChartData.addEventListener(CollectionEvent.COLLECTION_CHANGE,updateTable);
+				getChartData(_chartSpecs.variablecategory,_chartSpecs.boundary,_chartSpecs.year);
+				
+			}
+			
+			protected function updateTable(e:CollectionEvent):void{
+				dataGridCollection.removeAll();
+				for each (var i:Object in _bigChartData){
+					dataGridCollection.addItem(i);
+				}
+			}
+			
+			protected function comparisonChart_itemClickHandler(event:ChartItemEvent):void
+			{
+				
+				thematicMapSelectedButton.enabled=true;
+				//getDataObject(event.hitData.item.label);
+				
+			}
+			
+			
+			protected function getDataObject(field:String):void
+			{
+				getDataObjectResult.token = datalookup.getDataObject(field,_chartSpecs.boundary);
+			}
+			
+			protected function getDataObjectResult_resultHandler(event:ResultEvent):void
+			{
+				var tempObj:Object={};
+					tempObj=ObjectUtil.copy(event.result[0]);
+					tempObj.action="first";
+							
+				var dm:dataSelectionManager=new dataSelectionManager(tempObj,this.theMap);
+				
+			}
+			
+			protected function button4_clickHandler(event:MouseEvent):void
+			{
+				if(this.currentState=="State1"){
+					//do something
+					this.currentState='customize';
+					chartCustomizer.dataArr=_bigChartData;
+					
+						;
+				}
+				else{
+					//do Other
+					this.currentState='customize';
+					chartCustomizer.suggestedTitle=_comparisonDescription;
+					chartCustomizer.dataArr=comparisonChart.dataProvider as ArrayCollection;
+						
+				}
+				
+			}
+			
+			protected function comparisonStateButton_clickHandler(event:MouseEvent):void
+			{
+				if(bigChart.selectedChartItems.length<=0){
+					Alert.show("Please select an item on the chart");
+				}
+				else{
+					_comparisonDescription=_chartSpecs.variablecategory+" in "+_chartSpecs.boundary+":"+bigChart.selectedChartItem.item.label+ " in " + _chartSpecs.year;
+					var tempArray:Array=new Array();
+					for each(var obj:Object in getChartDataResult.lastResult.item){
+						tempArray.push(obj.field);
+					}
+					chartComparisonData=new ArrayCollection();
+					_comparisonVariables=new ComparisonVariables(_chartSpecs.boundary,_chartSpecs.layer,tempArray);
+					_comparisonVariables.where=_chartSpecs.boundary + " like '" + bigChart.selectedChartItem.item.label+"'";
+					_comparisonVariables.geography=_geography;
+					_comparisonVariables.doQuery();
+					_comparisonVariables.addEventListener("dataLoaded",setChartData);
+				}
+				
+			}
+			
+			protected function thematicMapSelectedButton_clickHandler(event:MouseEvent):void
+			{
+				if(comparisonChart.selectedChartItems.length>0){
+					getDataObject(comparisonChart.selectedChartItem.item.field);
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="State1"/>
+		<s:State name="customize"/>
+		<s:State name="trend"/>
+		<s:State name="Table"/>
+		<s:State name="Comparison"/>
+	</s:states>
+	<fx:Metadata>
+		
+	
+	[Event(name="removeChartGraphic",type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Declarations>
+		<s:CallResponder id="getYearsResult"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		<esri:SimpleFillSymbol color="0x000000" alpha="0.5" style="solid" id="chartSelect">
+			<esri:SimpleLineSymbol color="0x3300FF" width="4" alpha="0.98" style="solid" />
+		</esri:SimpleFillSymbol>
+		<esri:GraphicsLayer id="chartGraphicLayer" symbol="{chartSelect}" graphicProvider="{queryTask.executeLastResult.features}"/>
+		<s:CallResponder id="getChartDataResult"/>
+		<s:CallResponder id="getDataObjectResult" result="getDataObjectResult_resultHandler(event)"/>
+	</fx:Declarations>
+
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace viewer "com.esri.viewer.*";
+		@namespace esri "http://www.esri.com/2008/ags";
+		.headerStyle{
+			color:white;
+		}
+	</fx:Style>
+		
+	
+		
+	<!--
+	<esri:GraphicsLayer id="chartClickFeature" graphicProvider="{queryTask.executeLastResult.features}"/>
+	-->
+	<s:BorderContainer width="100%" includeIn="State1, Comparison" 
+					   creationComplete="bordercontainer1_creationCompleteHandler(event)" 
+					   left="5" right="5" dropShadowVisible="true" top="5" bottom="5">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" gap="5"/>
+		</s:layout>
+		
+		<s:VGroup includeIn="State1" width="100%">
+			
+			<s:VGroup id="vChartBox" width="100%" horizontalAlign="center" gap="5" paddingTop="10">
+				<mx:HRule width="100%" strokeColor="#000000"/>
+					<s:Label text="{description}" width="100%" textAlign="center" color="#333333" fontSize="14"/>
+				<mx:HRule width="100%" strokeColor="#000000"/>
+				<mx:ColumnChart dataProvider="{_bigChartData}" 
+								creationComplete="getYears();" 
+								showDataTips="true" 
+								itemSelectionColor="haloBlue" selectionMode="single"
+								id="bigChart" width="100%" 
+								itemClick="bigChart_itemClickHandler(event as ChartItemEvent)" height="280" color="#333333">
+				<mx:horizontalAxis>
+					<mx:CategoryAxis
+						dataProvider="{_bigChartData}"
+						categoryField="label"/>
+				</mx:horizontalAxis>
+				<mx:series>
+					<mx:ColumnSeries  displayName="{_description}" yField="data" color="#333333"/>
+				</mx:series>
+				</mx:ColumnChart>
+			</s:VGroup>
+			
+			
+			<s:Group>
+			<mx:ColumnChart id="littleChart"  dataProvider="{_littleChartData}" width="{bigChart.width}" height="50">
+				<mx:series>
+					<mx:ColumnSeries displayName="Count" color="#333333" yField="data"/>
+				</mx:series>
+			</mx:ColumnChart>
+				
+			<code:HSlider id="slider" toolTip="Use this slider to change what is displayed on the chart above" 
+						  change="slider_changeHandler(event)" values="{sliderArr}"  
+					  trackHighlightSkin="assets.skins.sliderSkin"
+					  thumbSkin="mx.skins.spark.SliderThumbSkin"
+					  allowThumbOverlap="false"
+					  trackSkin="mx.skins.spark.SliderTrackSkin"
+					  minimum="0" maximum="{_sliderMax}"
+					  thumbCount="2" height="40" left="30" width="{littleChart.width-40}" y="{littleChart.y+30}"  snapInterval="1"
+					  liveDragging="true" showTrackHighlight="true"/>
+			</s:Group>
+				
+				<s:Label width="100%" textAlign.State1="center" text="*Click on chart to select an item. Use the slider to zoom in on the chart" color="#1C47C3"/>
+				
+		</s:VGroup>
+		
+		<s:VGroup width="100%" includeIn="Comparison" gap="5">
+			<mx:HRule width="100%" strokeColor="#000000"/>
+			<s:Label text="{_comparisonDescription}" width="100%" textAlign="center" fontSize="14" color="#333333"/>
+			<mx:HRule width="100%" strokeColor="#000000"/>
+			<mx:ColumnChart dataProvider="{chartComparisonData}" showDataTips="true"
+							itemClick="comparisonChart_itemClickHandler(event)"
+							itemSelectionColor="haloBlue" selectionMode="single"
+							id="comparisonChart" height="100%" width="100%" color="#333333">
+				<mx:horizontalAxis>
+					<mx:CategoryAxis
+						dataProvider="{chartComparisonData}"
+						categoryField="label"/>
+				</mx:horizontalAxis>
+				<mx:series>
+					<mx:ColumnSeries  yField="data" color="#333333"/>
+				</mx:series>
+				
+			</mx:ColumnChart>
+			
+			<s:Label text="*Click chart column to map variable" textAlign="center" fontWeight="bold" color="#333333" fontSize="14"/>
+		</s:VGroup>
+		
+		<s:HGroup>
+			<s:Button label="Customize Chart" includeIn="State1,Comparison" toolTip="Click to alter the chart's appearance for exporte" width="126" click="button4_clickHandler(event)"/>
+			<s:Button id="mapSelected" includeIn="State1" toolTip="Click to see where chart items are on the map" label="Find Selected Values" width="143" enabled="true" click="button2_clickHandler(event)"/>
+			<s:Button label="Clear Map" toolTip="Click to clear chart graphics from the map and remove selected chart items" width="103" click="button3_clickHandler(event)"/>
+			<s:Button id="thematicMapSelectedButton" includeIn="Comparison" toolTip="Click to thematically map selected chart item" label="Map Selected Value" enabled="false" click="thematicMapSelectedButton_clickHandler(event)"/>
+			<s:Button id="backButton" toolTip="Click to go back to prior chart" includeIn="Comparison" label="Back" enabled="true" click="this.currentState='State1'"/>
+			<s:Button id="comparisonStateButton" toolTip="Click to see related variables in selected area" includeIn="State1" label="See related variables" enabled="true" click="comparisonStateButton_clickHandler(event)"/>
+		</s:HGroup>
+		<s:Line width="100%"/>
+		
+	</s:BorderContainer>
+	
+	
+	
+	<s:BorderContainer includeIn="customize" left="5" backgroundAlpha="0" width="100%" right="5" dropShadowVisible="true" top="5" bottom="5">
+		<infoComponents:ChartCustomizer id="chartCustomizer" ChangeState="this.currentState='State1'" suggestedTitle="{description}"/>
+	</s:BorderContainer>
+	
+	
+	<s:BorderContainer includeIn="trend" height="432" textAlign="center">
+		<s:TextInput id="labelInput1" width="364" x="25" y="6" text="{startTitle}" textAlign="center" color="#333333"/>
+		<mx:LineChart height="351" y="49" color="#333333" width="535" dataProvider="{_trendChartSource}" showDataTips="true">
+			<mx:horizontalAxis>
+				<mx:CategoryAxis dataProvider="{getYearsResult.lastResult.item}" categoryField="year" />
+			</mx:horizontalAxis>
+			<mx:series>
+				<mx:LineSeries 
+					yField="data" 
+					displayName="Count"
+					/>
+			</mx:series>
+		</mx:LineChart>
+	</s:BorderContainer>
+	
+	<s:BorderContainer includeIn="Table" dropShadowVisible="true" left="5" right="5" top="5" bottom="5" cornerRadius="5">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<mx:HRule width="100%" strokeColor="#000000"/>
+		<s:Label text="{description}" width="100%" textAlign="center" color="#333333" fontSize="14"/>
+		<mx:HRule width="100%" strokeColor="#000000"/>
+		<s:HGroup gap="20" horizontalCenter="0" width="100%" horizontalAlign="center">
+			
+		
+		<mx:DataGrid id="dataTable" horizontalCenter="0" dataProvider="{_bigChartData}"
+					 headerStyleName="headerStyle" height="430" width="249">
+			<mx:columns>
+				<mx:DataGridColumn dataField="label" headerText="Geography" textAlign="center"/>
+				<mx:DataGridColumn dataField="data" headerText="{_chartSpecs.alias}" textAlign="center"/>
+			</mx:columns>
+		</mx:DataGrid>
+		<s:VGroup gap="20">
+			<s:Button label="Back to Chart" click="{this.currentState='State1'}" x="16" y="562" width="160" height="30"/>
+			<s:Button x="143" y="562" label="Export Data as CSV" click="exportData(event)" width="161" height="30"/>
+			
+			
+			<s:RichText width="200" >
+				<s:content>
+					<s:p color="#333333" >
+						Table data reflects the values in the big chart. If you used the slider to change
+						how much data is shown in the chart, than the data in this table will reflect those changes. 
+						To export the complete data set, make sure that the chart slider is pushed completely to the left and
+						making the chart show the complete set of data.
+					</s:p>
+				</s:content>
+			</s:RichText>
+		</s:VGroup>
+		</s:HGroup>
+	</s:BorderContainer>
+	
+</s:Group>

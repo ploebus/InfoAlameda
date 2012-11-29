@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true">
+	
+	<s:HGroup gap="20" textAlign="left">
+		<s:Label color="#333333" text="{data.Name}"/>
+		<s:Label color="#333333" text="{data.Value}"/>
+	</s:HGroup>
+	<mx:HRule x="-11" y="10"/>
+	
+</s:ItemRenderer>

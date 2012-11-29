@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<configuration>
+    <!--
+        Refer to the doc below for valid HTML tags that can be used for the content
+        http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flashx/textLayout/conversion/TextConverter.html#TEXT_FIELD_HTML_FORMAT
+    -->
+    <width>600</width>
+    <height>600</height>
+    <video></video>
+    <content>
+        <![CDATA[
+        <p align='center'>
+            <font size="16"><b>InfoAlameda Help Content: Charting</b></font>
+        </p>
+        <p>The charting window shows you the range of values in the data you selected as a bar graph or histogram. If you picked Census Designated Places, there will be less than 20 bars. If you are mapping Census Tracts, you will have a couple hundred bars. Don't fret, we've made it easy to work with this data!</p>
+        <img src='assets/images/histoslider.png'/>
+        <p><font size="14"><b>Top Right Navigation</b></font></p>
+        <p><img src="assets/images/i_table.png"/><b>--------->See the selected table and export to .csv file.</b></p>
+        <textformat blockindent="20">
+            <p><b>1. </b>If you want to view the top ten areas or the bottom 5, you can drag the buttons on the slider box to show only those you are interested in. As you drag, a tooltip will tell you how many recoreds are in the chart.</p>
+        	<p><b>2. </b>Once you have the top x shown, you can hit 'MAP SELECTED VALUES' and the large map view will draw a dark blue border around those selected.</p>
+        	<p><b>3. </b>You can edit the chart title, font sizes, add data labels and more in the 'CUSTOMIZE CHART' window.</p>
+        	<p><b>4. </b>You can remove the thematic map layer you initially created and make a new map with different data- from the mew legend you can 'CHART' the new data and you will have multiple charts available. Switch between them by clicking on their tab like in a regular browser. Or change tabs by using the drop down arrow on the top right.</p>
+        </textformat>
+              
+       ]]>
+    </content>
+    <btnlabel>Click to continue</btnlabel>
+
+</configuration>

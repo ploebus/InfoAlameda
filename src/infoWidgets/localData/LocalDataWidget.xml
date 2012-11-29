@@ -1,0 +1,113 @@
+<?xml version="1.0" ?>
+<configuration>
+    <layers>
+    	<layer>
+	        <name>Youth Uprising Parcel Mapping</name>
+	        <description>The data in this service represents a mapping project conducted by Youth Uprising and the Urban Strategies Council. The project was to do housing survey's of homes in the area surrounding Youth Uprising.</description>
+	        <url>http://209.119.63.162/InfoAlameda/rest/services/Projects/YouthUprising/MapServer/0</url>
+	   		<image>logo_YouthUprising.png</image>
+	   		<title>Housing Survey Score Card</title>
+	   		<fields>
+	   			<field name="owner" map="false" alias="Owner name" popup="true" />
+                <field name="land_val" map="true" alias="Assessed Land Value" popup="false" />
+                <field name="imp_val" map="true" alias="Assessed Improvement Value" popup="false" />
+                <field name="tot_val" map="true" alias="Assessed Total Value" popup="false" />
+            </fields>
+          	<links>
+          		<link alias="Research Page with other links" description="This summer Urban Strategies Council worked with a team of students at Youth UpRising to carry out a detailed neighborhood conditions survey.">http://www.infoalamedacounty.org/index.php/Research/Housing/Blight-Vacant-Housing/East-Oakland-Community-Survey-Youth-UpRising.html</link>
+          	</links>     	
+        </layer>
+        <layer>
+	        <name>Neighborhood Stressors Model</name>
+	        <description>This model provides a rank for every Community Police Beat in Oakland that indicates the relatively high or low levels of ‘stress’ on a neighborhood.</description>
+	        <url>http://209.119.63.162/infoAlameda/rest/services/Projects/NeighborhoodStressorModel/MapServer/0</url>
+	   		<image>USCLogo_Smaller.JPG</image>
+	   		<title>Neighborhood Stressors Model</title>
+	   		
+	   		<fields>
+	   			<field name="PoliceBeats" alias="Community Police Beats" popup="true"/>
+	   			<field name="Rank" map="true" alias="Rank" popup="true" />
+                <field name="Score" map="true" alias="Index Score" popup="true" />
+                <field name="TopTens" map="true" alias="Total Top Tens" popup="false" />
+                <field name="TotPop" map="true" alias="Total Population" popup="false" />
+                <field name="Age_017" map="true" alias="People Aged 0 to 17" popup="false" />
+                <field name="Age_1830" map="true" alias="People Aged 18 to 30" popup="false" />
+                <field name="Age_18Over" map="true" alias="People Aged 18 and Over" popup="false" />
+                <field name="OUSD_Students" map="true" alias="OUSD Student Enrollment" popup="false" />
+                <field name="Juv_Incarcerations" map="true" alias="Juveniles Incarcerated" popup="false" />
+                <field name="Prob_adult" map="true" alias="Adult Probationers" popup="false" />
+                <field name="CalWorks" map="true" alias="Cal Works Recipients" popup="false" />
+                <field name="FoodStamps" map="true" alias="Food Stamps Recipients" popup="false" />
+            </fields>
+            <links>
+	   			<link alias="Research Page" description="The City of Oakland and Urban Strategies Council have developed a new Stressor model for the city using the latest available neighborhood data.">http://www.infoalamedacounty.org/index.php/Research/Crime-Safety/Crime-Research/Oakland-Stressors-2011-Model-Update.html</link>     	
+        	</links>
+        </layer>
+         <layer>
+	        <name>Building Healthy Communities</name>
+	        <description>Data Page for Building Healthy Communities Initiative. Includes statistics sheet of health survey</description>
+	        <url>http://209.119.63.162/InfoAlameda/rest/services/Projects/BuildingHealthyCommunities/MapServer/0</url>
+	   		<image>CalEndowment_logo.png</image>
+	   		<title>Building Healthy Communities</title>
+	   		
+	   		<fields>
+	   			<field name="Project" alias="Project" map="false" popup="true"/>
+	   			<field name="Website" alias="Website" map="false" popup="true" link="true" />
+            </fields>
+            <links>
+            	<link alias="California Endowment: Building Healthy Communities Website" description = "Website for the larger Building Healthy Cities Initiative">http://www.calendow.org/healthycommunities/communities.html</link>
+            	<link alias="East Oakland Fact Sheet (pdf)" description="A pdf document fact sheet of health statistics in East Oakland">http://www.askchis.com/bhc_docs/en/BHC_Fact_Sheet_E_Oakland.pdf</link>
+            </links>     	
+        </layer>
+         <layer>
+	        <name>West Oakland Environmental Indicators Project</name>
+	        <description>This report details through scientific research what residents of West Oakland have long known: That West Oakland suffers the lion's share of the area's toxic pollution, but gains few of the benefits</description>
+	        <url>http://209.119.63.162/InfoAlameda/rest/services/Projects/WestOaklandIndicatorsProject/MapServer/0</url>
+	   		<image>logo_pacific.png</image>
+	   		<title>West Oakland Environmental Indicators Project</title>
+	   		
+	   		<fields>
+	   			
+            </fields>
+            <links>
+            	<link alias="Pacific Institute Website: Publication Page">http://www.pacinst.org/reports/environmental_indicators/</link>
+            	<link alias="Final Report(pdf)" description="The final report: Neighborhood Knowledge for Change">http://www.pacinst.org/reports/environmental_indicators/neighborhood_knowledge_for_change.pdf</link>
+            </links>     	
+        </layer>
+        <layer>
+	        <name>Communities for a Better Environment</name>
+	        <description>Explore a series of reports that use collaborative, neighborhood-powered research to measure environmental hazards in parts of East Oakland.</description>
+	        <url>http://209.119.63.162/InfoAlameda/rest/services/Projects/CBEHegenbergerCorridor/MapServer/0</url>
+	   		<image>CBE_logo.png</image>
+	   		<title>Air Quality Studies in East Oakland</title>
+	   		<fields>
+	   		</fields>
+          	<links>
+          		<link alias="Communities for a Better Environment Website">http://www.cbecal.org</link>
+          		<link alias="Cumulative Impacts in East Oakland: Findings from a community-based mapping study" 
+          		description="Environmental Justice (EJ) is rooted in the belief that everyone has the right to a clean and healthy environment where we live, work, go to school, play, and pray regardless of race, gender, or income.">http://www.infoalamedacounty.org/docs/cumulative_impacts_final.pdf</link>
+          		<link alias="East Oakland Diesel Truck Survey Report" description="In 2007, Communities for a Better Environment (CBE) undertook a study of cumulative impacts in East Oakland and found East Oakland residents are living in close proximity to toxic pollution and are disproportionately burdened by cumulative impacts.">http://www.infoalamedacounty.org/docs/Diesel truck study FINAL 092710.pdf</link>
+          		<link alias="East Oakland Particulate Matter 2.5: Community based Air Monitoring Research Report" description="East Oakland has a childhood asthma hospitalization rate 150 to 200% higher than Alameda County as a whole, and life expectancy in East Oakland for the years 2000 to 2003 was 72.0 years, which was 6.9 years lower than Alameda County as a whole">http://www.infoalamedacounty.org/docs/East Oakland PM Monitoring Report FINAL 2010.pdf</link>
+          	</links>     	
+        </layer>
+    </layers>    
+    <pages>
+    	<page name="selectdata">
+		    <width>500</width>
+			<height>400</height>
+			<video></video>
+			<content>
+		        <![CDATA[<br><p align='center'><font size="16"><b>Selection Tool</b></font></p>
+		        <textformat leftmargin="5" rightmargin="5"><p>On this page, you can find census tracts that meet criteria that you set.</p>
+		        <p><b>1.</b> To begin, select the layer from the Target Layer drowdown that you are interested in querying.<p>
+		        <p><b>2.</b> Once you select the layer, the Fields box will show a list of variables available to query for that layer. Double click the value to select.<p>
+		        <p><b>3.</b> Once you have selected the variable, the values box will populate with the values for that variables. Use the calculator button to select what operation you want to perform<p>
+		        <p><b>3.</b> You can see your query building in the dialog box. The last step is to select some value to set as your search parameter.<p>
+		        <br>
+		        <p>For example, let's say you want to find the census tracts in Alameda that have mortality rates greater than 800 mortalities per 100,000 people. You would double click 'All-Cause Mortality Rate 2006 - 2008'. Then you would click the greater than button from the calculator. Finally, you would click in the dialog box and write in 800.</p>
+		        </textformat>]]>
+			</content>
+	    	<btnlabel>Click to continue</btnlabel>
+	    </page>
+    </pages>
+</configuration>

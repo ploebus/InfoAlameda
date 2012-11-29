@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" focusOut="itemrenderer1_focusOutHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import mx.events.FlexEvent;
+			
+			
+			
+			protected function btnLayer_clickHandler(event:MouseEvent):void
+			{
+				// Generate custom event
+				var theData:Object = {
+					layer:data.bodyId,
+					name:data.name,
+					district:data.district
+				};
+				var myEvent:CustomEvents = new CustomEvents(CustomEvents.FORMAT_SELECTED,theData,true,true);
+				dispatchEvent(myEvent);
+				theContainer.filters = new Array(selectedGlow);
+			}
+			
+			protected function itemrenderer1_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				theContainer.filters = new Array();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+
+		<s:GlowFilter id="selectedGlow" inner="true" blurX="16" blurY="16"/>
+	
+	</fx:Declarations>
+	<s:BorderContainer id="theContainer" width="300" height="122" cornerRadius="10"
+					   dropShadowVisible="true">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="center"
+							  paddingTop="10" paddingBottom="10"/>
+		</s:layout>
+		<s:Label color="#333333" text="{data.Body}"/>
+		<s:Label color="#333333" text="District: {data.district}"/>
+		<s:Label color="#333333" text="{data.name}"/>
+		
+		<s:Label color="#333333" text="{data.phone}"/>
+		<s:Button id="btnLayer" label="See District on Map" chromeColor="#6885C8"
+				  click="btnLayer_clickHandler(event)" color="#FFFFFF" fontSize="18"/>
+	</s:BorderContainer>
+</s:ItemRenderer>

@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2010 ESRI
+//
+// All rights reserved under the copyright laws of the United States.
+// You may freely redistribute and use this software, with or
+// without modification, provided you include the original copyright
+// and use restrictions.  See use restrictions in the file:
+// <install location>/License.txt
+//
+////////////////////////////////////////////////////////////////////////////////
+-->
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   xmlns:datalookup="services.datalookup.*"
+				   widgetConfigLoaded="init()">
+	
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			import com.esri.viewer.components.HTMLPopup;
+			
+			import infoComponents.commentBox;
+			
+			import infoWidgets.dataExploration.VO.DataObject;
+			import infoWidgets.dataExploration.chart.chartManager;
+			
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.controls.Text;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.events.StateChangeEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			
+			public var dataObject:DataObject;
+			public var formAction:String;
+			
+			//HELP MENU
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSrc:String;
+			
+			private var buttonIndex:int;
+			private var detailXML:XML;
+			private const ICON_URL:String = "assets/images/";
+			[Bindable]
+			private var isFirstVariableSelected:Boolean=false;
+			
+			private var firstBoundary:String = "first";
+			
+			private var finalData:ArrayCollection;
+			
+			
+			private function init():void{
+				
+				wTemplate.addTitlebarButton(ICON_URL + "i_selection.png","Choose a variable", showStateDefault);
+				wTemplate.addTitlebarButton(ICON_URL + "i_help.png","Help", showStateHelp);
+				
+				//CHECK THE STATE OF THE MAPS GRAPHICS LAYER AND SET VALUES
+				AppEvent.addListener(AppEvent.WIDGET_STATE_CHANGED,function():void{
+						if(!map.getLayer("graphicsLayer")){
+							firstVariableAction.label="Create a map";
+							}
+						else{
+							firstVariableAction.label="Change first map variable";
+							};
+					})
+					
+					
+				}
+			
+			
+			protected function postComment():void{
+				var CommentBox:commentBox=PopUpManager.createPopUp(this.parent,commentBox,true) as commentBox;
+				
+			}
+			
+			protected function showStateHelp():void{
+				var tempState:String = this.currentState;
+				/* if (configXML)
+				{
+					content = configXML.page.(@name==tempState).content || "";
+					btnLabel = configXML.page.(@name==tempState).btnlabel || "OK";
+					txtareaWidth = configXML.page.(@name==tempState).width || 500;
+					txtareaHeight = configXML.page.(@name==tempState).height || 500;
+					videoSrc = configXML.page.(@name==tempState).video || "none";
+					HTMLPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSrc);
+				} */
+							
+					
+				 if (configXML)
+				{
+					var tempXML:XMLList=configXML.page.(@name==tempState);
+					//Alert.show(tempXML.toString());
+					if(tempXML){
+					content = tempXML.content || "";
+					btnLabel = tempXML.btnlabel || "OK";
+					txtareaWidth = tempXML.width || 500;
+					txtareaHeight = tempXML.height || 500;
+					videoSrc = tempXML.video || "none";
+					//Alert.show("Content:"+content+"\nHeight:"+txtareaHeight);
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSrc);
+					hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+					wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+					} 
+				} 
+			}
+			
+			private function doThis(e:Event):void{
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+			}
+			
+			protected function showStateDefault():void{
+				this.currentState="State1";
+			}
+			
+			//Control what action is taking place
+			
+			protected function label1_clickHandler(event:MouseEvent):void
+			{
+				formAction="first";
+				firstBoundary = "first";
+				this.currentState="category";
+				buttonbar2.selectedIndex=1;
+				
+			}
+			
+			
+			protected function label2_clickHandler(event:MouseEvent):void
+			{
+				formAction="second";
+				this.currentState="category";
+				buttonbar2.selectedIndex=1;
+			}
+			
+			
+			protected function label3_clickHandler(event:MouseEvent):void
+			{
+				formAction="chart";
+				this.currentState="category";
+				buttonbar2.selectedIndex=1;
+				
+				
+			}
+
+
+			//data selection process
+			
+			protected function list1_creationCompleteHandler(event:FlexEvent):void
+			{
+				categoryResult.token = datalookup.category();
+			}
+
+						
+			protected function list1_clickHandler(event:MouseEvent):void
+				{
+					dataObject=new DataObject();
+					//start creating a record of selection
+					dataObject.category=event.currentTarget.selectedItems[0].category;
+					dataObject.action=formAction;
+					subCategoryResult.token = datalookup.subCategory(event.currentTarget.selectedItems[0].category);
+										
+					this.setCurrentState('subcategory');
+					buttonbar2.selectedIndex=2;
+					
+				}
+			
+			protected function list2_clickHandler(event:MouseEvent):void
+				{
+					subCategoryResult2.token = datalookup.variable(event.currentTarget.selectedItems[0].category,firstBoundary);
+					subCategoryResult2.addEventListener(ResultEvent.RESULT,parseVariableCategory);
+					dataObject.subCategory=event.currentTarget.selectedItems[0].category;
+					subCategoryResult3.lastResult = null;
+					
+				}
+			
+			protected function subCategory2Fault(e:FaultEvent):void{
+				Alert.show("Sorry, there are no variables in this category that use the same geography as your first mapped variable");
+				
+			}
+			private function parseVariableCategory(e:ResultEvent):void{
+				
+				//CHANGE TAB
+				this.setCurrentState('variable');
+				buttonbar2.selectedIndex=3;
+				
+				//PARSE DATA
+				var tempArr:ArrayCollection=new ArrayCollection();
+				var tempArr1:ArrayCollection;
+					finalData = new ArrayCollection();
+				var tempXML:XMLListCollection=new XMLListCollection();
+				var sortedArr:ArrayCollection = e.result.item;
+				
+				//SORT VARIABLES IN LIST
+				var sortField:SortField = new SortField();
+					sortField.name = 'rank';
+					sortField.numeric = true;
+				var sort:Sort=new Sort();
+					sort.fields = [sortField];
+					sortedArr.sort = sort;
+					sortedArr.refresh();
+			
+				for each(var thing:Object in sortedArr){
+					if (!tempArr.contains(thing.variablecategory)){
+						tempArr.addItem(thing.variablecategory);
+						}
+				}
+				
+				//SORT ALPHABETICALLY VARIABLE CATEGORIES IN TEMP ARRAY
+					tempArr.source.sort();
+					tempArr.refresh();
+				
+				//ADD CHILD ELEMENTS
+				for each (var s:String in tempArr){
+					tempArr1=new ArrayCollection();
+					for each(var thing1:Object in e.result.item){
+						if(thing1.variablecategory==s){
+							var vCat:variableCategoryVO=new variableCategoryVO(thing1.alias,null,s)
+							tempArr1.addItem(vCat);
+							}
+						}
+					var vCat1:variableCategoryVO=new variableCategoryVO(s,tempArr1);
+					finalData.addItem(vCat1);	
+				}
+				
+				variableCategoryTree.dataProvider=finalData;
+				
+				variableCategoryTree.addEventListener(FlexEvent.UPDATE_COMPLETE, openTree);
+				//finalData.addEventListener(CollectionEvent.COLLECTION_CHANGE, openTree);
+				
+				
+			}
+		
+		protected function openTree(e:FlexEvent):void{
+			//Alert.show("Tree Created");
+			//variableCategoryTree.removeEventListener(FlexEvent.UPDATE_COMPLETE, openTree);
+			//variableCategoryTree.expandItem(finalData.getItemAt(0),true,true);
+		}
+		protected function datagrid1_itemClickHandler(event:ListEvent):void
+			{
+			 
+				displayDataButton.enabled = true;
+				dataObject.boundary = event.itemRenderer.data.boundary;
+				dataObject.boundaryLabel = event.itemRenderer.data.boundaryLabel;
+				dataObject.coverage = event.itemRenderer.data.coverage;
+				dataObject.year = event.itemRenderer.data.year;
+				dataObject.layer = event.itemRenderer.data.layer;
+				dataObject.field = event.itemRenderer.data.field;
+				dataObject.dataType = event.itemRenderer.data.dataType;
+				dataObject.usertip = event.itemRenderer.data.usertip;
+				dataObject.source = event.itemRenderer.data.source;
+				dataObject.confidenceInterval = event.itemRenderer.data.confidenceinterval;
+			}
+
+
+		protected function button2_clickHandler(event:MouseEvent):void
+		{
+			
+			displayDataButton.enabled = false;
+			var dManager:dataSelectionManager;
+			switch(dataObject.action){
+				case "first":
+					dManager=new dataSelectionManager(dataObject,map);
+					isFirstVariableSelected=true;
+					firstBoundary=dataObject.boundary;
+					buttonbar2.selectedItem="action";
+					firstVariableAction.label="Change First Variable";
+					this.currentState="action";
+					this.setState("minimized");
+					break;
+				case "second":
+					dManager=new dataSelectionManager(dataObject,map);
+					buttonbar2.selectedItem="action";
+					this.currentState="action";
+					secondVariableAction.label="Change Second Variable";
+					this.setState("minimized");
+					break;
+				case "chart":
+					var ChartManager:chartManager=new chartManager(dataObject,map);
+						buttonbar2.selectedItem="action";
+						this.currentState="action";
+						this.setState("minimized");
+					break;
+			}
+		
+		}
+
+
+		protected function buttonbar2_changeHandler(event:IndexChangeEvent):void
+		{
+			switch(event.newIndex){
+				case (0):
+					this.currentState="action";
+					break;
+				case (1):
+					this.currentState="category";
+					break;
+				case (2):
+					this.currentState="subcategory";
+					break;
+				case (3):
+					this.currentState="variable";
+					break;
+			}
+			
+		}
+
+		private function yearSelected(event:CustomEvents):void{
+			dataObject.boundary = event.data.boundary;
+			dataObject.coverage = event.data.coverage;
+			dataObject.year = event.data.year;
+			dataObject.layer = event.data.layer;
+			dataObject.field = event.data.field;
+			dataObject.dataType = event.data.dataType;
+		} 
+
+		protected function variableCategoryTree_itemDoubleClickHandler(event:ListEvent):void
+		{
+			
+			if(!event.itemRenderer.data.children){
+			switch(dataObject.action)
+			{
+				case "first":
+					subCategoryResult3.token=datalookup.variableDetail(event.itemRenderer.data.name,event.itemRenderer.data.parent);
+					dataObject.variablecategory = event.itemRenderer.data.parent;
+					break;
+				case "second":
+					subCategoryResult3.token=datalookup.secondVariable(event.itemRenderer.data.name,firstBoundary);
+					dataObject.variablecategory = event.itemRenderer.data.parent;
+					break;
+				case "chart":
+					subCategoryResult3.token=datalookup.variableDetail(event.itemRenderer.data.name,event.itemRenderer.data.parent);
+					dataObject.variablecategory = event.itemRenderer.data.parent;
+					
+			}
+			
+			dataObject.variable=event.itemRenderer.data.name;
+			}
+			else
+				{
+				
+				var int:int=event.rowIndex;
+				if(variableCategoryTree.openItems.length>0){
+					for each(var obj:Object in variableCategoryTree.openItems){
+						if(obj.name==event.itemRenderer.data.name){
+							variableCategoryTree.expandItem(variableCategoryTree.dataProvider[int],false);
+						}
+						else{
+							variableCategoryTree.expandItem(variableCategoryTree.dataProvider[int],true);
+						}
+					}
+				}
+				else
+					{
+					variableCategoryTree.expandItem(variableCategoryTree.dataProvider[int],true);
+					}
+				}
+			}
+
+
+			protected function datagrid1_changeHandler(event:ListEvent):void
+			{
+				//Alert.show(subCategoryResult3.lastResult.item.toString());
+			}
+			protected function showDataTip(i:Object):String{
+				return i.name;
+			}
+			
+			protected function subCategoryResult3_resultHandler(event:ResultEvent):void
+			{
+				// Possible place to change datagrid
+				trace("hello");
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@font-face{
+			src:url("assets/fonts/CAMBRIA.TTC");
+			font-family:"cambria";
+			embedAsCFF: false; 
+			}
+		.cambria{font-family:"cambria"}
+		
+		.headerStyle{
+			color:white
+		}
+		
+		s|ButtonBar s|ButtonBarButton:upAndSelected,
+		s|ButtonBar s|ButtonBarButton:overAndSelected,
+		s|ButtonBar s|ButtonBarButton:downAndSelected,
+		s|ButtonBar s|ButtonBarButton:disabledAndSelected {
+			chromeColor: #003666;
+			color: #FFFFFF;
+		}
+		
+	</fx:Style>
+	
+	<viewer:states>
+		<s:State name="action"/>
+		<s:State name="Help"/>
+		<s:State name="category"/>
+		<s:State name="subcategory"/>
+		<s:State name="variable"/>
+	</viewer:states>
+
+	
+	<viewer:transitions>
+		<s:Transition fromState="*" toState="*">
+			<s:Wipe direction="left" duration="1100" target="{wTemplate}"/>
+		</s:Transition>
+	</viewer:transitions>
+	
+	
+	
+	<fx:Declarations>
+		<s:CallResponder id="categoryResult" fault="Alert.show('Please try and select the category again or refresh the browser.\n If the problem continues, please post us a comment')"/>
+		<datalookup:Datalookup id="datalookup" showBusyCursor="true"/>
+		<s:CallResponder id="subCategoryResult" fault="Alert.show('Please try and select the category again or refresh the browser.\n If the problem continues, please post us a comment')"/>
+		<s:CallResponder id="subCategoryResult2" fault="subCategory2Fault(event)"/>
+		<s:CallResponder id="subCategoryResult3" result="subCategoryResult3_resultHandler(event)" fault="Alert.show('Please try and select the category again or refresh the browser.\n If the problem continues, please post us a comment')" />
+	</fx:Declarations>
+
+	<viewer:WidgetTemplate width="800" height="500" id="wTemplate">
+		<s:BorderContainer id="actionPage" width="100%" height="100%" backgroundAlpha="0.0" borderVisible="false">
+			<s:layout>
+				<s:VerticalLayout/>
+			</s:layout>
+			<mx:HRule width="100%"/>
+			<s:ButtonBar width="100%" id="buttonbar2" change="buttonbar2_changeHandler(event)" fontSize="14">
+				<s:ArrayCollection>
+					<fx:String id="action">Start Here</fx:String>
+					<fx:String id="category">Pick a Category</fx:String>
+					<fx:String id="subcategory">Pick a Subcategory</fx:String>
+					<fx:String id="variable">Choose Data</fx:String>
+				</s:ArrayCollection>
+			</s:ButtonBar>
+			<mx:HRule width="100%"/>
+		<s:Group includeIn="action" width="100%" height="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:Label x="120" y="0" text="Select what you would like to do" fontSize="22" textAlign="center" width="100%"/>
+			<mx:Spacer  height="20"/>
+			<s:Button click="label1_clickHandler(event)" buttonMode="true" useHandCursor="true" x="133" y="70" id="firstVariableAction" label="Create a Map"  fontSize="16" skinClass="com.esri.viewer.skins.mapbuttonSkin" width="60%"/>
+			<s:Button click="label2_clickHandler(event)" buttonMode="true" useHandCursor="true" enabled="{isFirstVariableSelected}" id="secondVariableAction" x="133" y="120" label="Add a Second Layer" toolTip="This variable must use the same boundaries"  fontSize="16" skinClass="com.esri.viewer.skins.mapbuttonSkin" width="60%"/>
+			<s:Button click="label3_clickHandler(event)" buttonMode="true" useHandCursor="true" x="133" y="170" id="chart" label="Make a Chart" fontSize="16" skinClass="com.esri.viewer.skins.buttonSkin" width="60%"/>
+		</s:Group>	
+		<s:Group includeIn="category" width="100%" height="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:List  width="100%" y="25" buttonMode="true" useHandCursor="true"  click="list1_clickHandler(event)" contentBackgroundAlpha="0" borderVisible="false"  creationComplete="list1_creationCompleteHandler(event)"
+					 dataProvider="{categoryResult.lastResult.item}" itemRenderer="infoWidgets.dataExploration.dateSelectComponent">
+				<s:layout>
+					<s:TileLayout/>
+				</s:layout>
+			</s:List>
+		</s:Group>
+		<s:Group includeIn="subcategory" width="100%" height="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:List  x="10" y="25" width="100%" click="list2_clickHandler(event)" height="100%" id="yearList"
+					 contentBackgroundAlpha="0" borderVisible="false" dataProvider="{subCategoryResult.lastResult.item}" 
+					 itemRenderer="infoWidgets.dataExploration.dateSelectComponent">
+				<s:layout>
+					<s:TileLayout/>
+				</s:layout>
+			</s:List>
+		</s:Group>
+		<s:Group includeIn="variable" width="100%" height="100%">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center"/>
+			</s:layout>
+		
+				<s:BorderContainer height="58" dropShadowVisible="true" cornerRadius="5" contentBackgroundAlpha="0.8">
+					<s:layout>
+						<s:HorizontalLayout paddingRight="5" paddingTop="5"/>
+					</s:layout>
+				<s:VGroup textAlign="center">
+					<s:Label text="Select a variable to see what places and years we have then click 'display'" styleName="cambria" fontSize="16" color="#333333" height="25" width="550" textAlign="center" verticalAlign="middle"/>
+					<s:Label text="You can sort the variables by clicking on the column titles" styleName="cambria" color="#333333" width="547"/>
+				</s:VGroup>
+					<s:Button label="Display the Data" click="button2_clickHandler(event)" id="displayDataButton" 
+							  enabled="false" height="40" width="148" fontSize="16" accentColor="#003666" focusColor="#003666" chromeColor="#003666"/>
+				</s:BorderContainer>
+		
+			
+			<mx:HDividedBox width="100%" height="347">
+				<s:VGroup width="50%">
+					<mx:Tree dataProvider="{subCategoryResult2.lastResult.item}" showDataTips.variable="true" dataTipFunction.variable="showDataTip"  
+							 borderStyle="none" defaultLeafIcon="{null}"  
+							 contentBackgroundAlpha="0"  id="variableCategoryTree" labelField="name" buttonMode="true" useHandCursor="true"
+							 width="100%" itemClick="variableCategoryTree_itemDoubleClickHandler(event)" height="332">
+						
+					</mx:Tree>
+				
+				</s:VGroup>
+				<s:VGroup width="50%">
+					<mx:DataGrid textAlign="center" id="dgVariableDetails"  itemClick="datagrid1_itemClickHandler(event)" color="#FFFFFF" 
+								 dataProvider="{subCategoryResult3.lastResult.item}" dropShadowVisible="false"
+								 width="100%" height="331"  borderVisible="false" headerStyleName="headerStyle"
+								 contentBackgroundAlpha="1" >
+						<mx:columns>
+							<mx:DataGridColumn dataField="boundaryLabel" headerText="Boundary"/>
+							<mx:DataGridColumn dataField="year" width="50" headerText="Year"/>
+							<!--<mx:DataGridColumn dataField="coverage" headerText="Coverage"/>-->
+							<mx:DataGridColumn dataField="source" headerText="Source"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:VGroup>
+			</mx:HDividedBox >
+			
+		</s:Group>
+			<s:Group includeIn="Help">
+				<mx:Text color="0x000000" text="This is the help menu for data selection"></mx:Text>
+			</s:Group>
+		</s:BorderContainer>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="800" height="638" 
+		 creationComplete="group1_creationCompleteHandler(event)" xmlns:layout="org.alivepdf.layout.*" xmlns:esri="http://www.esri.com/2008/ags">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import myUtils.imageSaving;
+			protected function button2_clickHandler(event:MouseEvent):void
+			{
+				var bytes:ByteArray=imageSaving.getPNG(bcMapBox);
+				var fileFilter:FileFilter = new FileFilter("Image: .png",".png");
+				var file:FileReference=new FileReference();
+						file.save(bytes,"yourMap.png");
+						
+				
+			}
+
+			protected function button3_clickHandler(event:MouseEvent):void
+			{
+				var bytes:ByteArray=imageSaving.getPNG(bcMetaBox);
+				var file:FileReference=new FileReference();
+				
+				file.save(bytes,"yourLegend.png");
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Script>
+		<![CDATA[
+			import com.degrafa.Graphic;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.geometry.Extent;
+			import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.renderers.Renderer;
+			import com.esri.ags.symbols.SimpleFillSymbol;
+			import com.esri.ags.symbols.Symbol;
+			
+			import flash.display.Bitmap;
+			
+			import mx.collections.ArrayCollection;
+			import mx.containers.VBox;
+			import mx.controls.SWFLoader;
+			import mx.events.FlexEvent;
+			import mx.graphics.ImageSnapshot;
+			
+			import myUtils.UtilFunctions;
+			
+			import org.alivepdf.display.Display;
+			import org.alivepdf.fonts.*;
+			import org.alivepdf.layout.*;
+			import org.alivepdf.pages.Page;
+			import org.alivepdf.pdf.PDF;
+			import org.alivepdf.saving.Method;
+			public var _theLayers:ArrayCollection;
+			
+			[Bindable]
+			private var _theDescription:String;
+			
+			[Bindable]
+			private var _theTitle:String;
+			
+			[Bindable]
+			private var _theLegend:Bitmap;
+			
+			[Bindable]
+			private var _theLegend2:Bitmap;
+						
+			[Bindable]
+			private var theSubTitle:String;
+			
+			[Bindable]
+			private var theLegend1:VBox;
+			
+			[Bindable]
+			private var _legendTitle:String;
+			
+			[Bindable]
+			private var _legendTitle2:String;
+			
+			[Bindable]
+			private var _theExtent:Extent;
+			
+			//Interface
+			
+			 public function set theLayers(m:ArrayCollection):void{
+				_theLayers=m;
+			}
+			
+			public function get theLayers():ArrayCollection{
+				return _theLayers;
+			} 
+			
+			public function set Legend(b:Bitmap):void{
+				_theLegend=b;
+			}
+			
+			public function get Legend():Bitmap{
+				return _theLegend;
+			}
+			
+			public function set Legend2(b:Bitmap):void{
+				_theLegend2=b;
+			}
+			
+			public function get Legend2():Bitmap{
+				return _theLegend2;
+			}
+			
+			public function set Title(s:String):void{
+				_theTitle=s;
+			}
+			
+			public function get Title():String{
+				return _theTitle;
+			}
+			
+			public function set theExtent(e:Extent):void{
+				_theExtent=e;
+			}
+			
+			[Bindable]
+			public function get theExtent():Extent{
+				return _theExtent;
+			}
+			
+			public function set legendTitle(s:String):void{
+				_legendTitle=s;
+			}
+			
+			public function set legendTitle2(s:String):void{
+				_legendTitle2=s;
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+				{
+					//template to populate boxes
+					generateLoaders();
+				}
+			
+			
+			
+			
+			protected function generateLoaders():void{
+				
+				//recreates graphics
+				mpPrintMap.removeAllLayers();
+				for each (var obj:Layer in theLayers){
+					
+					if(obj.visible==true){
+						switch(obj.className){
+							case "ArcGISTiledMapServiceLayer":
+								var tempObj:ArcGISTiledMapServiceLayer=obj as ArcGISTiledMapServiceLayer;
+								var tempLayer:ArcGISTiledMapServiceLayer=new ArcGISTiledMapServiceLayer(tempObj.url);
+								mpPrintMap.addLayer(tempLayer);
+								break;
+							case "GraphicsLayer":
+								var tempGrObj:GraphicsLayer=obj as GraphicsLayer;
+								var tempGraphicLayer:GraphicsLayer=new GraphicsLayer();
+									tempGraphicLayer=tempGrObj;
+								mpPrintMap.addLayer(tempGraphicLayer);
+								break;
+							case "ArcGISDynamicMapServiceLayer":
+								var tempObj1:ArcGISDynamicMapServiceLayer=obj as ArcGISDynamicMapServiceLayer;
+								var visLayer:ArrayCollection=new ArrayCollection();
+									for each(var thing:Object in tempObj1.visibleLayers){
+									visLayer.addItem(thing);
+							}
+								var tempDynaLayer:ArcGISDynamicMapServiceLayer=new ArcGISDynamicMapServiceLayer(tempObj1.url);
+									tempDynaLayer.imageTransparency=true;
+									tempDynaLayer.visibleLayers=visLayer;
+								mpPrintMap.addLayer(tempDynaLayer);
+								break;
+						}
+						mpPrintMap.navigationClass=null;
+						mpPrintMap.logoVisible=false;
+						
+					
+					}
+					
+				}
+				
+				
+				
+				
+				//thematic legend
+				var loader1:SWFLoader=new SWFLoader();
+					loader1.source=Legend;
+					
+					//loader1.scaleX=.85;
+					//loader1.scaleY=.85;
+				bcMetaBox.addElement(loader1);
+				
+				if(Legend2)
+					{
+					this.currentState="twolegend";	
+											
+					//point legend
+					var loader2:SWFLoader=new SWFLoader();
+						loader2.source=Legend2;
+						loader1.percentWidth=100;
+						loader1.percentHeight=100;
+						
+						loader2.percentWidth=100;
+						loader2.percentHeight=100;
+						//loader2.scaleX=.8;
+						//loader2.scaleY=.8;
+						bcMetaBox1.addElement(loader2);
+					}
+				var d:Date=new Date();
+				var mon:Number = d.month+1
+				lblDate.text=mon+"/"+d.date+"/"+ d.fullYear;
+			}
+			
+
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				/* var myPDF:PDF=new PDF(Orientation.LANDSCAPE);
+					myPDF.setDisplayMode(Display.FULL_WIDTH);
+					myPDF.addPage();	
+					myPDF.addImage(bcOneLegendMap);
+					myPDF. save(Method.LOCAL);*/
+				
+				//REMOVE ZOOM SLIDER FROM PRINT_OUT
+				mpPrintMap.zoomSliderVisible = false;
+				
+				//TAKE SNAPSHOT OF MAP
+				var bmpMap:BitmapData = ImageSnapshot.captureBitmapData(bcMapDocument);
+					var pdf:PDF=new PDF(Orientation.LANDSCAPE,Unit.MM,Size.LETTER);
+					pdf.setDisplayMode( Display.FULL_PAGE, Layout.SINGLE_PAGE );
+					var newPage:Page = new Page ( Orientation.LANDSCAPE, Unit.MM);
+					pdf.addPage( newPage );
+					//pdf.save(Method.LOCAL);
+					//pdf.setFont(FontFamily.ARIAL , Style.NORMAL, 12);
+					//pdf.addText("This is a sample text",5,15);
+					//pdf.drawCircle(25,35,15);
+					//pdf.addPage();
+					pdf.addImage(bcMapDocument);
+					var fs:FileReference = new FileReference();  
+					fs.save(pdf.save(Method.LOCAL),"map.pdf");
+					/* file = File.desktopDirectory.resolvePath("testPage.pdf");   
+					fs.open( file, FileMode.WRITE);   
+					var bytes:ByteArray = pdf.save(Method.LOCAL);   
+					fs.writeBytes(bytes);    */
+				
+			}
+
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="onelegend"/>
+		<s:State name="twolegend"/>
+	</s:states>
+
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+		
+	
+	<s:BorderContainer width="100%" height="95%" id="bcMapDocument" borderVisible="false" dropShadowVisible="true" cornerRadius="5">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="center"/>
+		</s:layout>
+		
+		<!--title area-->
+		<s:BorderContainer backgroundColor="#333333" backgroundAlpha=".9" width="100%" height="74">
+			 <s:layout>
+				 <s:VerticalLayout paddingTop="5"/>
+			 </s:layout>
+			 <s:TextInput width="100%" id="txtTitle1" text="Click Here and Write a Title" click="txtTitle1.text=''" fontSize="16" borderVisible="false" contentBackgroundColor="#333333" contentBackgroundAlpha="0" />
+			 <s:TextInput width="100%" id="txtSubtitle1" text="Click Here and Write a Subtitle" click="txtSubtitle1.text=''" fontSize="14" borderVisible="false"  contentBackgroundColor="#333333" contentBackgroundAlpha="0"/>
+		 </s:BorderContainer>
+			
+		<!--legend and map-->
+		<s:HGroup height="80%" width="100%">
+			<!--legend sidebar-->
+			<s:BorderContainer height="100%" id="bcSidebar" includeInLayout="true"  width="30%" borderVisible="false">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="center"/>
+				</s:layout>
+				<s:BorderContainer id="bcText1" includeInLayout.twolegend="false" visible.twolegend="false" width="100%" backgroundColor="#FFFFFF" height="40%" contentBackgroundColor="#8B98FB" borderVisible="false">
+					<s:TextArea text="Write a Description" contentBackgroundColor="#FDFDFD" height="100%" width="100%" color="#333333" borderVisible="false"/>
+				</s:BorderContainer>
+				
+				<s:Panel id="bcMetaBox" skinClass="infoWidgets.dataExploration.MapLegend.legendPanelSkin" title="{_theTitle}" height.twolegend="49%"  backgroundAlpha=".7" width="100%">
+					<s:layout>
+						<s:HorizontalLayout verticalAlign="middle" horizontalAlign="center"/>
+					</s:layout>
+				</s:Panel>	
+				<s:Panel id="bcMetaBox1" skinClass="infoWidgets.dataExploration.MapLegend.legendPanelSkin" height.twolegend="49%" visible.onelegend="false" visible.twolegend="true" title="{_legendTitle2}" backgroundAlpha=".7" width="100%">
+					<s:layout>
+						<s:HorizontalLayout verticalAlign="middle" horizontalAlign="center"/>
+					</s:layout>
+				</s:Panel>	
+				
+				<!--<s:BorderContainer id="bcMetaBox1" height="60%" backgroundAlpha=".7" width="100%" borderVisible="false">
+					<s:Label text="{Title}" color="#333333"/>
+				</s:BorderContainer>-->
+			</s:BorderContainer>
+			<!--Map area-->
+			<s:BorderContainer id="bcMapBox" width="69%" height="100%" borderVisible="true">
+				<esri:Map id="mpPrintMap" extent="{theExtent}" zoomSliderVisible="false"/>
+			</s:BorderContainer>
+			</s:HGroup>
+		<!--footer-->
+		<s:BorderContainer id="bcAbout1" width="100%" height="30" backgroundColor="#333333">
+			<s:layout>
+				<s:HorizontalLayout verticalAlign="middle"/>
+			</s:layout>
+			<s:Label text="Produced using infoAlamedaCounty.org on"/>
+			<s:Label id="lblDate"
+					 width.onelegend="173"/>
+			<s:Label width="100%" text="Copyright@2011, All Rights Reserved" textAlign="right"
+					 textAlign.onelegend="center" verticalAlign.onelegend="middle"/>
+		</s:BorderContainer>
+	</s:BorderContainer>
+	
+	<s:BorderContainer id="bcControlPanel" width="100%">
+		<s:layout>
+			<s:VerticalLayout paddingTop="5"/>
+		</s:layout>
+		<s:RichText color="#333333" width="95%">
+			<s:p>The print template is a customizable landscape design that allows you to type in text on the document to describe your project as well as to move
+			and zoom the map to best fit your area of interest.</s:p>
+			<s:p>Map controls will work: 1: click and drag to move the map around; 2: Hold shift and drag a box around an area to zoom in; 
+			and 3:Hold the control key and double click to zoom out. For more map controls, please read the help menu</s:p> 
+		</s:RichText>
+		<s:HGroup>
+			<s:Button label="Print Map" click="button1_clickHandler(event)"/>
+			<s:Button label="Export Just Map" click="button2_clickHandler(event)"/>
+			<s:Button label="Export Just Legend" click="button3_clickHandler(event)"/>
+		</s:HGroup>	
+	</s:BorderContainer>
+	
+	
+
+</s:Group>

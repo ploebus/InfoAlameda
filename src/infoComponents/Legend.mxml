@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:datalookup="services.datalookup.*"
+		 xmlns:infoComponents="infoComponents.*"
+		 width="400" creationComplete="group1_creationCompleteHandler(event)"
+		 height.edit="100%" xmlns:esri="http://www.esri.com/2008/ags">
+	<fx:Script>
+		<![CDATA[
+			import classes.IClassificationScheme;
+			import classes.ILegend;
+			import classes.IRenderer;
+			import classes.MapColors;
+			import classes.equalInterval;
+			import classes.events.CustomEvents;
+			import classes.proportionalSymbolRenderer;
+			import classes.quantile;
+			import classes.thematicLegend;
+			import classes.thematicRenderer;
+			
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.events.GeoprocessorEvent;
+			import com.esri.ags.events.LayerEvent;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.renderers.ClassBreaksRenderer;
+			import com.esri.ags.renderers.Renderer;
+			import com.esri.ags.renderers.supportClasses.ClassBreakInfo;
+			import com.esri.ags.symbols.SimpleLineSymbol;
+			import com.esri.ags.tasks.supportClasses.JobInfo;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			
+			import infoWidgets.dataExploration.VO.DataObject;
+			import infoWidgets.dataExploration.chart.chartManager;
+			import infoWidgets.dataExploration.dataSelectionManager;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.containers.Grid;
+			import mx.containers.GridRow;
+			import mx.controls.Alert;
+			import mx.controls.DataGrid;
+			import mx.controls.HSlider;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.events.ColorPickerEvent;
+			import mx.events.FlexEvent;
+			import mx.events.SliderEvent;
+			import mx.graphics.ImageSnapshot;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import myUtils.johnUtils;
+			
+			import spark.events.IndexChangeEvent;
+			
+			private var dataUrl:String = "";
+			
+			private var lineSymbol:SimpleLineSymbol=new SimpleLineSymbol("solid",0x000000);
+			
+			private var myDataDownload:DataDownload;
+			
+			//MAP SELECTED BOUNDARY TO SUMMARY MAP SERVICE
+			private var boundaryObjectMapping ={
+				County:'County Line',
+				SchoolDistricts:'School Districts',
+				Places:'City or Place',
+				ZipCodes2010:'Zip Codes 2010',
+				ZipCodes2009:'Zip Codes 2009',
+				BlockGroups:'Census Block Groups',
+				Blocks:'Census Blocks',
+				Tracts2010:'Census Tracts 2010',
+				Tracts:'Census Tracts 2000',
+				PoliceBeats:'Oakland Community Police Beats'
+			};
+			
+			[Bindable]
+			public var variableSelected:String;
+			
+			[Bindable] private var yearSelected:String;
+			
+			[Bindable]
+			public var classificationSelected:String;
+			
+			public var binCount:Array;
+			
+			public var theGraphic:GraphicsLayer;
+			
+			public var mapAlpha:Number;
+			
+			[Bindable]
+			public var mapObject:Object;
+			
+			private var arrCategory:Array=new Array(5,4,3);
+			
+			private var _catCount:Number;
+			
+			[Bindable]
+			public var lookupResults:XML;
+			
+			[Bindable]
+			public var dataAlias:String;
+			
+			[Bindable]
+			private var variableAlias:String;
+			
+			[Bindable]
+			public var arrCollection:ArrayCollection=new ArrayCollection;
+			
+			[Bindable]
+			public var sldTransparency:HSlider=new HSlider();
+			
+			[Bindable]
+			private var _dataType:String;
+			
+			[Bindable]
+			private var _specs:Object;
+			
+			[Bindable]
+			public var source:String;
+			
+			[Bindable]
+			public var selectedColor:int;
+			
+			[Bindable]
+			public var selectedClassification:String = "Equal Interval";
+			
+			
+			private var dg:DataGrid;
+			
+			
+			private var sort:Sort;
+			
+			[Bindable]
+			private var _features:Array;
+			
+			public var map:Map;
+			
+			[Bindable]public var transparencyValue:Number = 1;
+			
+			[Bindable]
+			public var usertip:String;		
+			
+			public var objectName:String;
+			
+			[Bindable]
+			private var tempColl:ArrayCollection;
+			
+			
+			[Bindable]
+			private var colorPickerArray:Array=[
+				
+				{label:"red",color:"0xB10026"},
+				{label:"green",color:"0x005A32"},
+				{label:"purple",color:"0x4A1486"},
+				{label:"brown",color:"0x993404"},
+				{label:"orange",color:"0x8C2D04"},
+				{label:"blue",color:"0x0C2C84"}];
+			
+			//CAPTURE LEGEND INFORMATION
+			[Bindable]
+			public var thisLegendState:Object={
+				which: "graphicsLayer",
+				classes:5,
+				color:"green",
+				classification:"Equal Interval"
+			};
+			
+			//MAINTAIN WHAT HAS CHANGED
+			
+			private var colorChanged:Boolean = false;
+			private var classesChanged:Boolean = false;
+			private var classificationChanged:Boolean = false;
+			
+			public function set specs(obj:Object):void{
+				_specs=obj;
+				_dataType=_specs.dataType;
+			}
+			
+			public function get specs():Object{
+				return _specs;
+			}
+						
+			
+			private function changeColor(E:MouseEvent):void
+			{
+				
+				var legendObject:Object={
+						box:objectName,
+						categories:categoryNumber.value,
+						color:E.target.label,
+						colorIndex:(E.target as ColorPicker).selectedIndex,
+						classification:classificationScheme.selectedItem,
+						specs:_specs
+				}
+				AppEvent.dispatch(AppEvent.LEGEND_CHANGED,legendObject);
+				//createLegend();
+			}	
+			
+			private function changeAlpha(event:SliderEvent):void
+			{
+				mapAlpha=event.value/100;
+				theGraphic.alpha=mapAlpha;
+				
+			}
+			private function removeLayer(event:MouseEvent):void
+			{
+				var legendObject:Object={
+					box:objectName,
+					categories:"Remove",
+					color:null,
+					classification:null
+				}
+				event.stopPropagation();
+				
+				this.dispatchEvent(new Event(Event.CLOSE));
+				
+				
+				//tell dataselect to wipe layer from map
+				AppEvent.dispatch(AppEvent.LEGEND_CHANGED,legendObject);
+				
+			}
+
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				//Create a renderer
+				//SET CURSOR
+				CursorManager.setBusyCursor();	
+			
+				var theColor:String = "green";
+				
+				if((colorList.selectedItem as Object).hasOwnProperty('label')){
+					theColor = colorList.selectedItem.label
+				}
+				//took way conditional until changeColors function works
+				if(colorChanged == "Change" && classesChanged == false && classificationChanged == false ){
+					//RESET CHANGE FLAG
+					colorChanged = false;
+					
+					changeColors();
+				}
+				else{
+					var cBreak:IClassificationScheme;
+					var lyr:GraphicsLayer;
+					var cRenderer:IRenderer;
+					
+					//CLASSIFY DATA
+					switch(thisLegendState.classification){
+						case "Equal Interval":
+							cBreak = new equalInterval(mapObject.features,thisLegendState.classes,specs.field);
+							break;
+						case "Quantile":
+							cBreak = new quantile(mapObject.features,thisLegendState.classes,specs.field);
+							break
+					}
+					//RENDER FOR MAP
+					switch(this.id){
+						case "first":
+							lyr=map.getLayer("graphicsLayer") as GraphicsLayer;
+							cRenderer = new thematicRenderer(thisLegendState.classes,specs.field,cBreak.getRanges(),thisLegendState.color);
+							break;
+						case "second":
+							lyr=map.getLayer("graphicsLayer1") as GraphicsLayer;
+							cRenderer = new proportionalSymbolRenderer(thisLegendState.classes,specs.field,cBreak.getRanges(),thisLegendState.color);
+							break;
+					}
+					//CHANGE MAP LAYER
+					lyr.renderer = cRenderer.getRenderer();
+					lyr.refresh();
+					
+					//LISTEN FOR COMPLETE EVENT THAN CHANGE MAP
+					lyr.addEventListener(LayerEvent.UPDATE_END,layerUpdated);
+				}
+			}
+
+			protected function layerUpdated(evt:LayerEvent):void{
+				(evt.target as Layer).removeEventListener(LayerEvent.UPDATE_END,layerUpdated);
+				updateLegend(evt.target as Layer);
+			}
+
+			protected function button2_clickHandler(event:MouseEvent):void
+			{
+								
+				this.dispatchEvent(new Event("closeme",true));
+				
+			}
+
+
+			protected function legendChart_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				var chartArr:ArrayCollection=new ArrayCollection();
+				var histArr:ArrayCollection=new ArrayCollection();
+				var present:Boolean=false;
+				var lastValue:Number;
+				
+				for each (var obj:Object in mapObject.features){
+					
+					chartArr.addItem(obj.attributes);
+					if(histArr.length==0){
+						var histObj:Object={
+							"Value":obj.attributes[specs.field],
+							"Count":0,
+							"color":obj.graphicsLayer._lastSymbol.color
+						};
+						histArr.addItem(histObj);
+					}
+					for each(var obj1:Object in histArr){
+							if(obj1.Value==obj.attributes[specs.field])
+							{
+								present=true;
+								obj1.Count=obj1.Count+1;
+							}
+						}
+					if(present==false){
+						var histObj1:Object={
+							"Value":obj.attributes[specs.field],
+							"Count":1,
+							"color":obj.graphicsLayer.symbol.color
+							
+						};
+						histArr.addItem(histObj1);
+					}
+						present=false;	
+								
+							}
+						
+			
+				
+				var dataSort:SortField=new SortField("Value",false,true,true);
+				sort=new Sort();
+					sort.fields=[dataSort];
+				histArr.sort=sort;
+				histArr.refresh();
+				legendChart.dataProvider=histArr;
+				
+				
+			}
+			private function editLegend(e:Event):void{
+				this.setCurrentState("edit");
+				getYears();
+				classificationScheme.selectedItem=mapObject.classificationScheme;
+				//colorList.selectedIndex=1;
+				cbxYears.selectedItem=specs.year;
+			}
+
+			
+			protected function getYears():void
+			{
+				//CHANGED THIS TO STANDARDIZE INPUTS
+				getYearsResult.token = datalookup.getYears(_specs.variablecategory,_specs.variable, _specs.boundary);
+			}
+			
+
+			protected function button3_clickHandler(event:MouseEvent):void
+			{
+				specs.year=cbxYears.selectedItem.year;
+				specs.field=cbxYears.selectedItem.field;
+				getDataObject.token = datalookup.getDataObject(specs.field,specs.boundary);
+				getDataObject.addEventListener(ResultEvent.RESULT, loadMap);
+				
+				//ViewerContainer.dispatchEvent(new AppEvent(AppEvent.CHANGE_YEAR,specs));
+			}
+			
+			protected function loadMap(e:ResultEvent):void{
+				e.result[0].action = specs.action;
+				e.result[0].variable = specs.variable;
+				var dManager:dataSelectionManager=new dataSelectionManager(e.result[0] as Object, this.document.map);
+			}
+			public function getLegendImage():Bitmap{
+				var g:Grid=legendGrid;
+					
+				var bmpMap:BitmapData=ImageSnapshot.captureBitmapData(g);
+			
+				var legendImg:Bitmap = new Bitmap(bmpMap);
+					legendImg.scaleX=1.2;
+					legendImg.smoothing = true;
+				return legendImg;
+			}
+			
+			public function getGrid():Grid{
+				
+				return legendGrid;
+			}
+			
+			public function getDataType():String{
+				return _dataType;
+			}
+			public function getVariableName():String{
+				return variableSelected;
+			}
+			private function makeChart(e:MouseEvent):void{
+				AppEvent.dispatch(AppEvent.WIDGET_RUN,2);
+				var dataO:DataObject=new DataObject();
+				dataO=_specs as DataObject;
+				var ChartManager:chartManager=new chartManager(_specs,map);
+				
+			}
+
+			
+			protected function button4_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+			}
+
+
+			protected function timeChart_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+			}
+
+
+			protected function legendGrid_clickHandler(event:MouseEvent):void
+			{
+				
+					PopUpManager.addPopUp(transparencyWindow,this,true);
+					PopUpManager.centerPopUp(transparencyWindow);
+					//transparencyWindow.addEventListener(SliderEvent.CHANGE,changeMap);
+			}
+			protected function changeMap(e:SliderEvent):void{
+				Alert.show(e.value.toString());
+			}
+
+
+			protected function transparencyWindow_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
+			}
+
+
+			
+
+			protected function label1_clickHandler(event:MouseEvent):void
+			{
+				navigateToURL(new URLRequest('http://www.infoalamedacounty.org/index.php/Data/Metadata-Sources.html'),'_blank');
+				
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				//LISTEN FOR CHANGE EVENTS FOR LAYERS
+			 			
+				switch(this.id){
+					case "first":
+						thisLegendState.which = "graphicsLayer";
+						break;
+					case "second":
+						thisLegendState.which = "graphicsLayer1";
+						break;
+				};
+				var lyr:GraphicsLayer = map.getLayer(thisLegendState.which) as GraphicsLayer;
+					lyr.addEventListener(LayerEvent.UPDATE_END,layerUpdated);
+					this.yearSelected = this.specs.year;
+				
+			}
+			
+			protected function naturalBreak_clickHandler(event:MouseEvent):void
+			{
+				
+			 tempColl = new ArrayCollection();
+				for each(var gr:com.esri.ags.Graphic in theGraphic.graphicProvider){
+					var obj:Object = {
+						name: gr.attributes[specs.boundary],
+						value: gr.attributes[specs.field]
+					}
+					tempColl.addItem(obj);
+				}
+				//sliderPoints.arrColl = tempCollection;
+				
+				PopUpManager.addPopUp(naturalBreak,this);
+				PopUpManager.centerPopUp(naturalBreak);
+			}
+			
+			protected function naturalBreakComp_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
+			}
+			
+			
+			protected function sliderPoints_sliderChangeHandler(event:CustomEvents):void
+			{
+				CursorManager.setBusyCursor();
+				var theArr:Array = event.data.values;
+				var rendererArr:Array = new Array();
+				var theRenderer:IRenderer;
+				
+				for (var i:Number = 0;i < theArr.length;i++){
+					var obj:Object;
+					//CATCH HIGHEST VALUE					
+					if(i==theArr.length -1){
+						obj ={
+							bin:i,
+							low:theArr[i -1],
+							high:theArr[i]+1
+						};
+					}
+					//OTHER VALUES
+					else{
+						obj ={
+							bin:i,
+							low:theArr[i],
+							high:theArr[i + 1]
+						};
+					}
+					
+					rendererArr.push(obj);
+				}
+				//Create a renderer
+				var theColor:String = "green";
+				if((colorList.selectedItem as Object).hasOwnProperty("label")){
+					theColor = colorList.selectedItem.label
+				}
+				switch(thisLegendState.which){
+					case "graphicsLayer":
+						theRenderer = new thematicRenderer(theArr.length-1,specs.field,rendererArr,theColor);
+						break;
+					case "graphicsLayer1":
+						theRenderer = new proportionalSymbolRenderer(theArr.length-1,specs.field,rendererArr,theColor);
+						break;
+				}
+				
+				
+				var lyr:GraphicsLayer = map.getLayer(thisLegendState.which) as GraphicsLayer;
+					lyr.renderer = theRenderer.getRenderer() as Renderer;
+					lyr.refresh();
+				updateLegend(lyr);
+			}
+			protected function updateLegend(layer:Layer):void{
+				//CHANGE LEGEND
+				this.currentState="legend";
+				legendGrid.removeAllElements();
+				legendGrid.invalidateDisplayList();
+				var theLegend:ILegend;
+				
+				switch(thisLegendState.which){
+					case "graphicsLayer":
+						theLegend = new thematicLegend(thematicLegend.THEMATIC);
+						break;
+					case "graphicsLayer1":
+						theLegend = new thematicLegend(thematicLegend.POINT);
+						break;
+				}
+				//var themeLegend:thematicLegend = new thematicLegend(thematicLegend.THEMATIC);
+				var gridArr:Array=theLegend.getLegend(((layer as GraphicsLayer).renderer as ClassBreaksRenderer).infos);
+				var firstGr:GridRow=new GridRow();
+				
+				for each (var gr:GridRow in gridArr){
+					legendGrid.addElement(gr)
+				}
+				
+				CursorManager.removeBusyCursor();
+			}
+			protected function colorList1_changeHandler(event:ColorPickerEvent):void
+			{
+				thisLegendState.color = (event.target as ColorPicker).selectedItem.label;
+				var colorSymbolArray:Array = new Array();
+				var tRenderer:MapColors;
+				switch((event.target as ColorPicker).selectedItem.label){
+					case "green":
+						tRenderer = new MapColors(MapColors.GREEN, categoryNumber.value);
+						break;
+					case "purple":
+						tRenderer = new MapColors(MapColors.PURPLE, categoryNumber.value);
+						break;
+					case "red":
+						tRenderer = new MapColors(MapColors.RED, categoryNumber.value);											
+						break;
+					case "brown":
+						tRenderer = new MapColors(MapColors.BROWN, categoryNumber.value);					
+						break;
+					case "blue":
+						tRenderer = new MapColors(MapColors.BLUE, categoryNumber.value);
+						break;
+					case "orange":
+						tRenderer = new MapColors(MapColors.ORANGE, categoryNumber.value);
+						break;
+					case "hollow":
+						tRenderer = new MapColors(MapColors.HOLLOW, categoryNumber.value);
+						break;
+					}
+				colorSymbolArray = tRenderer.getColors();
+				var lyr:GraphicsLayer = map.getLayer("graphicsLayer") as GraphicsLayer;
+				var i:int = 0;
+				for each(var t:ClassBreakInfo in (lyr.renderer as ClassBreaksRenderer).infos){
+					t.symbol = colorSymbolArray[i]
+					i++
+				}
+				//lyr.renderer = theRenderer.getRenderer() as Renderer;
+				lyr.refresh();
+				
+				updateLegend(lyr);
+			}
+			
+			protected function btnGoToLegend_clickHandler(event:MouseEvent):void
+				{
+					this.currentState="legend";
+					
+					legendGrid.invalidateDisplayList();
+				}
+			protected function changeColors():void{
+				var colorSymbolArray:Array = new Array();
+				var tRenderer:MapColors;
+				
+				switch(thisLegendState.color){
+				case "green":
+				tRenderer = new MapColors(MapColors.GREEN, categoryNumber.value);
+				break;
+				case "purple":
+				tRenderer = new MapColors(MapColors.PURPLE, categoryNumber.value);
+				break;
+				case "red":
+				tRenderer = new MapColors(MapColors.RED, categoryNumber.value);											
+				break;
+				case "brown":
+				tRenderer = new MapColors(MapColors.BROWN, categoryNumber.value);					
+				break;
+				case "blue":
+				tRenderer = new MapColors(MapColors.BLUE, categoryNumber.value);
+				break;
+				case "orange":
+				tRenderer = new MapColors(MapColors.ORANGE, categoryNumber.value);
+				break;
+				case "hollow":
+				tRenderer = new MapColors(MapColors.HOLLOW, categoryNumber.value);
+				break;
+				}
+				colorSymbolArray = tRenderer.getColors();
+				var lyr:GraphicsLayer = map.getLayer(thisLegendState.which) as GraphicsLayer;
+				var i:int = 0;
+				for each(var t:ClassBreakInfo in (lyr.renderer as ClassBreaksRenderer).infos){
+				t.symbol = colorSymbolArray[i]
+				i++
+				}
+				//lyr.renderer = theRenderer.getRenderer() as Renderer;
+				lyr.refresh();
+				lyr.addEventListener(LayerEvent.UPDATE_END,layerUpdated);
+				
+				}
+				
+			//CAPTURE CHANGES TO LEGEND SPECS
+			protected function colorList_changeHandler(event:ColorPickerEvent):void
+			{
+				thisLegendState.color = (event.target as ColorPicker).selectedItem.label;
+				colorChanged = true;
+			}
+			
+				
+			protected function categoryNumber_changeHandler(event:Event):void
+			{
+				classesChanged = true;
+				thisLegendState.classes = (event.target as NumericStepper).value;
+			}
+			
+			protected function classificationScheme_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				classificationChanged = true;
+				thisLegendState.classification = (event.target as ComboBox).selectedItem;
+			}
+			
+			protected function txtPercent_clickHandler(event:MouseEvent):void
+			{
+				
+				if((_specs.field as String).indexOf("PERCENT") == -1){
+				//Alert.show(_specs.field);
+				_specs.field = "PERCENT_" + _specs.field;
+				getDataObject.token = datalookup.getDataObject(_specs.field, _specs.boundary);
+					getDataObject.addEventListener(ResultEvent.RESULT, getPercentLayer);
+					getDataObject.addEventListener(FaultEvent.FAULT, getPercentLayerError);
+				//var dMan:dataSelectionManager = new dataSelectionManager(_specs,map); 
+				}
+				else{
+					Alert.show("This value is already a percent");
+				}
+				
+			}
+			protected function getPercentLayer(e:ResultEvent):void{
+				//Alert.show("result found");
+				var tempObj:Object = e.result[0];
+				//ADD WHICH LAYER TO BE CHANGED
+				tempObj.action = _specs.action;
+				var dMan:dataSelectionManager = new dataSelectionManager(tempObj,map); 
+				
+			}
+			
+			protected function getPercentLayerError(e:FaultEvent):void{
+				_specs.field = (_specs.field as String).replace("PERCENT+","");
+				Alert.show("Sorry, we do not have percentages for this variable");
+			}
+			
+			
+			//DATA EXTRACTION TOOL
+			protected function btnDownload_clickHandler(event:MouseEvent):void
+				{
+				
+					myDataDownload = PopUpManager.createPopUp(this.parentApplication as DisplayObject,DataDownload, true) as DataDownload;
+					//myDataDownload.CSVExport = exportCSV(event);
+					PopUpManager.centerPopUp(myDataDownload);
+					myDataDownload.addEventListener("CSVExport",exportCSV);
+					myDataDownload.addEventListener(CustomEvents.FORMAT_SELECTED,exportGeo);
+				}
+			
+			private function exportGeo(evt:CustomEvents):void{
+				var selected:String = evt.data.format;
+				//Alert.show(selected);
+				createGPParams(selected)
+			}
+			
+			private function createGPParams(s:String):void{
+				//TODO: map current geography
+				var tempArr:Array = [];
+				tempArr.push(boundaryObjectMapping[specs.boundary]);
+				
+				
+				var gpParams:Object= {
+					"Layers_to_Clip":tempArr,
+					"Feature_Format":s
+				};
+				//send job
+				gp.submitJob(gpParams);
+				
+				//return gpParams;
+			}
+			
+			
+				
+		private function gp_jobCompleteHandler(event:GeoprocessorEvent):void{
+			//Alert.show("data here");
+			PopUpManager.removePopUp(myDataDownload);
+			if (event.jobInfo.jobStatus == JobInfo.STATUS_SUCCEEDED)
+			{
+				gp.getResultData(gp.submitJobLastResult.jobId,
+					"Output_Zip_File"); // parameterName
+			}
+			else
+			{
+				//var msg:String = getDefaultString("problemLabel") + "\n\n\n" + event.jobInfo.jobStatus;
+			//	if (event.jobInfo.messages)
+				//{
+					//msg += "\n\n\n" + GPMessage(event.jobInfo.messages[event.jobInfo.messages.length - 1]).description;
+				//}
+				//showError(msg);
+			}
+		}
+		
+		private function gp_getResultDataCompleteHandler(event:GeoprocessorEvent):void{
+			if (event.parameterValue)
+			{
+				dataUrl = String(event.parameterValue.value.url);
+				if (!dataUrl)
+				{
+					//Alert.show(emptyResultsLabel, wTemplate.widgetTitle);
+					//return;
+				}
+				
+				Alert.show("Do you want to save file?", "Data Extract", Alert.YES | Alert.NO, null, alert_ClickHandler);
+			}
+			else
+			{
+				Alert.show("Empty", "Data Extract");
+			}
+		}
+		
+		private function gp_faultHandler(event:FaultEvent):void{
+			//var msg:String = getDefaultString("problemLabel") + "\n\n\n" + event.fault.faultString;
+			//showError(msg);
+			Alert.show(event.fault.faultString);
+		}
+		
+		private function alert_ClickHandler(event:CloseEvent):void
+			{
+				if (event.detail == Alert.YES)
+				{
+					downloadFile(dataUrl);
+				}
+			}
+		
+		private function downloadFile(url:String):void
+			{
+				var downloadURL:URLRequest = new URLRequest();
+				downloadURL.url = url;
+				var file:FileReference = new FileReference();
+				// TODO: can we be smarter with the name of the zip file? For example, for single layers, using a modified layer name?
+				file.download(downloadURL);
+			}
+			
+		private function exportCSV(evt:Event):void{
+				//evt.stopPropagation();
+				//this.removeEventListener("CSVExport",exportCSV);
+				//Alert.show("Here");
+				var dataCollection:ArrayCollection = new ArrayCollection();
+				//get attribute data from features
+				for each(var obj:com.esri.ags.Graphic in mapObject.features){
+					var tempObj:Object = {
+						"geography":obj.attributes[_specs.boundary],
+							"value":obj.attributes[_specs.field]
+					}
+					dataCollection.addItem(tempObj);
+				}
+				//export as csv
+				
+				var s:String=johnUtils.arrayCollectiontoCSV(dataCollection, _specs.variable);
+				var fs:FileReference=new FileReference();
+				fs.save(s,"dataTable.csv");
+			}
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="legend"/>
+		<s:State name="edit"/>
+		<s:State name="chart"/>
+	</s:states>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		.myStyle{
+			swatchWidth:25;
+			swatchHeight:25;
+			textFieldWidth:95;
+		}
+	</fx:Style>
+	
+	<s:transitions>
+		<s:Transition fromState="*" toState="*">
+			<s:Fade id="t1" target="{editBox}" duration="1000"/>
+		</s:Transition>
+	</s:transitions>
+	
+	<fx:Declarations>
+		<esri:Geoprocessor id="gp" showBusyCursor="true"
+						   concurrency="last" 
+						   fault="gp_faultHandler(event)"
+						   getResultDataComplete="gp_getResultDataCompleteHandler(event)"
+						   jobComplete="gp_jobCompleteHandler(event)"
+						   url="http://infogis/InfoAlameda/rest/services/Summary/Summary/GPServer/Extract%20Data%20Task"/>
+		
+		<s:TitleWindow id="transparencyWindow" alpha=".8" title="Set Transparency" width="200" height="100" close="transparencyWindow_closeHandler(event)">
+			<mx:HSlider  id="hSliderTransparency" minimum="0" maximum="100" value="100" labels="['0%','100%']" change="changeMap(event)" liveDragging="true"/>
+		</s:TitleWindow>
+		
+		<s:TitleWindow id="naturalBreak" title = "Set break points" width="550" height="350" close="transparencyWindow_closeHandler(event)">
+			<infoComponents:NaturalBreakComp arrColl="{tempColl}" horizontalCenter="0" verticalCenter="0" sliderChange="sliderPoints_sliderChangeHandler(event)"
+											 id="sliderPoints"/>
+		</s:TitleWindow>
+		<s:CallResponder id="getDataObject"/>
+		<s:CallResponder id="getYearsResult"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		
+		
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:VGroup id="printableArea" includeIn="legend" width="378" height="300">
+		<s:Label text="{variableSelected}" width="368" toolTip="{usertip}"  textAlign="center" verticalAlign="top" fontSize="14" fontWeight="bold"/>
+		<s:Label text="{_dataType}" width="382" textAlign="center"  verticalAlign="middle" fontSize="12"/>
+		
+		<s:HGroup gap.legend="5">
+			
+		<mx:Grid id="legendGrid" dropShadowVisible="true" verticalAlign="middle" horizontalAlign="center" paddingBottom="10" borderStyle="solid" backgroundColor="#035671" backgroundAlpha="0.8"  
+				 cornerRadius="10"  borderColor="#FFFFFF" paddingLeft="10" paddingTop="10" paddingRight="10" contentBackgroundAlpha="0.71" width="240" >
+		</mx:Grid>
+		
+		<s:VGroup gap.legend="10">
+			<s:Button label="Change Map" fontSize="12" click="editLegend(event)" height="30" width="123" />
+			<s:Button label="Show on Chart" click="makeChart(event)" width="123" height="29"/>
+			<s:Button id="btnDownload" width="122" height="29" label="Download Data"
+					  click="btnDownload_clickHandler(event)"/>
+			<s:Button label="Remove Layer" click="button2_clickHandler(event)" height="30" width="123" fontSize="12"/>
+		</s:VGroup>
+		</s:HGroup>
+		<s:HGroup id="nullValues" verticalAlign="middle" horizontalAlign="center" width="244" gap="50">
+			<s:Graphic>
+				<s:Rect width="20" height="20">
+					<s:fill>
+						<s:SolidColor color="0xCCCCCC"/>
+					</s:fill>
+				</s:Rect>
+			</s:Graphic>
+			<s:Label text="Null Values"/>
+		</s:HGroup>
+		<mx:Label id="sourceLabel" click.legend="label1_clickHandler(event)" 
+				  mouseOver.legend="{sourceLabel.setStyle('color','blue')}" 
+				  mouseOut.legend="{sourceLabel.setStyle('color','white')}"
+				  text.legend="Source: {_specs.source}">
+		</mx:Label>
+	</s:VGroup>
+
+	<s:BorderContainer includeIn="edit" id="editBox" cornerRadius="5" dropShadowVisible="true" left="5" right="5" top="5" bottom="-10">
+		<s:layout>
+			<s:BasicLayout />
+				
+		</s:layout>
+		<s:Label text="Change The Look Of The Map" fontSize="16" color="#333333" height="26" fontWeight="bold" x="81" y="6"/>
+		<s:Label text="Change The Data" fontSize="16" color="#333333" height="26" fontWeight="bold" x="0" y="228" width="390" verticalAlign="middle" textAlign="center"/>
+		<s:Label text="Select Color Range" textAlign="left" width="143" color="#333333" height="17" fontSize="14" x="13" y="112"/>
+		<mx:ColorPicker id="colorList" x="31" y="133" width="88" height="41"
+						change="colorList_changeHandler(event)" dataProvider="{colorPickerArray}"
+						editable="false" selectedColor="#005A32" selectedIndex="1"
+						swatchPanelStyleName="myStyle">
+			
+		</mx:ColorPicker>		
+		
+		<s:Label text="Select # of Categories" fontSize="14" color="#333333" x="10" y="35"/>
+		
+		<s:NumericStepper id="categoryNumber" change="categoryNumber_changeHandler(event)" 
+						  minimum="3" maximum="7" value="{mapObject.classes}" height="34" textAlign="center" color="#333333" width="95" fontSize="14" x="28" y="59" contentBackgroundColor="#FFFFFF"/>
+		
+		<s:Label text="Select Classification Scheme:"  color="#333333" fontSize="14" x="182" y="35"/>
+		
+		<s:ComboBox id="classificationScheme" change="classificationScheme_changeHandler(event)" width="198" fontSize="14"  
+					height="33" textAlign="center" x="180" y="59">
+					<mx:ArrayCollection>
+						<fx:String>Equal Interval</fx:String>
+						<fx:String>Quantile</fx:String>
+					</mx:ArrayCollection>
+		</s:ComboBox>
+		
+		<s:Button label="Apply Changes" click="button1_clickHandler(event)" height="30" fontSize="12" width="123" x="124" y="189"/>
+		<s:Button label="Go back to legend" id="btnGoToLegend" fontSize="12" click="btnGoToLegend_clickHandler(event)" height="30" x="258" y="292" width="123"/>
+		<s:Label x="236" y="143" text="Transparency" color="#333333"/>
+		
+		<mx:HSlider  id="hSlider" minimum="0" maximum="100" value="{transparencyValue * 100}" 
+					 labels="['0%','100%']" change="changeAlpha(event);" liveDragging="true" 
+					 left="179" right="10" y="139"/>
+		<s:Label x="10" y="262" color="#333333" text="Select Year: "/>
+		<s:ComboBox x="93" y="262" width="124" id="cbxYears" dataProvider="{getYearsResult.lastResult.item}" labelField="year"/>
+		<s:Button label="Get New Data" click="button3_clickHandler(event)" x="260" y="248" width="121" height="36"/>
+		<!--<s:Button label="Time Chart" id="timeChart" click="timeChart_clickHandler(event)"/>-->
+		<mx:HRule x="-1" y="227" width="392"/>
+		<s:Button id="naturalBreak1" x="210" y="100" label="Set your own breaks"
+				  click="naturalBreak_clickHandler(event)"/>
+		<s:Label id="txtPercent" x="10" y="300" click="txtPercent_clickHandler(event)"
+				 color="#333333" text="Percent"/>
+	</s:BorderContainer>
+	
+	<s:BorderContainer includeIn="chart" id="chartBox">
+		<mx:PlotChart id="legendChart"  initialize="legendChart_creationCompleteHandler(event)" width="588">
+			<mx:series>
+				<mx:PlotSeries id="col1" itemRenderer="infoWidgets.dataExploration.MapLegend.historgamRenderer" yField="Value"/>
+			</mx:series>
+		</mx:PlotChart>
+	</s:BorderContainer>
+	<s:Button id="btnGoLegend" label="Back to Legend" click="btnGoToLegend_clickHandler(event)" x="30" y="338" width="317" includeIn="chart"/>
+</s:Group>
+ 

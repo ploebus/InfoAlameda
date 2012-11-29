@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="vgroup1_creationCompleteHandler(event)" width="600" height="900">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			
+			[Bindable] public var dataCollection:ArrayCollection;
+			
+			[Bindable] public var titleText:String;
+			
+			protected function vgroup1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				dataCollection.addEventListener(CollectionEvent.COLLECTION_CHANGE,doThis)
+			}
+			protected function doThis(evt:CollectionEvent):void{
+				trace("hello");
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<mx:HRule/>
+		<s:HGroup id="banner" width="100%">
+			<s:Label id="reportTitle" text="{titleText}"/>
+		</s:HGroup>
+	<mx:HRule/>
+	<mx:DataGrid dataProvider="{dataCollection}">
+		<mx:columns>
+			<mx:DataGridColumn dataField="category" headerText="Category"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<!--<mx:AdvancedDataGrid initialize="groupList.refresh();" width="100%" color="#333333">
+		<mx:dataProvider>
+			<mx:GroupingCollection2 id="groupList" source="{dataCollection}">
+				<mx:grouping>
+					<mx:Grouping>
+						<mx:GroupingField name="category"/>
+						
+					</mx:Grouping>	
+				</mx:grouping>
+			</mx:GroupingCollection2>
+		</mx:dataProvider>
+		
+		<mx:columns>
+			<mx:AdvancedDataGridColumn dataField="category" headerText="Category"/>
+			<mx:AdvancedDataGridColumn dataField="alias" headerText="Variable"/>
+			<mx:AdvancedDataGridColumn dataField="field" headerText="Field"/>
+		</mx:columns>
+	</mx:AdvancedDataGrid>-->
+	<s:HGroup>
+		<s:RichText>
+			<s:p>
+				This report was generated using InfoAlameda County.
+			</s:p>
+		</s:RichText>
+	</s:HGroup>
+
+</s:VGroup>

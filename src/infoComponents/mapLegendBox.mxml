@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup 	xmlns:mx			="http://www.adobe.com/2006/mxml"
+			xmlns:esri			="http://www.esri.com/2008/ags" 
+			xmlns				="com.esri.solutions.flexviewer.*"
+			xmlns:usc			="myComponents.*"
+			xmlns:degrafa		="com.degrafa.*"
+		 	width="497" xmlns:s="library://ns.adobe.com/flex/spark"
+			height="300">
+	
+	<mx:Script>
+		<![CDATA[
+			import classes.mapLegend;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.symbols.SimpleFillSymbol;
+			import com.esri.ags.symbols.SimpleLineSymbol;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.BaseWidget;
+			import com.esri.viewer.ViewerContainer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.containers.Canvas;
+			import mx.containers.Grid;
+			import mx.containers.GridItem;
+			import mx.containers.GridRow;
+			import mx.containers.HBox;
+			import mx.containers.Panel;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.controls.Button;
+			import mx.controls.DataGrid;
+			import mx.controls.HSlider;
+			
+			import mx.controls.NumericStepper;
+			import mx.controls.Text;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.events.NumericStepperEvent;
+			import mx.events.PropertyChangeEvent;
+			import mx.events.SliderEvent;
+			
+			private static const FEATURE_LOADED:String="featureLoaded";
+			private var lineSymbol:SimpleLineSymbol=new SimpleLineSymbol("solid",0x000000);
+			
+			public var variableSelected:String;
+			public var binCount:Array;
+			
+			
+			public var thismapLegend:mapLegend;
+		 	private var arrCategory:Array=new Array(5,4,3);
+			private var _catCount:Number;
+			[Bindable]
+			public var lookupResults:XML;
+			
+			[Bindable]
+			public var dataAlias:String;
+			
+			[Bindable]
+			public var arrCollection:ArrayCollection=new ArrayCollection;
+			
+			[Bindable]
+			public var sldTransparency:HSlider=new HSlider();
+					
+					
+			private var dg:DataGrid;
+				 	
+			[Bindable]
+			private var _features:Array;
+			
+			private var _mapObject:mapLegend;
+			
+			public function set features(items:Array):void
+				{
+					_features=items;
+					createLegend();
+					//this.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE,createLegend);
+					
+				} 
+				
+			public function set mapObject(thisObject:mapLegend):void
+			
+				{
+					_mapObject=thisObject;
+				}
+			
+			
+			
+			public function createScatterPlot():void
+			{
+				
+			
+				arrCollection.removeAll();
+				var XValue:String=thismapLegend.variableName;
+				
+							
+					
+				for each(var graphic:Graphic in thismapLegend.features)
+				{
+					var binAverage:Number=thismapLegend.Average;
+					var item2:Object=
+						{
+							What:XValue,
+							Name:graphic.attributes.CP_BEAT,
+							Value:graphic.attributes[XValue],
+							Bin:thismapLegend.getBinNumber(graphic.attributes[XValue]),
+							Average:Math.ceil(binAverage)
+						}
+					arrCollection.addItem(item2);
+						
+				}
+				var dataSortField:SortField=new SortField();
+				dataSortField.name="Value";
+				dataSortField.numeric="true";
+				
+				var numericDataSort:Sort=new Sort();
+				numericDataSort.fields=[dataSortField];
+				arrCollection.sort=numericDataSort;
+				arrCollection.refresh();
+				
+			}
+			
+			private function getSwatches():Array
+			{
+				var swatches:Array=new Array();
+				if(_mapObject){
+				for each(var f:Object in _mapObject.Graphics.infos)
+				{
+					var gridRow:GridRow=new GridRow();
+					gridRow.percentWidth=100;
+					var gridItem:GridItem=new GridItem();
+					var gridItem1:GridItem=new GridItem();
+					var gridItem2:GridItem=new GridItem();
+					
+					//first legend column
+					var swatch:UIComponent=new UIComponent();
+						swatch.graphics.beginFill(f.symbol.color);
+						swatch.graphics.drawRect(30,0,20,20);
+						swatch.graphics.endFill();
+					gridItem.addChild(swatch);
+				
+					
+					
+					//second legend column
+					var label:spark.components.Label=new Label();
+					label.text=f.minValue;
+					
+					gridItem1.addChild(label);
+					//label.setStyle('color','0X000000');
+					//third legend column
+					var label1:spark.components.Label=new Label();
+					label1.text=f.maxValue;
+					
+					gridItem2.addChild(label1);
+					//label1.setStyle('color','0X000000');
+					gridRow.addChild(gridItem);
+					gridRow.addChild(gridItem1);
+					gridRow.addChild(gridItem2);
+					
+					swatches.push(gridRow);			
+			
+					//var Item:Object=new Object();
+					//Item={Symbol:swatch,Minimum:f.minValue,Maximum:f.maxValue};
+					
+					
+				}
+				
+				}
+				return swatches;
+				
+			}
+			public function createLegend():void
+			{
+					
+					var vBox:VBox=new VBox();
+					var panel:Panel=new Panel();
+					var minButton:Button=new Button();
+					var dataArray:Array=new Array();
+					var legendGrid1:Grid=new Grid();
+					var legendGridCount:Number=legendGrid.numChildren;
+					
+				
+					
+					for(var y:int=legendGridCount-1;y>0;y--)
+						{
+							trace(y);
+							trace(legendGrid.numChildren);
+							trace(legendGridCount);
+							legendGrid.removeChildAt(y);
+						}
+					
+				
+					for each (var item:GridRow in getSwatches())
+					{
+						legendGrid.addChildAt(item,legendGrid.numChildren);
+					}
+					legendGrid.setStyle("height",300);
+					
+					this.addChild(legendGrid1);
+					
+							
+						
+					//panel.addChild(sldTransparency);
+					//createScatterPlot();
+				
+					
+			}
+		private function setCatCount(event:NumericStepperEvent):void
+		{
+			_catCount=event.value;
+			
+		}
+		
+		public function get catCount():Number
+		{
+			return _catCount
+		}
+		private function changeColor(E:MouseEvent):void
+		{
+					
+			var legendObject:Object={
+				box:this.id,
+				categories:categoryNumber.value,
+				color:E.target.label,
+				classification:classificationScheme.selectedItem
+			}
+			ViewerContainer.dispatchEvent(new AppEvent(AppEvent.LEGEND_CHANGED, legendObject));
+			createLegend();
+		}	
+		]]>
+	</mx:Script>
+	<!--get the goods-->
+		
+	
+		<mx:HTTPService 
+					id="getDataYears" 
+					url="php/dataYears.php" 
+					resultFormat="e4x" 
+					method="POST"
+		/>
+		<s:HGroup requestedColumnCount="2">
+			
+		<s:BorderContainer>
+			<mx:Grid id="legendGrid" dropShadowVisible="true" width="250" paddingBottom="10" borderStyle="solid" backgroundColor="0x000000" backgroundAlpha=".2" creationComplete="getSwatches()" cornerRadius="2">
+				<mx:GridRow width="100%" height="100%">
+						<mx:GridItem width="100%" height="100%" label="Symbol">
+							<s:Label text="Symbol" fontSize="12" width="33%" height="28" fontWeight="bold"/>
+						</mx:GridItem>
+						<mx:GridItem width="100%" height="100%" label="Symbol">
+							<s:Label text="Low Range" fontSize="12" width="33%" height="28"  fontWeight="bold"/>
+						</mx:GridItem>
+						<mx:GridItem width="100%" height="100%" label="Symbol">
+								<s:Label text="High Range" fontSize="12" width="33%" height="28"  fontWeight="bold"/>
+						</mx:GridItem>
+				</mx:GridRow>
+		</mx:Grid>
+		</s:BorderContainer>
+		<s:BorderContainer>
+			
+		
+		<s:VGroup horizontalAlign="center" width="214"  paddingBottom="5">
+		<s:BorderContainer height="110" cornerRadius="0"  width="131" dropShadowVisible="true" borderVisible="false">
+			<s:layout>
+				<s:VerticalLayout  gap="5" paddingTop="5"/>
+			</s:layout>
+			<s:Label text="Select Color Range" textAlign="center" width="131"/>
+					<mx:Button id="greenButton" horizontalGap="31" width="130" label="Green" click="changeColor(event)" >
+					<!--<mx:icon>@Embed(source='../assets/assets.images/greenDot.png')</mx:icon>-->
+					</mx:Button>
+					<mx:Button id="redButton" horizontalGap="34" label="red" width="130" click="changeColor(event)">
+					<!--<mx:icon>@Embed(source='../assets/assets.images/redDot.png')</mx:icon>-->
+					</mx:Button>
+					<mx:Button id="purpleButton" label="purple" horizontalGap="30" width="130" labelPlacement="right" click="changeColor(event)">
+								<!--<mx:icon>@Embed(source='../assets/assets.images/purpleDot.png')</mx:icon>-->
+					</mx:Button>
+		</s:BorderContainer>
+				
+					
+				
+			<s:Label text="Select # of Categories"/>
+				<mx:NumericStepper id="categoryNumber" minimum="3" maximum="7" height="21" textAlign="center" width="133"/>
+				
+	</s:VGroup>
+		</s:BorderContainer>	
+	</s:HGroup>
+		<s:HGroup width="100%" height="60">
+			<mx:HSlider minimum="0" maximum="100" labels="['0%','100%']" height="49"/>
+			<s:BorderContainer height="50" width="172" borderVisible="false">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+			
+			<s:Label text="Select Classification Scheme"/>
+				<s:ComboBox id="classificationScheme">
+						<mx:ArrayCollection>
+							<mx:String>Equal Interval</mx:String>
+							<mx:String>Quantile</mx:String>
+						</mx:ArrayCollection>
+				</s:ComboBox>
+			</s:BorderContainer>
+		</s:HGroup>
+</s:VGroup>
+
+
+	
+
+
+
+
+
+	

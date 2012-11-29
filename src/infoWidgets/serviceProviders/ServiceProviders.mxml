@@ -1,0 +1,219 @@
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   xmlns:datalookup="services.datalookup.*" creationComplete="basewidget1_creationCompleteHandler(event)"
+				   xmlns:acreentry="services.acreentry.*" fontWeight.category="bold" xmlns:components="com.esri.ags.components.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.serializers.utility.TypeUtility;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.SpatialReference;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.events.DrawEvent;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.geometry.Extent;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.WebMercatorMapPoint;
+			import com.esri.ags.tasks.QueryTask;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.ags.tools.DrawTool;
+			import com.esri.ags.webmap.PopUpRenderer;
+			import com.esri.ags.webmap.supportClasses.PopUpInfo;
+			import com.esri.ags.webmap.supportClasses.PopUpMediaInfo;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.core.IVisualElement;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.StringUtil;
+			
+			import spark.components.TitleWindow;
+			import spark.events.IndexChangeEvent;
+			private static const URLSTART:String="http://209.119.63.162/InfoAlameda/rest/services";
+			
+			[Bindable]
+			private var qt:QueryTask;
+			
+			[Bindable]
+			private var qy:Query;
+			
+			[Bindable]
+			private var serviceArr:ArrayCollection;
+			
+			protected function comboBox_creationCompleteHandler(event:FlexEvent):void
+			{
+				getServiceGroupResult.token = acreentry.getServiceGroup();
+			}
+
+
+			protected function comboBox_changeHandler(event:IndexChangeEvent):void
+				{
+					//getServicesResult.token = acreentry.getServices(event.currentTarget.selectedItem.categoryID);
+					myViewStack.selectedIndex = 1;
+					getServiceResult.token = acreentry.getServices((event.target as ComboBox).selectedItem.categoryID);
+					
+				}
+			
+			protected function datagrid1_clickHandler(event:MouseEvent):void
+				{
+					var service:String = event.currentTarget.selectedItem.name;
+					getLocations.token = acreentry.getLocations(service);
+					getLocations.addEventListener(ResultEvent.RESULT, addLocations);
+				}
+			
+			protected function addLocations(event:ResultEvent):void
+			{
+				returnedServices.clear();
+				for each(var obj:Object in getLocations.lastResult.item){
+					var mp:WebMercatorMapPoint = new WebMercatorMapPoint(obj.longitude,obj.latitude);
+					var gr:Graphic = new Graphic(mp);
+						gr.attributes = obj;
+						gr.toolTip = obj.name;
+						//gr.addEventListener(MouseEvent.CLICK, openGraphicWindow);
+					returnedServices.add(gr);
+				}
+			}
+			protected function openGraphicWindow(event:MouseEvent):void
+				{
+					var titleWindow:myTitleWindow = new myTitleWindow();
+						titleWindow.theObject = event.target as Graphic;
+					titleWindow.addEventListener(CloseEvent.CLOSE,closeThis);
+					this.addElement(titleWindow);
+				}
+			
+			protected function closeThis(event:CloseEvent):void
+				{
+					this.removeElement(event.target as IVisualElement);
+				}
+			
+			protected function basewidget1_creationCompleteHandler(event:FlexEvent):void
+				{
+					// TODO Auto-generated method stub
+					map.addLayer(returnedServices);
+					localDataWidget.addEventListener('closed',removeGraphics);
+				}
+			
+			protected function removeGraphics(event:Event):void{
+				map.removeLayer(returnedServices);
+			}
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				returnedServices.clear();
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="category"/>
+		<s:State name="subcategory"/>
+		<s:State name="results"/>
+	</viewer:states>
+	
+	<fx:Declarations>
+			
+		<esri:SimpleMarkerSymbol id="sms1" color="0xDDDD00" size="20" alpha="0.5" style="circle">
+			<esri:SimpleLineSymbol color="0xDD0000" width="2" alpha="1" style="solid" />
+		</esri:SimpleMarkerSymbol>
+				
+		<esri:GraphicsLayer id="returnedServices" symbol="{sms1}">
+			<esri:infoWindowRenderer>
+				<fx:Component>
+					<esri:LabelDataRenderer label="{data.name}" color="#50a6c2" fontWeight="bold">
+						<esri:layout>
+							<s:VerticalLayout />
+						</esri:layout>
+						<s:Label color="0xffffff" text="{data.address}"/>
+						<s:Label color="0xffffff" text="{data.city} , {data.zip}"/>
+						<s:Label color="0xffffff" text="{data.phone}"/>
+						<s:Label color="0xffffff" text="Last Update: {data.LastUpdated}"/>
+						
+					</esri:LabelDataRenderer>
+					
+				</fx:Component>
+			</esri:infoWindowRenderer>
+		</esri:GraphicsLayer>
+		
+		
+		<acreentry:Acreentry id="acreentry"
+							 fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"
+							 showBusyCursor="true"/>
+		<s:CallResponder id="getServiceGroupResult"/>
+		<s:CallResponder id="getServiceResult"/>
+		<s:CallResponder id="getLocations"/>
+
+	</fx:Declarations>
+	
+	<viewer:WidgetTemplate id="localDataWidget" width="600" height="400">
+		<viewer:layout>
+			<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" paddingTop="10" gap="10"/>
+		</viewer:layout>
+		<!--Logo-->
+		<s:BorderContainer width="100%" height="150">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center"/>
+			</s:layout>
+		<s:Image source="assets/images/header_logo.png"/>
+		</s:BorderContainer>
+		<!--Menu-->
+		<mx:HRule/>
+			<s:ButtonBar dataProvider="{myViewStack}">
+			</s:ButtonBar>
+		<mx:HRule/>
+		
+		<!--Content Area-->
+		<mx:ViewStack id="myViewStack" width="100%" height="400">
+			<s:NavigatorContent id="category" label="Select a Category">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="center" gap="10" verticalAlign="top"/>
+				</s:layout>
+				<s:Label text="Select a Category of Services" fontSize="16"/>
+				<s:ComboBox id="cbxServicesGroups" fontSize="16" labelField="name" change="comboBox_changeHandler(event)" 
+							creationComplete="comboBox_creationCompleteHandler(event)">
+					<s:dataProvider.category>
+						<s:AsyncListView list="{TypeUtility.convertToCollection(getServiceGroupResult.lastResult.item)}"/>
+					</s:dataProvider.category>
+				</s:ComboBox>
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent id="Services" label="Select a Service"
+								width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout horizontalAlign="center" verticalAlign="top"/>
+				</s:layout>
+				<s:Label text="Now Select a Service"/>
+				<s:DataGrid width="100%" id="resultGrid" click="datagrid1_clickHandler(event)"
+							fontSize.category="10" textAlign.category="center">
+					<s:dataProvider.category>
+						<s:AsyncListView list="{TypeUtility.convertToCollection(getServiceResult.lastResult.item)}"/>
+					</s:dataProvider.category>
+					<s:columns.category>
+						<s:ArrayList>
+							<s:GridColumn dataField="name" width="200" headerText="Service Name"></s:GridColumn>
+							<s:GridColumn dataField="definition" id="definitionColumn" headerText="Description"></s:GridColumn>
+						</s:ArrayList>
+					</s:columns.category>
+				</s:DataGrid>
+				<s:Button label="Clear Graphics" click="button1_clickHandler(event)"/>
+			</s:NavigatorContent>
+		</mx:ViewStack>
+			
+		
+	</viewer:WidgetTemplate>
+	
+</viewer:BaseWidget>
+

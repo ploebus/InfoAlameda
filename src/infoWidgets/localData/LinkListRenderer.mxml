@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" creationComplete="itemrenderer1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import flash.net.navigateToURL;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			private var theLink:String;
+			
+			private function showLink(evt:MouseEvent):void{
+				//Alert.show(data.toString());
+				
+				navigateToURL(new URLRequest(data.toString()));
+			}
+			
+			protected function itemrenderer1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				theLink = data.toString();
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="normal"/>
+		<s:State name="hovered"/>
+		<s:State name="selected"/>
+	</s:states>
+	<!-- border/background rectangle -->
+	<s:Rect left="0" right="0" top="0" bottom="0"
+			radiusX="4"
+			radiusY="4">
+		<s:stroke>
+			<mx:SolidColorStroke alpha="{getStyle('borderAlpha')}"
+								 color="{getStyle('borderColor')}"
+								 weight="1"/>
+		</s:stroke>
+		<s:fill>
+			<s:SolidColor alpha="0.3"
+						  alpha.hovered="0.8" 
+						  color.selected="#B4CDCD"
+						  color.hovered="{getStyle('rollOverColor')}"
+						  color.normal="{getStyle('contentBackgroundColor')}"/>
+		</s:fill>
+	</s:Rect>
+	
+	<s:HGroup width="600" height="100%"
+			  paddingBottom="5"
+			  paddingLeft="5"
+			  paddingRight="5"
+			  paddingTop="5"
+			  verticalAlign="middle">
+		<mx:UIComponent id="resultIcon"
+						width="20" height="20">
+			<mx:filters>
+				<mx:GlowFilter alpha="0.5"
+							   blurX="10"
+							   blurY="10"
+							   color="#000000"/>
+			</mx:filters>
+		</mx:UIComponent>
+		<s:VGroup width="100%" height="100%"
+				  verticalAlign="middle">
+			<s:Label width="100%" color="#333333"
+					 fontWeight="bold"
+					 maxDisplayedLines="-1"
+					 text="{data.@alias}"/>
+			
+			<s:RichText width="500" color="#333333">
+				<s:text>{data.@description}</s:text>
+			</s:RichText>
+			
+			<!--<s:Label width="100%" color="#333333"
+					 fontWeight="normal"
+					 maxDisplayedLines="-1"
+					 text="{data.@description}"/>-->
+		</s:VGroup>
+		<mx:Image id="feedLink"
+				  width="18" height="18"
+				  buttonMode="true"
+				  click="showLink(event)"
+				  source="assets/images/w_link.png"
+				  toolTip="{data}"
+				  useHandCursor="true"/>
+	</s:HGroup>
+	
+</s:ItemRenderer>

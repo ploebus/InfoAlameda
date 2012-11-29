@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:viewer="com.esri.viewer.*"
+				   layout="absolute"
+				   widgetConfigLoaded="basewidget_widgetConfigLoadedHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import infoWidgets.BatchGeocoder.components.BatchGeocoder;
+			
+			import com.esri.viewer.components.HTMLPopup;
+			
+			private const ICON_URL:String = "assets/images/";
+			
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSource:String;
+			
+			protected function basewidget_widgetConfigLoadedHandler(event:Event):void
+			{
+				wTemplate.addTitlebarButton(ICON_URL + "i_help.png","Help", showStateHelp);
+				if (configXML)
+				{
+					var task:String = configXML.geocodeserver;
+					var wkid:Number = Number(configXML.outputsr);
+					var geocoder:BatchGeocoder = new BatchGeocoder();
+	                    geocoder.percentHeight = 100;
+	                    geocoder.percentWidth = 100;
+						geocoder.setMap(map);
+						geocoder.setGeocodeURL(task);
+					wTemplate.addElement(geocoder);
+				}
+			}
+			
+			private function showStateHelp():void{
+				if(configXML.pages.page){
+					content = configXML.pages.page.content || "";
+					btnLabel = configXML.pages.page.btnlabel || "OK";
+					txtareaWidth = configXML.pages.page.width || 500;
+					txtareaHeight = configXML.pages.page.height || 500;
+					videoSource = configXML.pages.page.video || "none";
+					HTMLPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSource);
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Style source="assets/batchgeocoderstyle.css" />
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<viewer:WidgetTemplate id="wTemplate"
+						   height="325"
+						   width="440" />
+	</viewer:BaseWidget>

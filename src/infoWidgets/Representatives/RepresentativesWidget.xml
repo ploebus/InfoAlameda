@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+   <layers>
+	   <layer id="1" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/2"/>
+	   <layer id="2" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/3"/>
+	   <layer id="3" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/8"/>
+	   <layer id="4" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/10"/>
+	   <layer id="5" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/9"/>
+	   <layer id="6" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/4"/>
+	   <layer id="7" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/5"/>
+	   <layer id="8" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/6"/>
+	   <layer id="9" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/1"/>
+	   <layer id="10" url="http://infogis/InfoAlameda/rest/services/Projects/politics/FeatureServer/0"/>
+	</layers>
+</configuration>

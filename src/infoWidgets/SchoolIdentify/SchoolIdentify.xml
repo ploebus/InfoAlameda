@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" ?>
+<configuration>
+   <stats>
+		<stat type="Ethnic" name="Hispanic or Latino">32.0%</stat>
+		<stat type="Ethnic" name="American Indian">0.4%</stat>
+		<stat type="Ethnic" name="Asian">21.7%</stat>
+		<stat type="Ethnic"name="White">22.0%</stat>
+		<stat type="Ethnic" name="African American">13.5%</stat>
+		<stat type="Ethnic" name="Pacific Islander">1.3%</stat>
+		<stat type="Ethnic" name="Filipino">5.2%</stat>
+		<stat type="Ethnic" name="Two or more races">3.1%</stat>
+		<stat type="Staff">1 : 26</stat>
+   </stats>
+   <pages>
+   <page name="action">
+	    <width>529</width>
+	    <height>350</height>
+	    <video></video>
+	    <content>
+	        <![CDATA[
+	        <p align='center'><font size="16"><b>School Identify Tool</b></font></p>
+	        <p>This tool allows you to find public schools in Alameda County and find basic statistics about the school.</p>
+			<textformat blockindent="4">	    
+	        <p><b>1. </b>To begin,you can either select a schoool through the dropdown lists or click on show all schools.</p>
+	        <p><b>2. </b>To get information about the school, click on the school on the map.</p>
+	        <p><b>3. </b>Once the data page is open, you can print the report or just the ethnicity pie chart</b>.</p>
+	         <p><b>3. </b>An added feature is that you can send the ethnicity chart to the chart widget for customization and to be saved throughout your visit to the site</b>.</p>
+	         
+	    	</textformat>
+	    	]]>
+	    </content>
+	    <btnlabel>Click to continue</btnlabel>
+	</page>
+	</pages>
+	
+</configuration>

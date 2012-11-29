@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<configuration>
+    <title>{Site}</title>
+    <description>
+        <![CDATA[	
+        	{MarketName}
+			{Street}
+			{City},{Zip}
+        	{Location}
+       ]]>
+    </description>
+    <fields>
+		<field name="MarketName"/>
+        <field name="Address"/>
+        <field name="Street"/>
+		<field name="Zip"/>
+        <field name="Location"/>
+     </fields>
+    <showattachments>true</showattachments>
+</configuration>

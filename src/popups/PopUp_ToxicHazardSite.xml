@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<configuration>
+    <title>{Site}</title>
+    <description>
+        <![CDATA[	
+        	{SITENAMES}
+			{ADDRESS}
+			{CITY}, CA {ZIP}
+			{FACILITY_S}
+			{STATUS_1}
+       ]]>
+    </description>
+    <fields>
+				<field name="SITENAMES"/>
+        <field name="ADDRESS"/>
+        <field name="CITY"/>
+				<field name="STATE"/>
+        <field name="ZIP"/>
+				<field name="FACILITY_S"/>
+				<field name="STATUS_1"/>
+     </fields>
+    <showattachments>true</showattachments>
+</configuration>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:esri="http://www.esri.com/2008/ags"
+				xmlns:flexlib="http://code.google.com/p/flexlib/"
+                autoDrawBackground="true" creationComplete="itemrenderer1_creationCompleteHandler(event)">
+    <s:layout>
+        <s:VerticalLayout paddingBottom="2"
+                          paddingLeft="2"
+                          paddingRight="2"
+                          paddingTop="4"/>
+    </s:layout>
+    <fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			
+			import spark.utils.TextFlowUtil;
+			
+			protected function itemrenderer1_creationCompleteHandler(event:FlexEvent):void
+			{
+				var tempArr:Array=[];
+				
+				for(var k:* in data){
+					tempArr.push(k);
+				}
+				
+				 for each(var s:String in tempArr){
+					if(s != 'OBJECTID'){
+					 textArea.text += s+' : '+data[s]+'\n';
+					}
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Panel id="panel" skinClass="widgets.IdentifyTool.skins.resultItemPanelSkin">
+		<s:layout>
+			<s:VerticalLayout />
+		</s:layout>
+		   <flexlib:HAccordion id="accordion" height="400" width="400">
+			   <mx:VBox label="Demographic">
+				   <s:Label text="first"/>
+			   </mx:VBox>
+			   <mx:VBox label="Health">
+				   <s:Label text="first"/>
+			   </mx:VBox>
+			   <mx:VBox label="Safety">
+				   <s:Label text="first"/>
+			   </mx:VBox>
+			   <mx:VBox label="Education">
+				   <s:Label text="first"/>
+			   </mx:VBox>
+		   </flexlib:HAccordion>
+	    <s:TextArea id="textArea" textFlow="{TextFlowUtil.importFromString(data.content)}"
+	                width="100%"
+	                height="100" color="#ffffff"
+	                editable="false"
+	                selectable="true"
+	                lineBreak="explicit"/>
+	</s:Panel>
+</s:ItemRenderer>

@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<configuration>
+    <title>Alameda County</title>
+    <fields>
+        <field name="NAME" alias="County" visible="true"/>
+        <field name="STATE_NAME" alias="State" visible="true"/>
+        <field name="SQMI" alias="Square Miles" visible="true"/>
+       
+    </fields>
+    <showattachments>true</showattachments>
+</configuration>
+
+<!--
+    Pop-up configuration file for:
+    http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/SanFrancisco/311Incidents/FeatureServer/0
+
+    See pop-up documentation at
+    http://links.esri.com/flexviewer/popups
+-->

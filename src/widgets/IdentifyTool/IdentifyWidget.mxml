@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	 ////////////////////////////////////////////////////////////////////////////////
+	 //
+	 // Copyright (c) 2010 ESRI
+	 //
+	 // All rights reserved under the copyright laws of the United States.
+	 // You may freely redistribute and use this software, with or
+	 // without modification, provided you include the original copyright
+	 // and use restrictions.  See use restrictions in the file:
+	 // <install location>/License.txt
+	 //
+	 ////////////////////////////////////////////////////////////////////////////////
+-->
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:flexlib="http://code.google.com/p/flexlib/"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:datalookup="services.datalookup.*"
+				   creationComplete="basewidget_creationCompleteHandler(event)"
+				  >
+	<viewer:states>
+		<s:State name="first"/>
+		<s:State name="second"/>
+		<s:State name="reload"/>
+		<s:State name="results"/>
+		
+	</viewer:states>
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.components.supportClasses.InfoWindow;
+			import com.esri.ags.events.MapMouseEvent;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+			import com.esri.ags.layers.ArcIMSMapServiceLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.ags.layers.supportClasses.Field;
+			import com.esri.ags.layers.supportClasses.LayerInfo;
+			import com.esri.ags.symbols.InfoSymbol;
+			import com.esri.ags.symbols.Symbol;
+			import com.esri.ags.tasks.IdentifyTask;
+			import com.esri.ags.tasks.supportClasses.IdentifyParameters;
+			import com.esri.ags.tasks.supportClasses.IdentifyResult;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			import com.esri.viewer.components.HTMLPopup;
+			
+			import infoComponents.IdentifyReport;
+			
+			import infoWidgets.dataExploration.VO.DataObject;
+			import infoWidgets.dataExploration.chart.chartManager;
+			import infoWidgets.dataExploration.dataSelectionManager;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.controls.DataGrid;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.IndexChangedEvent;
+			import mx.events.ListEvent;
+			import mx.events.StateChangeEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			import mx.utils.ObjectUtil;
+			
+			import spark.components.TitleWindow;
+			import spark.events.GridEvent;
+			import spark.events.GridSelectionEvent;
+			import spark.events.IndexChangeEvent;
+			
+			import widgets.IdentifyTool.VO.QueryVO;
+			import widgets.IdentifyTool.VO.SummaryVO;
+			import widgets.IdentifyTool.components.DraggablePanel;
+			import widgets.IdentifyTool.components.IdentifyTool;
+			import widgets.IdentifyTool.components.MyDataGrid;
+			import widgets.IdentifyTool.itemRenderers.IdentifyResultItemRenderer;
+			import widgets.IdentifyTool.renderers.IdentifyResultRenderer;
+			import widgets.IdentifyTool.utils.LayerUtil;
+			
+			[Embed(source="assets/cambria.ttf", embedAsCFF="false", fontFamily="accordionHeader", fontName="accordionHeader")]
+			private var font1:Class;
+			
+			//handles filling in selection boxes
+			protected var summaryVO:SummaryVO;
+			
+			//handles generating query to ArcGIS server
+			protected var queryVO:QueryVO;
+			
+			protected var idTool:IdentifyTool;
+			
+			[Bindable]
+			private var polygonLabel:String;
+			
+			[Bindable]
+			private var dgDataProvider:Object;
+			
+			private var cursorId:int=0;
+			
+			private var summaryLayer:ArcGISDynamicMapServiceLayer;
+			
+			private var visibleIndex:Number;
+			
+			[Bindable]
+			public var identifyTaskURL:String;
+			
+			[Bindable]
+			public var layerList:ArrayCollection;
+			
+			
+			private var theCategories:Array;
+			
+			[Bindable]
+			public var tempBoundaryXML:XML;
+			
+			[Bindable]
+			public var typeCollection:Array;
+			
+			private var myDataObject:DataObject;
+			
+			[Bindable]
+			public var dg:DataGrid;
+			
+			[Bindable]
+			public var dataGridProvider:ArrayCollection;
+			
+			[Bindable]
+			private var theData:XMLList;
+			
+			private var yearObject:Object;
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSource:String;
+			private var buttonIndex:int;
+			
+			//STORES PDF DATA
+			private var reportData:ArrayCollection;
+			
+			protected function basewidget_creationCompleteHandler(event:Event):void
+			{
+				//ADD WIDGET BUTTONS	
+					wTemplate.addTitlebarButton("assets/images/i_selection.png","Choose a boundary", showStateDefault);
+					wTemplate.addTitlebarButton("assets/images/i_table.png","Results", showResults);
+					//wTemplate.addTitlebarButton("assets/images/i_print.png","print", showPrint);
+					wTemplate.addTitlebarButton("assets/images/i_help.png","Results", showHelp);
+				//SEND DATA REQUEST--PARSE DATA RESPONDER
+					getSummaryData.send();
+				//ADD MAP GRAPHICS
+					map.addLayer(identifyGraphic);
+					map.addLayer(identifyClickGraphicLayer);
+					
+					summaryLayer=map.getLayer('Boundaries and Places') as ArcGISDynamicMapServiceLayer;
+					
+					wTemplate.addEventListener("minimized",checkState);
+					wTemplate.addEventListener("closed",checkState);
+								
+			}
+			
+			protected function showPrint():void{
+				trace("hello");	
+			}
+			
+			protected function showHelp():void{
+				if(configXML.pages.page){
+					content = configXML.pages.page.content || "";
+					btnLabel = configXML.pages.page.btnlabel || "OK";
+					txtareaWidth = configXML.pages.page.width || 500;
+					txtareaHeight = configXML.pages.page.height || 500;
+					videoSource = configXML.pages.page.video || "none";
+					//change icon line back to selected state.
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSource);
+					hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+				}
+			}
+			
+			protected function doThis(e:Event):void{
+				
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+				
+			}
+			
+			protected function checkState(event:Event):void{
+				
+				switch(event.type){
+					case "minimized":
+						map.removeEventListener(MapMouseEvent.MAP_CLICK,mapClickHandler);
+						identifyGraphic.visible=false;
+						identifyClickGraphicLayer.visible=false;
+						CursorManager.removeAllCursors();
+						break;
+					case "closed":
+						identifyGraphic.visible=false;
+						identifyClickGraphicLayer.visible=false;
+						map.removeEventListener(MapMouseEvent.MAP_CLICK,mapClickHandler);
+						CursorManager.removeAllCursors();
+						break;
+					case "open":
+						if(identifyGraphic){
+							identifyGraphic.visible=true;
+							identifyClickGraphicLayer.visible=true;
+						}
+						else{
+							map.addLayer(identifyGraphic);
+							map.addLayer(identifyClickGraphicLayer);
+						}
+				}
+			}
+			
+			
+			protected function showStateDefault():void{
+				this.currentState="first";
+			}
+			
+			protected function showResults():void{
+				this.currentState="results";
+			}
+			//================================================
+			//Model:GETSUMMARYRETURNDATA
+			//================================================
+			protected function parseResults(event:ResultEvent):void
+				{
+					theData=event.result.item;
+					yearObject=new Object();
+					var yearCollection:XMLList=theData..fields;
+					for each(var x:XML in yearCollection..item){
+						yearObject[x.field]=x.year[0].toString();
+					}
+					
+				}
+			//================================================
+			//Controllers
+			//================================================
+			
+			protected function summaryList_changeHandler(event:IndexChangeEvent):void
+			{
+				//CLEAR CLICK GRAPHICS
+				identifyClickGraphicLayer.clear();
+				identifyGraphic.clear();
+				
+				//CHANGE TO DATAGRID PAGE
+				this.currentState='second';
+				
+				//CREATE QUERY OBJECT SEND IT THE DATA
+				summaryVO=new SummaryVO();
+				summaryVO.data=event.currentTarget.selectedItem..types.item.type;
+				
+				//Alert.show(summaryVO.data.toXMLString());
+				tempBoundaryXML=event.currentTarget.selectedItem;
+					summaryVO.boundary=tempBoundaryXML..boundary;
+					summaryVO.datafield=tempBoundaryXML..datafield;
+				
+				//HACCORDION CHILDREN
+				typeCollection=new Array();
+				//Alert.show(tempBoundaryXML.types.item.type.type.toXMLString());
+				//Create Category Array
+				
+				theCategories = new Array();
+				//CREATE HACCORDION CHILDREN
+				for each(var s:* in tempBoundaryXML.types.item.type.type.name){
+					var vBox:VBox=new VBox();
+						vBox.label=s;
+						vBox.percentWidth = 100;
+						vBox.percentHeight = 98;
+						vBox.id=s;
+						theCategories.push(s);
+					typeCollection.push(vBox);
+					}
+				
+				//CHOOSE LAYER BASED ON INDEX OF ACCORDION
+				
+				
+				if(accordion){
+					summaryVO.setLayer(accordion.selectedIndex);
+					summaryVO.generateFields();
+					accordion_creationCompleteHandler();
+				}
+				else{
+					summaryVO.setLayer();
+				}
+				//toggle visible layers
+				//find layerid of selected boundary
+				
+				
+				//SET VISIBLE LAYER
+				if(visibleIndex){
+					//Alert.show(summaryLayer.visibleLayers.getItemIndex(visibleIndex).toString());
+					summaryLayer.visibleLayers.removeItemAt(summaryLayer.visibleLayers.length-1);
+				}
+				
+				var layer:ArcGISDynamicMapServiceLayer=map.getLayer('Boundaries and Places') as ArcGISDynamicMapServiceLayer;
+				if(layer){
+					for each(var obj:LayerInfo in layer.layerInfos)
+					{
+						if(obj.name==summaryVO.boundary){
+							visibleIndex=obj.id;
+						}
+					}
+				}
+				else{
+					Alert.show('no layer detected');
+				}
+				summaryLayer.visible=true;
+				
+				
+				identifyTaskURL='http://209.119.63.162/InfoAlameda/rest/services/Summary/Summary/MapServer';
+				
+				summaryLayer.visibleLayers.addItem(visibleIndex);
+				summaryLayer.refresh();
+				cursorId=CursorManager.setCursor(identifyCursor);
+				map.addEventListener(MapMouseEvent.MAP_CLICK, mapClickHandler);
+				
+			}
+			
+			
+			
+			
+			protected function mapClickHandler(event:MapMouseEvent):void{
+				
+					identifyClickGraphicLayer.clear();
+					if(map.getLayer('identifyGraphic')){
+						identifyGraphic.clear();
+					}
+					else{
+						map.addLayer(identifyGraphic);
+					}
+					var identifyParams:IdentifyParameters=new IdentifyParameters();
+						identifyParams.returnGeometry = true;
+						identifyParams.layerOption="all";
+						identifyParams.layerIds=[visibleIndex];
+						identifyParams.tolerance = 3;
+						identifyParams.width = map.width;
+						identifyParams.height = map.height;
+						identifyParams.geometry = event.mapPoint;
+						identifyParams.mapExtent =map.extent;
+						identifyParams.spatialReference = map.spatialReference;
+						
+					var identifyClickGraphic:Graphic = new Graphic(event.mapPoint, clickPtSym);
+						identifyClickGraphicLayer.add(identifyClickGraphic);
+						identifyTask.execute(identifyParams, new AsyncResponder(onResult,onFault,identifyClickGraphic));
+						CursorManager.removeCursor(cursorId);
+				}
+			
+			private function onResult(results:Array,identifyClickGraphic:Graphic = null):void{
+				if(results && results.length>0){
+					
+						var result:IdentifyResult=results[0];
+						var resultGraphic:com.esri.ags.Graphic=result.feature;
+							resultGraphic.symbol=identifyTaskSymbol;
+							identifyGraphic.add(resultGraphic);
+							polygonLabel=resultGraphic.attributes.name;
+							summaryVO.where=polygonLabel;
+						
+						this.currentState="results";
+						wTemplate.selectedTitlebarButtonIndex = 1;
+						//GET RESULTS FOR SELECTED ACCORDION BOX
+						if(accordion){
+							summaryVO.setLayer(accordion.selectedIndex);
+						}
+						else{
+							summaryVO.setLayer();
+						}
+						
+						//CREATE OUTFIELDS BASED ON SELECTED RETURN
+						summaryVO.generateFields();
+						
+						sendQuery();
+					}
+				}
+			
+			private function sendQuery():void
+				{
+					qt.url=summaryVO.getURL();
+					qry.returnGeometry=false;
+					qry.outFields=summaryVO.outfields;
+					qry.where=summaryVO.datafield+" like '"+summaryVO.where+"'";
+					qt.execute(qry,new AsyncResponder(queryResult,onFault));
+				}
+			
+			private function queryResult(features:FeatureSet, token:Object=null):void{
+				
+				//var accordionBox:String=accordion.selectedChild.label;
+				dataGridProvider=new ArrayCollection();	
+				for each(var s:Field in features.fields){
+					var key:String=features.fieldAliases[s];
+					var tempObj:Object={
+						'Field':s.name,
+						'Name':s.alias,
+						'Value':features.attributes[0][s.name],
+						'Year':yearObject[s.name]
+						
+					}
+					dataGridProvider.addItem(tempObj);
+					}
+			
+					
+				
+				//dataGridProvider=new ArrayCollection(features.attributes);	
+					var dg:MyDataGrid=new MyDataGrid();
+						dg.theData = dataGridProvider;
+						dg.addEventListener(GridEvent.GRID_CLICK, enableButtons);
+					
+					accordion.selectedChild.removeAllElements();
+					accordion.selectedChild.addElement(dg);
+					
+				
+					
+			}
+			
+			private function enableButtons(e:GridEvent):void{
+				mapVariable.enabled=true;
+				chartVariable.enabled=true;
+				getDataObject(e.item.Field,tempBoundaryXML.datafield);
+				//getDataObject(e.itemRenderer.data.Field,tempBoundaryXML.datafield);
+			}
+			
+			private function onFault(error:Object,identifyClickGraphic:Graphic = null):void
+			{
+				Alert.show(String(error), "Identify Error");
+			}
+			
+			
+			
+			
+			[Embed(source="assets/images/IdentifyCursor.png")]
+			[Bindable]
+			public var identifyCursor:Class;
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				CursorManager.removeCursor(cursorId);
+				this.currentState='first';
+			}
+			
+			
+			
+			protected function accordion_changeHandler(event:IndexChangedEvent):void
+			{
+				var label:String=event.currentTarget.selectedChild.label;
+				summaryVO.outfields=new Array();
+				summaryVO.categoryIndex=event.currentTarget.selectedIndex;
+				summaryVO.generateFields();
+				sendQuery();
+				
+			}
+			
+			protected function getAllFields():void{
+				trace("hello");
+			}
+			
+			
+			
+			
+			
+			protected function accordion_creationCompleteHandler(event:FlexEvent=null):void
+			{
+				//populate accordion component
+				accordion.removeAllChildren();
+				
+				for each(var vBox:VBox in typeCollection){
+					
+					accordion.addElement(vBox);
+				}
+				
+			}
+			
+			protected function filterThis(item:Object):void{
+				trace("hello");
+			}
+			
+			
+			protected function getDataObject(field:String,boundary:String):void
+			{
+				getDataObjectResult.token = datalookup.getDataObject(field,boundary);
+			}
+			
+			protected function getDataObjectResult_resultHandler(event:ResultEvent):void
+			{
+				myDataObject=new DataObject();
+					myDataObject.category=event.result[0].category;
+					myDataObject.subCategory=event.result[0].subcategory;
+					myDataObject.variable=event.result[0].alias;
+					myDataObject.coverage=event.result[0].coverage;
+					myDataObject.boundary=event.result[0].boundary;
+					myDataObject.year=event.result[0].year;
+					myDataObject.layer=event.result[0].layer;
+					myDataObject.field=event.result[0].field;
+					//myDataObject.theMap=this.Map;
+					//myDataObject.specs=event.result[0].specs;
+					myDataObject.dataType=event.result[0].dataType;
+					myDataObject.variablecategory=event.result[0].variablecategory;
+					myDataObject.alias=event.result[0].alias;
+					myDataObject.usertip=event.result[0].usertip;
+					myDataObject.source=event.result[0].source;
+					myDataObject.disclaimer=event.result[0].disclaimer;
+					if((event.result[0] as Object).hasOwnProperty('confidenceinterval'))
+						{
+							myDataObject.confidenceInterval=event.result[0].confidenceInterval;
+						}
+					else
+						{
+						myDataObject.confidenceInterval=0;
+					}
+				
+			}
+			
+			
+			protected function mapVariable_clickHandler(event:MouseEvent):void
+			{
+				myDataObject.action="first";
+				var DS:dataSelectionManager=new dataSelectionManager(myDataObject, this.map);
+				identifyGraphic.visible=false;
+				
+				//identifyClickGraphicLayer.visible=false;
+			}
+			
+			protected function chartVariable_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				myDataObject.action="chart";
+				var CS:chartManager=new chartManager(myDataObject, this.map);
+				
+			}
+			
+			protected function getReport_clickHandler(event:MouseEvent):void
+			{
+				getIdentifyVariables(summaryVO.boundary);
+				
+			}
+			
+			
+			protected function getIdentifyVariables(boundaryLabel:String):void
+			{
+				getIdentifyVariablesResult.token = datalookup.getIdVariables(boundaryLabel);
+			}
+			
+			protected function getIdentifyVariablesResult_resultHandler(event:ResultEvent):void
+			{
+				get_Variables(theCategories[0],0);
+			}
+			
+			
+			protected function get_Variables(s:String, i:int):void
+				{
+					reportData = new ArrayCollection();
+					if(i<theCategories.length){
+						var label:String=s;
+						summaryVO.outfields = new Array();
+						summaryVO.categoryIndex = i;
+						summaryVO.generateFields();
+						qt.url=summaryVO.getURL();
+						qry.returnGeometry=false;
+						qry.outFields=summaryVO.outfields;
+						qry.where=summaryVO.datafield+" like '"+summaryVO.where+"'";
+						qt.execute(qry,new AsyncResponder(addReportData,reportDataFault));
+					}
+					else{
+						var ttlWndw:TitleWindow = new TitleWindow();
+						ttlWndw.addEventListener(CloseEvent.CLOSE, ttlWndw_close);
+						var idReport:IdentifyReport = new IdentifyReport();
+						idReport.dataCollection = reportData;
+						idReport.titleText = polygonLabel;
+						ttlWndw.addElement(idReport);
+						PopUpManager.addPopUp(ttlWndw,this,true);
+						PopUpManager.centerPopUp(ttlWndw);
+					}
+					
+					function addReportData(ftSet:FeatureSet, token:Object=null):void{
+						
+							var tempObj:Object = {
+								'category':label,
+								'attributes':ftSet.attributes
+							};
+							reportData.addItem(tempObj)
+							get_Variables(theCategories[i+1], i+1);
+					}
+					
+					function reportDataFault(evt:FaultEvent):void{
+						Alert.show("back to the drawing board");
+					}
+					
+				}
+				
+			protected function ttlWndw_close(evt:CloseEvent):void{
+				PopUpManager.removePopUp(evt.currentTarget as IFlexDisplayObject);
+			}
+		]]>
+	</fx:Script>
+	<fx:Style source="assets/identify.css" />
+	<fx:Style source="assets/AccordianDefaults.css" />
+		
+	
+		
+	<viewer:transitions>
+		<s:Transition fromState="*" toState="*">
+			
+			<s:Fade targets="{[firstBox,secondBox,resultsBox]}"/>
+		</s:Transition> 
+	</viewer:transitions>
+	
+	<fx:Declarations>
+		<esri:IdentifyTask id="identifyTask"
+						   concurrency="last"
+						   url="{identifyTaskURL}"/>
+		<esri:QueryTask id="qt"/>
+		<esri:Query id="qry"/>
+		<esri:SimpleFillSymbol id="identifyTaskSymbol"/>
+		
+		<esri:SimpleMarkerSymbol id="clickPtSym"
+								 color="0xFF0000"
+								 size="12"
+								 style="x"/>
+		<esri:GraphicsLayer id="identifyGraphic"/>
+		<esri:GraphicsLayer id="identifyClickGraphicLayer"/>
+		
+		
+		<s:HTTPService id="getSummaryData" url="http://rest.infoalamedacounty.org/index.php/api/rest/boundaries"
+					    resultFormat="e4x" result="parseResults(event)"/>
+		
+		<s:XMLListCollection source="{theData.boundary}" id="dataCollection"/>
+		<s:CallResponder id="getDataObjectResult" result="getDataObjectResult_resultHandler(event)"/>
+		<datalookup:Datalookup id="datalookup"
+							   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"
+							   showBusyCursor="true"/>
+		<s:CallResponder id="getIdentifyVariablesResult" result="getIdentifyVariablesResult_resultHandler(event)"/>
+		
+	</fx:Declarations>
+	
+	<viewer:WidgetTemplate id="wTemplate"
+						   height.first="300" width.first="800"
+						   height.second="300" width.second="800"
+						   height="400" width="800" creationPolicy="all">
+		<!--SELECTION BOX-->
+		<s:VGroup includeIn="first" id="firstBox">
+			<mx:HRule width="100%"/>
+			<s:Label text="Please Select A Layer" width="100%" fontSize="16" textAlign="center" color="0xffffff"/>
+			<mx:HRule width="100%"/>
+			<s:List id="summaryList" change="summaryList_changeHandler(event)" height="300" 
+					width="750" dataProvider="{dataCollection}" itemRenderer="widgets.IdentifyTool.renderers.SummaryListRenderer"
+					>
+				<s:layout>
+					<s:TileLayout/>
+				</s:layout>
+			</s:List>
+		</s:VGroup>
+		<!--GO BACK BOX-->
+		<s:VGroup id="secondBox" includeIn="second"
+				  gap="10" verticalCenter="0" horizontalCenter="0">
+			<s:Label text="Click on the map to see a summary of area selected" fontSize="16" color="white"/>
+			<s:Button label="Go Back" skinClass="widgets.IdentifyTool.skins.BackButtonSkin" click="button1_clickHandler(event)"/>
+		</s:VGroup>
+		<s:VGroup includeIn="reload" gap="10" textAlign="center" verticalCenter="0" horizontalCenter="0">
+			<s:Label text="We are sorry. The map viewer did not load correctly. This tool is unavailable"/>
+			<s:Label text="Try refreshing your web browser"/>
+		</s:VGroup>
+		
+		<!--RESULTS BOX-->
+		<s:VGroup id="resultsBox" includeIn="results" 
+				  width="100%">
+			<s:HGroup horizontalAlign="center" verticalAlign="middle" gap="10">
+				<s:Label text="Selected : {polygonLabel}" width="100%" fontSize="14" textAlign="center" color="0xffffff" />
+				<s:Button id="mapVariable" label="Map Selected" click="mapVariable_clickHandler(event)" enabled="false"/>
+				<s:Button id="chartVariable" label="Chart Selected" click="chartVariable_clickHandler(event)" enabled="false"/>
+				<!--<s:Button id="getReport" label="Generate PDF Report" click="getReport_clickHandler(event)"/>-->
+			</s:HGroup>
+			
+			<flexlib:HAccordion id="accordion" change="accordion_changeHandler(event)" 
+								creationComplete="accordion_creationCompleteHandler(event)"
+								color="#000000" headerStyleName="accordionHeaderStyle" height="380" width="100%">
+				
+			</flexlib:HAccordion>
+			
+		</s:VGroup>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

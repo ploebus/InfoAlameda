@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:viewer="com.esri.viewer.*" layout="absolute">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:GlowFilter id="glowFilter"
+					  alpha="1"
+					  color="{getStyle('focusColor')}"
+					  inner="true"
+					  strength="2"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.Map;
+			import com.esri.ags.events.DrawEvent;
+			import com.esri.ags.events.GeometryServiceEvent;
+			import com.esri.ags.events.LayerEvent;
+			import com.esri.ags.geometry.Extent;
+			import com.esri.ags.geometry.Geometry;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.geometry.Polygon;
+			import com.esri.ags.geometry.Polyline;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.supportClasses.CodedValue;
+			import com.esri.ags.layers.supportClasses.CodedValueDomain;
+			import com.esri.ags.layers.supportClasses.FeatureType;
+			import com.esri.ags.layers.supportClasses.Field;
+			import com.esri.ags.layers.supportClasses.LayerDetails;
+			import com.esri.ags.symbols.PictureMarkerSymbol;
+			import com.esri.ags.symbols.SimpleFillSymbol;
+			import com.esri.ags.symbols.SimpleLineSymbol;
+			import com.esri.ags.symbols.SimpleMarkerSymbol;
+			import com.esri.ags.symbols.Symbol;
+			import com.esri.ags.tasks.GeometryServiceSingleton;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.ags.tools.DrawTool;
+			import com.esri.ags.utils.GeometryUtil;
+			import com.esri.ags.webmap.PopUpRenderer;
+			import com.esri.ags.webmap.supportClasses.PopUpInfo;
+			import com.esri.ags.webmap.supportClasses.PopUpMediaInfo;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.events.FaultEvent;
+			
+			import spark.components.supportClasses.ItemRenderer;
+			
+			private var selectionLabel:String;
+			private var selectedDrawingIcon:Image;
+			
+			//labels
+			[Bindable]
+			private var clearLabel:String;
+			[Bindable]
+			private var layerLabel:String;
+			[Bindable]
+			private var lineLabel:String;
+			[Bindable]
+			private var freehandLineLabel:String;
+			[Bindable]
+			private var msgVisible:Boolean = false;
+			[Bindable]
+			private var noResultLabel:String;
+			[Bindable]
+			private var pointLabel:String;
+			[Bindable]
+			private var polygonLabel:String;
+			[Bindable]
+			private var freehandPolygonLabel:String;
+			[Bindable]
+			private var rectangleLabel:String;
+			[Bindable]
+			private var circleLabel:String;
+			[Bindable]
+			private var searchResultAC:ArrayCollection;
+			[Bindable]
+			private var submitLabel:String;
+			
+			private var configSearchGraphical:Array;
+			private var configSearchText:Array;
+			private var finishDrawing:Boolean;
+			private var graphicalsearchLabel:String;
+			private var graphicsLayer:GraphicsLayer;
+			private var loadingLabel:String;
+			private var nolayerLabel:String;
+			private var queryLayer:FeatureLayer;
+			private var queryGeom:Geometry;
+			private var queryExpr:String;
+			private var queryFields:XMLList;
+			private var queryTitleField:String;
+			private var queryLinkField:String;
+			private var resultsLabel:String;
+			private var selectionLabel:String;
+			private var selectedDrawingIcon:Image;
+			private var textsearchLabel:String;
+			private var timer:Timer;
+			private var zoomScale:Number = 50000;
+			private var mouseDownStageX:Number;
+			private var mouseDownStageY:Number;
+			private var dateFormatter:DateFormatter = new DateFormatter();
+			private function iconRollOverHandler(event:MouseEvent):void
+			{
+				clearSelectionFilter();
+				event.target.filters = [ glowFilter ];
+			}
+			
+			private function iconRollOutHandler(event:MouseEvent):void
+			{
+				clearSelectionFilter();
+			}
+			
+			private function clearSelectionFilter():void
+			{
+				for (var i:int = 0; i < imageGroup.numChildren; i++)
+				{
+					if (imageGroup.getChildAt(i).filters && imageGroup.getChildAt(i).filters.length > 0)
+					{
+						if (!(selectedDrawingIcon && imageGroup.getChildAt(i) === selectedDrawingIcon))
+						{
+							imageGroup.getChildAt(i).filters = [];
+						}
+					}
+				}
+			}
+			
+			private function activateDrawTool(event:MouseEvent):void
+			{
+				addSharedData("Deactivate_DrawTool", null); // to be able to deactivate drawTool on other widgets
+				
+				// apply glow
+				selectedDrawingIcon = Image(event.currentTarget);
+				clearSelectionFilter();
+				selectedDrawingIcon.filters = [ glowFilter ];
+				
+				finishDrawing = false;
+				
+				var status:String;
+				var value:String = selectedDrawingIcon.name;
+				switch (value)
+				{
+					case DrawTool.MAPPOINT:
+					{
+						status = pointLabel;
+						drawSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 15, 0x3FAFDC, 1);
+						break;
+					}
+					case DrawTool.POLYLINE:
+					{
+						status = lineLabel;
+						drawSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, 0x3FAFDC, 1, 1);
+						break;
+					}
+					case DrawTool.EXTENT:
+					{
+						status = rectangleLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, 0x3FAFDC, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, 0x3FAFDC, 1, 1));
+						break;
+					}
+					case DrawTool.POLYGON:
+					{
+						status = polygonLabel;
+						drawSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, 0x3FAFDC, 0.5, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, 0x3FAFDC, 1, 1));
+						break;
+					}
+				}
+				setMapAction(value, status, drawSymbol, searchDrawEnd);
+			}
+		]]>
+	</fx:Script>
+<viewer:WidgetTemplate id="wTemplate" width="600" height="600">
+<s:Label text="Use the selection tools to explore parcels of interest"/>
+	<s:HGroup id="imageGroup"
+			  width="100%"
+			  gap="10"
+			  horizontalAlign="center">
+		<mx:Image name="{DrawTool.MAPPOINT}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_point.png"
+				  toolTip="{pointLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.POLYLINE}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_line.png"
+				  toolTip="{lineLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.FREEHAND_POLYLINE}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_freeline.png"
+				  toolTip="{freehandLineLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.EXTENT}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_rect.png"
+				  toolTip="{rectangleLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.CIRCLE}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_circle.png"
+				  toolTip="{circleLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.POLYGON}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_poly.png"
+				  toolTip="{polygonLabel}"
+				  useHandCursor="true"/>
+		<mx:Image name="{DrawTool.FREEHAND_POLYGON}"
+				  width="40" height="40"
+				  buttonMode="true"
+				  click="activateDrawTool(event)"
+				  rollOut="iconRollOutHandler(event)"
+				  rollOver="iconRollOverHandler(event)"
+				  source="assets/images/i_draw_freepoly.png"
+				  toolTip="{freehandPolygonLabel}"
+				  useHandCursor="true"/>
+	</s:HGroup>
+</viewer:WidgetTemplate>
+</viewer:BaseWidget>

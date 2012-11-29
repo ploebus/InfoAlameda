@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true" height="263" width="250" creationComplete="itemrenderer1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import mx.events.FlexEvent;
+			import mx.events.MenuEvent;
+			
+			[Bindable] private var imageURL:String;
+			
+			
+			public var layerURL:String;
+			
+			protected function itemrenderer1_creationCompleteHandler(event:FlexEvent):void
+				{
+					imageURL = "assets/images/" + data.image;
+					layerURL = data.url;
+					//var linkURL:String = data.link;
+					//if(linkURL.length > 0){
+						//btnLink.includeInLayout = true;
+					//}
+				}
+			
+			protected function btnLoadLayer_clickHandler(event:MouseEvent):void
+				{
+				var obj:Object = {
+					url:data.url,
+					fields:data.fields,
+					links:data.links
+				};
+				var customEvent:CustomEvents=new CustomEvents('loadLayer',obj,true);
+				
+				this.dispatchEvent(customEvent);
+					
+				}
+			
+			protected function btnLink_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				//navigateToURL(
+						//new URLRequest(data.link)
+						//);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer id="rendererBox" width="100%" height="263" cornerRadius="5" dropShadowVisible="true">
+		
+		<s:Image x="13" y="3" source="{imageURL}"/>
+		<s:Label x="2" y="67" width="244" color="#333333" fontSize="16" fontWeight="bold"
+				 text="{data.title}" textAlign="center"/>
+		<mx:HRule width="228" height="1"/>
+		<s:RichText x="3" y="99" width="240" height="135" maxHeight="135" color="#333333"
+					text="{data.description}" textAlign="center" verticalAlign="middle"/>
+		<!--<s:Button id="btnLink" includeInLayout="false" label="See More Information" click="btnLink_clickHandler(event)"/>-->
+		<s:Button id="btnLoadLayer" x="77" y="231" label="Load Data" chromeColor="#5683F8"
+				  click="btnLoadLayer_clickHandler(event)" fontSize="14"/>
+	</s:BorderContainer>
+	
+</s:ItemRenderer>

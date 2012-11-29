@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<configuration>
+    <layerlist visible="true">
+        <!-- <excludelayer>The Label Of Some Layer In Main Config File</excludelayer> -->
+    </layerlist>
+    <help>
+    	<content>Use these drop down menus to add diferent boundary layers to your map. To add layers, you must first check the category box and then select by checking the box a layer from that category</content>
+    </help>
+</configuration>
+
+<!--
+    See Map Switcher widget documentation at
+    http://links.esri.com/mapswitcherwidget
+-->

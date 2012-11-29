@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<configuration>
+    <title>California Assembly District</title>
+    <fields>
+        <field name="District" alias="District" visible="true"/>
+        <field name="Member_Name" alias="Representative" visible="true"/>
+             
+    </fields>
+   
+</configuration>
+
+<!--
+    Pop-up configuration file for:
+    http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/SanFrancisco/311Incidents/FeatureServer/0
+
+    See pop-up documentation at
+    http://links.esri.com/flexviewer/popups
+-->

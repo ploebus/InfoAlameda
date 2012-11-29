@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright © 2008 - 2009 ESRI
+//
+// All rights reserved under the copyright laws of the United States.
+// You may freely redistribute and use this software, with or
+// without modification, provided you include the original copyright
+// and use restrictions.  See use restrictions in the file:
+// <install location>/FlexViewer/License.txt
+//
+////////////////////////////////////////////////////////////////////////////////
+-->
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:usc="infoComponents.*" 
+				   xmlns:flexlib="http://code.google.com/p/flexlib/" 
+				   creationPolicy="all"
+				   >
+	<fx:Script>
+		<![CDATA[
+			
+
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				var chartCustomizer:CustomizeChart=new CustomizeChart();
+				this.parentApplication.addChild(chartCustomizer);
+			}
+
+		]]>
+	</fx:Script>
+		
+		<s:HGroup x="0" y="6" width="629" height="31">
+			<s:ComboBox>
+				<s:dataProvider>
+					<s:ArrayCollection>
+						<fx:String>Export to jpg</fx:String>
+					</s:ArrayCollection>
+				</s:dataProvider>
+			</s:ComboBox>
+			<s:ComboBox>
+				<s:dataProvider>
+					<s:ArrayCollection>
+						<fx:String>Export to CSV</fx:String>
+					</s:ArrayCollection>
+				</s:dataProvider>
+			</s:ComboBox>
+			<s:Button label="Customize Chart" click="button1_clickHandler(event)" />
+		</s:HGroup>
+		<mx:TabNavigator id="vs" width="633" creationPolicy="all" height="293" x="0" y="38">
+			<mx:VBox id="chart" label="chart" creationPolicy="all" width="100%" borderColor="#FCF9F9" dropShadowVisible="true">
+				
+			</mx:VBox>
+			<mx:VBox id="grid" label="table" width="100%">
+			</mx:VBox>
+		</mx:TabNavigator>
+	
+</s:BorderContainer>
+

@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				
+				autoDrawBackground="false" dataChange="itemrenderer1_creationCompleteHandler(event)"
+				creationComplete="itemrenderer1_creationCompleteHandler(event)" xmlns:myComponents="myComponents.*" xmlns:Components="Components.*" xmlns:infoComponents="infoComponents.*">
+	<fx:Script>
+		<![CDATA[
+			import com.esri.viewer.AppEvent;
+			
+			import flash.display.Bitmap;
+			
+			import infoWidgets.SchoolIdentify.PrintTemplate;
+			import infoWidgets.SchoolIdentify.SchoolPrintVO;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.DataGrid;
+			import mx.events.FlexEvent;
+			import mx.graphics.ImageSnapshot;
+			import mx.managers.PopUpManager;
+			
+			import myUtils.imageSaving;
+			
+			import org.alivepdf.display.Display;
+			import org.alivepdf.fonts.*;
+			import org.alivepdf.layout.*;
+			import org.alivepdf.pages.Page;
+			import org.alivepdf.pdf.PDF;
+			import org.alivepdf.saving.Method;
+			
+			//Individual School Data
+			[Bindable] private var scoreCollection:ArrayCollection;
+			[Bindable] private var ethnicityCollection:ArrayCollection;
+			[Bindable] private var supportCollection:ArrayCollection;
+			[Bindable] private var enrollmentCollection:ArrayCollection;
+			
+			//County-wide totals
+			public var countyDemographics:XMLList;
+			
+			protected function itemrenderer1_creationCompleteHandler(event:FlexEvent):void
+			{
+					
+				scoreCollection = new ArrayCollection();
+				ethnicityCollection = new ArrayCollection();
+				supportCollection = new ArrayCollection();
+				enrollmentCollection = new ArrayCollection();
+			
+				var obj:Object;
+				//parse data object
+				for(var s:String in data){
+					switch(s){
+						case "ct_TotalEnrol_2011to2012":
+							obj = {
+							'Name':"Total Enrollment",
+							'Value':data[s]
+						}
+							enrollmentCollection.addItem(obj);
+							break;
+						
+						case "rt_PupiltoStaff_2011to2012":
+							obj = {
+							'Name':"Student to Classified Staff Ratio",
+							'Value':data[s]
+						}
+							supportCollection.addItem(obj);
+							break;
+						
+						case "avg_clssz_a_2010to2011":
+								obj = {
+								'Name':"Average Class Size",
+								'Value':data[s]
+							}
+								supportCollection.addItem(obj);
+								break;
+						case "API2010":
+							obj = {
+							'Name':'2010 API',
+							'Value':data[s]
+							}
+							scoreCollection.addItem(obj);
+							break;
+						case "API2011":
+							obj = {
+							'Name':'2011 API',
+							'Value':data[s]
+						}
+							scoreCollection.addItem(obj);
+							break;
+						case "ct_GrowthAPI_2012":
+							obj = {
+							'Name':'2012 API',
+							'Value':data[s]
+						}
+							scoreCollection.addItem(obj);
+							break;
+						case "ct_Hisp_2011to2012":
+							obj = {
+							'Name':'Hispanic or Latino',
+							'Value':data[s]
+							}
+							ethnicityCollection.addItem(obj);
+							break;
+						case "ct_AmInd_20112012":
+						obj = {
+							'Name':'American Indian',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+						break;
+						case "ct_Asian_2011to2012":
+						obj = {
+							'Name':'Asian',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+						break;
+						case "ct_Wht_2011to2012":
+						obj = {
+							'Name':'White',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+						break;
+						case "ct_AfAm_2011to2012":
+						obj = {
+							'Name':'African American',
+							'Value':data[s]
+						}
+						ethnicityCollection.addItem(obj);
+						break;
+						case "ct_Pac_2011to2012":
+							obj = {
+							'Name':'Pacific Islander',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+							break;
+						case "ct_Fil_2011to2012":
+							obj = {
+							'Name':'Filipino',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+							break;
+						case "ct_TwoOrMore_2011to2012":
+							obj = {
+							'Name':'Two or more races',
+							'Value':data[s]
+						}
+							ethnicityCollection.addItem(obj);
+							break;
+						case "rt_stu_teach_all_2010to2011":
+							obj = {
+							'Name':'Student to Teacher Ratio',
+							'Value':data[s]
+						}
+							supportCollection.addItem(obj);
+							break;
+						case "ct_fteteach_all_n_2010to2011":
+							obj = {
+							'Name':'FTE teachers',
+							'Value':data[s]
+						}
+							supportCollection.addItem(obj);
+							break;
+					}
+					
+					
+				}
+					
+				
+				
+			}
+			
+			protected function ethnicityPieChart_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Do you want to export this chart?");
+			}
+			
+			
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				//TAKE SNAPSHOT OF MAP
+				//CREATE VO for passing data to print template
+				var _data:SchoolPrintVO = new SchoolPrintVO(lblSchool.text,lblDistrict.text, lblStreet.text + "\n"+lblCity.text);
+					_data.enrollmentCollection = enrollmentCollection;
+					_data.evaluationCollection = scoreCollection;
+					_data.staffingCollection = supportCollection;
+					_data.ethnicityCollection = ethnicityCollection;
+				
+				var _printPage:PrintTemplate = new PrintTemplate();
+					_printPage.theData = _data;
+					PopUpManager.addPopUp(_printPage,this,false);
+				
+				//var bmpMap:BitmapData = ImageSnapshot.captureBitmapData(printArea);
+				//var pdf:PDF=new PDF(Orientation.LANDSCAPE,Unit.MM,Size.LETTER);
+					//pdf.setDisplayMode( Display.FULL_PAGE, Layout.SINGLE_PAGE );
+				//var newPage:Page = new Page ( Orientation.LANDSCAPE, Unit.MM);
+				//pdf.addPage( newPage );
+				//pdf.save(Method.LOCAL);
+				//pdf.setFont(FontFamily.ARIAL , Style.NORMAL, 12);
+				//pdf.addText("This is a sample text",5,15);
+				//pdf.drawCircle(25,35,15);
+				//pdf.addPage();
+				//pdf.addImage(printArea);
+				//var fs:FileReference = new FileReference();  
+				//fs.save(pdf.save(Method.LOCAL),"SchoolReport.pdf");
+			}
+			
+			protected function button2_clickHandler(event:MouseEvent):void
+			{
+				//need to adjust chart for printing
+				
+				var bytes:ByteArray=imageSaving.getPNG(pieChartPrintArea);
+				var file:FileReference=new FileReference();
+					file.save(bytes,"schoolPieChart.png");
+				
+			}
+			
+			protected function btnChartWidget_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var obj:Object = {
+					"type":"pie",
+					"data":ethnicityCollection,
+					"label":"Ethnic Composition at " + data.School,
+					"series":"Students"
+				};
+				
+				AppEvent.dispatch(AppEvent.ADD_CHART, obj);
+				AppEvent.dispatch(AppEvent.WIDGET_RUN,2);
+			}
+			
+			protected function button3_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(vStack.selectedIndex == 0){
+					vStack.selectedIndex = 1;
+					btnExportCSV.visible = true;
+					btnChartWidget.visible = false;
+					btnExportChart.visible = false;
+					(event.target as Button).label = "Chart Data";
+				}
+				else{
+					vStack.selectedIndex = 0;
+					btnExportCSV.visible = false;
+					btnChartWidget.visible = true;
+					btnExportChart.visible = true;
+					(event.target as Button).label = "Data Table";
+				}
+				
+			}
+			
+			protected function btnExportCSV_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				trace(typeof(ethnicityDataGrid));
+				var s:String=myUtils.CSVExport.exportCSV(ethnicityDataGrid);
+				var fs:FileReference=new FileReference();
+				fs.save(s,"dataTable.csv");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:Fade duration="400" alphaFrom="1" alphaTo="0" id="fadeEffect"/>
+		<s:Fade duration="400" alphaFrom="0" alphaTo="1" id="fadeEffect1"/>
+	</fx:Declarations>
+	
+	<s:BorderContainer borderVisible="false" cornerRadius="5" dropShadowVisible="false">
+		
+		<s:Group id="printArea">
+			<s:layout>
+				<s:VerticalLayout horizontalAlign="center" paddingBottom="5" paddingLeft="5"
+								  paddingRight="5" paddingTop="5"/>
+			</s:layout>
+		<s:HGroup id="headerBox" width="100%">
+			
+			
+		<s:VGroup id="leftHeaderBox" width="48%" verticalAlign="middle" horizontalAlign="center">
+			<s:Label color="#033333" fontSize="18" id="lblDistrict" text="{data.District}" textAlign="center"/>
+			<s:Label color="#333333" fontSize="18" id="lblSchool" text="{data.School}" textAlign="center"/>
+			<s:Label color="#333333" fontSize="14" id="lblStreet" text="{data.Street}" textAlign="center"/>
+			<s:Label color="#333333" fontSize="14" id="lblCity" text="{data.City_1} , {data.Zip_1}" textAlign="center"/>
+			<s:Label color="#333333" fontSize="14" text="Grades: {data.tx_grades_t_2010to2011}" textAlign="center"/>
+		</s:VGroup>
+		<s:VGroup>
+			<s:Label width="393" height="26" color="#333333" fontWeight="bold"
+					 text="School Year 2011 to 2012" textAlign="center"/>
+			<s:Label text="Relevant links section"/>
+		</s:VGroup>
+		
+		</s:HGroup>	
+		
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke color="#333333" weight="2"/>
+			</s:stroke>
+		</s:Line>
+			
+		<s:HGroup width="100%" gap="20" requestedColumnCount="2">
+		
+		<s:Panel id="chartPanel" width="445" height="300" title="Ethnic Composition of School">
+			<mx:ViewStack id="vStack" width="100%">
+			
+				<s:NavigatorContent showEffect="{fadeEffect1}" hideEffect="{fadeEffect}">
+				
+			
+			
+			<s:HGroup id="pieChartPrintArea">
+					
+			<mx:PieChart id="ethnicityPieChart" x="23" y="29" width="261" height="207"
+					 click="ethnicityPieChart_clickHandler(event)" 
+					 dataProvider="{ethnicityCollection}" showDataTips="true">
+			
+			<mx:series>
+				<mx:PieSeries displayName="Name" labelPosition="inside" nameField="Name" field="Value"/>
+			</mx:series>
+			
+			</mx:PieChart>
+				
+				<mx:Legend x="266" y="12" color="#333333" dataProvider="{ethnicityPieChart}">
+					
+				</mx:Legend>
+			</s:HGroup>
+			</s:NavigatorContent>	
+				<s:NavigatorContent showEffect="{fadeEffect1}" hideEffect="{fadeEffect}">
+					<s:HGroup id="dataTableArea" visible="true" width="100%" color="#333333"
+							  contentBackgroundColor="#000000">
+						
+						<s:DataGrid id="ethnicityDataGrid" width="100%" borderVisible="false"
+									color="#333333" contentBackgroundColor="#FFFDFD"
+									dataProvider="{ethnicityCollection}" showDataTips="true"
+									skinClass="assets.skins.myDataGridSkin">
+							<s:columns>
+								<s:ArrayList>
+									<s:GridColumn dataField="Name" headerText="Ethnicity"></s:GridColumn>
+									<s:GridColumn dataField="Value" headerText="Count"></s:GridColumn>
+								</s:ArrayList>
+							</s:columns>
+						</s:DataGrid>
+						
+					</s:HGroup>
+				</s:NavigatorContent>
+			</mx:ViewStack>
+			<s:controlBarContent>
+				
+			
+				<s:Button label="See Table" click="button3_clickHandler(event)"/>
+				<s:Button id="btnChartWidget" x="490" y="416" label="Customize"
+						  click="btnChartWidget_clickHandler(event)"/>
+				<s:Button id="btnExportCSV" visible="false" click="btnExportCSV_clickHandler(event)" label="Export"/>
+				<s:Button x="235" y="416" id="btnExportChart" label="Export" click="button2_clickHandler(event)"/>
+			</s:controlBarContent>
+		</s:Panel>
+			<s:VGroup width="300" height="258" gap="10" horizontalAlign="center" textAlign="center">
+				<s:Label color="#333333" fontSize="20" text="Enrollment"/>
+				<s:List id="enrollmentData" borderColor="#FFFFFF" borderVisible="false"
+						color="#333333" contentBackgroundAlpha="0.0"
+						dataProvider="{enrollmentCollection}" enabled="false"
+						itemRenderer="infoWidgets.SchoolIdentify.renderers.performanceDataGroupRenderer">
+					<s:layout>
+						<s:VerticalLayout gap="10" horizontalAlign="center"/>
+					</s:layout>
+				</s:List>
+				<s:Label color="#333333" fontSize="20" text="Performance"/>
+				<s:List id="performanceData" borderColor="#FFFFFF" borderVisible="false"
+						color="#333333" contentBackgroundAlpha="0.0"
+						dataProvider="{scoreCollection}" enabled="false"
+						itemRenderer="infoWidgets.SchoolIdentify.renderers.performanceDataGroupRenderer">
+					<s:layout>
+						<s:VerticalLayout gap="10" horizontalAlign="center"/>
+					</s:layout>
+					
+				</s:List>
+				<s:Label color="#333333" fontSize="20" text="Support"/>
+				<s:List id="supportData" borderColor="#FFFFFF" borderVisible="false"
+						color="#333333" contentBackgroundAlpha="0.0"
+						dataProvider="{supportCollection}" enabled="false"
+						itemRenderer="infoWidgets.SchoolIdentify.renderers.performanceDataGroupRenderer">
+					<s:layout>
+						<s:VerticalLayout gap="10" horizontalAlign="center"/>
+					</s:layout>
+					
+				</s:List>
+				<s:Button label="Print Sheet" click="button1_clickHandler(event)" enabled="false"/>
+				
+				
+			</s:VGroup>
+		</s:HGroup>
+			<s:Label color="#333333"
+					 text="Sources: California Department of Education &amp; National Center of Education Statistics"/>
+		</s:Group>
+		
+		
+	</s:BorderContainer>
+	
+	
+
+	
+</s:ItemRenderer>

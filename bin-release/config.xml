@@ -1,0 +1,251 @@
+<?xml version="1.0" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////
+//
+// Read more about ArcGIS Viewer for Flex - http://links.esri.com/flexviewer
+//
+////////////////////////////////////////////////////////////////////////////////
+-->
+<configuration>
+    <title></title>
+    <subtitle></subtitle>
+    <logo>assets/images/InfoBetaFlex100.png</logo>
+    <style>
+        <colors>0xFFFFFF,0x333333,0x101010,0x000000,0xFFD700</colors>
+        <alpha>0.8</alpha>
+    </style>
+    <!-- replace the following url with your own geometryservice -->
+    <geometryservice url="http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer" />
+	<httpproxy>proxy.php</httpproxy>
+	<server name="http://209.119.63.162/"/>
+	<bing key="AiFr4DYzgXt8MKo6cp9Y8uDfqSDE5S1j6AO3aES-ksppz7Y6_z9qr4qINw6yKUTF"/>
+   	
+    <!-- UI elements -->
+    <splashpage top="50" label="InfoAlameda County" config="widgets/Splash/SplashWidget.xml" url="widgets/Splash/SplashWidget.swf"/>
+    <widget left="10"  top="110"    config="widgets/Navigation/NavigationWidget.xml" url="widgets/Navigation/NavigationWidget.swf"/>
+    <widget right="-2" bottom="-2" config="widgets/OverviewMap/OverviewMapWidget.xml" url="widgets/OverviewMap/OverviewMapWidget.swf"/>
+    <widget right="1" top="105" config="widgets/MapSwitcher/MapSwitcherWidget.xml" url="widgets/MapSwitcher/MapSwitcherWidget.swf"/>
+    <widget left="0"   top="0"     config="widgets/HeaderController/HeaderControllerWidget.xml" url="widgets/HeaderController/HeaderControllerWidget.swf"/>
+	<widget config="infoWidgets/GoogleAnalytics/GoogleAnalyticsWidget.xml" 
+    		url="infoWidgets/GoogleAnalytics/GoogleAnalyticsWidget.swf"/>
+    
+    <map wraparound180="true" esrilogovisible="false" initialextent="-13619376 4501303 -13516385 4566799" top="40" fullextent="-13619376 4501303 -13516385 4566799">
+       <basemaps>
+         <layer label="Streets" type="tiled" visible="true" 
+            url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"/>
+         <!--<layer label="Aerial"  type="tiled" visible="false" 
+            url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"/>-->
+         <layer label="Satellite" type="bing" visible="false" style="aerialWithLabels" culture="en-US" />
+         <!--<layer label="Topo" type="tiled" visible="false"
+            url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer"/> -->
+          <layer label="Canvas" type="tiled" visible="false"
+            url="http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer"/>
+       </basemaps>
+        <operationallayers>
+        	<layer label="Boundaries and Places" type="dynamic" visible="false" useproxy="false" renderer="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/Summary/Summary/MapServer">
+	        </layer>
+             <layer label="Transportation" type="dynamic" visible="false" useproxy="false" renderer="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Transportation/MapServer">
+	        </layer>
+	        <layer label="Parks" type="dynamic" visible="false" useproxy="false" renderer="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Parks/MapServer">
+	        </layer>
+             <layer label="Initiatives" type="dynamic" visible="false" renderer="true" useproxy="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/MapLayers/Initiatives/MapServer">
+             </layer>
+              <layer label="Political Boundaries" type="dynamic" visible="false" renderer="true" useproxy="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/Projects/politics/MapServer">
+                  <sublayer id="0" popupconfig="popups/popup_senate.xml"></sublayer>
+                   <sublayer id="1" popupconfig="popups/popup_assembly.xml"></sublayer> 
+                    <sublayer id="2" popupconfig="popups/popup_supervisors.xml"></sublayer> 
+                     <sublayer id="3" popupconfig="popups/popup_oaklandcouncil.xml"></sublayer>  
+              </layer>
+                   
+             <layer label="Built Environment" type="dynamic" visible="false" renderer="true" useproxy="false" 
+                   url="http://209.119.63.162/InfoAlameda/rest/services/MapLayers/BuiltEnvironment/MapServer">
+             	<sublayer id="0" popupconfig="popups/PopUp_Supermarkets.xml"/>
+             	<sublayer id="1" popupconfig="popups/PopUp_Farmersmarkets.xml"/>
+             	<sublayer id="2" popupconfig="popups/PopUp_WICVendors.xml"/>
+             	<sublayer id="3" popupconfig="popups/PopUp_LiquorStores.xml"/>
+             	<sublayer id="4" popupconfig="popups/PopUp_GroceryStores.xml"/>
+             	<sublayer id="5" popupconfig="popups/PopUp_DrugStores.xml"/>
+             	<sublayer id="6" popupconfig="popups/PopUp_CheckCasher.xml"/>
+             	<sublayer id="7" popupconfig="popups/popup_School.xml"/>
+             	<sublayer id="8" popupconfig="popups/PopUp_College.xml"/>
+             	<sublayer id="9" popupconfig="popups/PopUp_Hospital.xml"/>
+             	<sublayer id="10" popupconfig="popups/PopUp_HealthClinic.xml"/>
+             	<sublayer id="11" popupconfig="popups/PopUp_PsychHealthClinic.xml"/>
+             	
+             </layer>
+             
+        </operationallayers>
+    </map>
+
+    <!-- widgets organized into widget containers that manage close/open etc -->
+    <!-- supported layout property options: horizontal(default)|float|vertical|fix-->
+      <widgetcontainer layout="float">
+        <!-- <widget label="Explore Data" preload="open" left="200" top="200"
+                icon="assets/images/5Exploredata.png"
+                config="infoWidgets/dataExploration/selectDataHelp.xml"
+                url="infoWidgets/dataExploration/selectData.swf"/>-->
+              <widget label="Explore Data" preload="open" left="200" top="200"
+                icon="assets/images/5Exploredata.png"
+                description="Make a map or chart"
+                config="infoWidgets/dataExploration/selectDataHelp.xml"
+                url="infoWidgets/DataSelect/DataSelectWidget.swf"/>
+    	  
+           
+       <widgetgroup label="Legends and Charts" description="Get a legend or open the chart" icon="assets/images/8legend.png">
+	         	<widget label="Thematic Legends" left="70" top="100"
+	                icon="assets/images/i_layers.png"  
+	                config="infoWidgets/dataExploration/MapLegend/MapLegend.xml"
+	                url="infoWidgets/dataExploration/MapLegend/mapLegendWidget.swf"/>
+	          	
+	          	<widget label="Charted Data" left="200" top="100" 
+	                icon="assets/images/i_piechart.png" preload="minimized" 
+	                url="infoWidgets/dataExploration/chart/chartWidget.swf"
+	                config="infoWidgets/dataExploration/chart/chartDataHelp.xml"/>
+	            
+	            <widget label="Map Legend" left="200" top="100" 
+	                icon="assets/images/i_legend2.png" 
+	                url="infoWidgets/DynamicLegend/DynamicLegendWidget.swf"
+	                config="infoWidgets/DynamicLegend/DynamicLegendWidget.xml"/>
+	        	
+	   </widgetgroup>
+       
+        
+        <widget label="Post a Comment" left="50" top="160"
+        		description="Send us a comment" 
+                icon="assets/images/6Comment.png"
+                config="" url="infoWidgets/comments/CommentWidget.swf"/>
+       <widget label="Restart" left="200" top="200"
+       			description="Clear the map and restart"
+                icon="assets/images/2ClearMap.png"
+                config=""
+                url="infoWidgets/clear/clearAll.swf"/>
+       
+        <widgetgroup label="Tools" description="Find a tool" icon="assets/images/7tools.png">
+        	<widget label="Zoom to Bookmark"   left="50" top="240"
+                icon="assets/images/i_bookmark.png"
+                config="widgets/Bookmark/BookmarkWidget.xml"
+                url="widgets/Bookmark/BookmarkWidget.swf"/>
+            <!-- <widget label="Selection" left="50" top="240"
+                icon="assets/images/i_pin3.png"
+                config="widgets/Selection/SelectionWidget.xml"
+                url="widgets/Selection/SelectionWidget.swf"/>-->
+            
+            <widget label="Clip Data" left="50" top="240"
+                icon="assets/images/i_pin3.png"
+                config="widgets/DataExtract/DataExtractWidget.xml"
+                url="widgets/DataExtract/DataExtractWidget.swf"/>
+         	
+        	<widget label="Find an Address" left="50" top="260" 
+                icon="assets/images/i_target.png"
+                config="widgets/Locate/LocateWidget_US.xml"
+                url="widgets/Locate/LocateWidget.swf"/>
+        	 <!--<widget label="Search"
+			            icon="assets/images/i_search.png"
+			            config="widgets/Search/SearchWidget_Louisville.xml"
+			            url="widgets/Search/SearchWidget.swf"/>-->
+             <widget label="Mark Up the Map" left="50" top="300"
+                icon="assets/images/i_draw2.png"
+                config="widgets/Draw/DrawWidget.xml"
+                url="widgets/Draw/DrawWidget.swf"/>
+              <widget label="Print"
+            		icon="assets/images/i_print.png"
+            		config="widgets/Print/PrintWidget.xml"
+            		url="widgets/Print/PrintWidget.swf"/>
+             <!-- <widget label="Make Measurements" left="50" top="300"
+                icon="assets/images/i_measure.png"
+                config="widgets/Measure/measureWidget.xml"
+                url="widgets/Measure/measureWidget.swf"/>-->
+         <!-- </widgetgroup> 
+		 <widgetgroup label="Custom Tools" icon="assets/images/9customTools.png">-->
+         	<widget label="Enrollment Zone" left="50" top="180"
+                icon="assets/images/i_legend2.png"
+                config="infoWidgets/Schools/attendenceWidget.xml"
+                url="infoWidgets/Schools/attendenceWidget.swf"
+                 />
+             
+            
+              <!-- <widget label="Add XML Geo-Feed" left="50" top="180"
+                icon="assets/images/i_rss.png"
+                config=""
+                url="infoWidgets/LoadPoints/LoadPointsWidget.swf"
+                />  -->
+               
+             <widget label="Drive Time Analysis"
+                icon="assets/images/i_servicearea.png"
+                config="infoWidgets/serviceArea/ServiceAreaWidget.xml"
+                url="infoWidgets/serviceArea/ServiceAreaWidget.swf"/>
+             <widget label="Batch Geocoder"
+				icon="infoWidgets/BatchGeocoder/assets/images/GeocodeAddresses32.png"
+				config="infoWidgets/BatchGeocoder/BatchGeocoderWidget.xml"
+				url="infoWidgets/BatchGeocoder/BatchGeocoderWidget.swf"/>
+             <!--<widget label="Filter by Time"
+                icon="assets/images/i_clock.png"
+                config="widgets/Time/TimeWidget_QuakesSince1970.xml"
+                url="widgets/Time/TimeWidget.swf"/>-->
+             <!-- <widget label="Batch Geocoder"
+				icon="infoWidgets/BatchGeocoder/assets/images/GeocodeAddresses32.png"
+				config="infoWidgets/BatchGeocoder/BatchGeocoderWidget.xml"
+				url="infoWidgets/BatchGeocoder/BatchGeocoderWidget.swf"/>-->
+			<!--<widget label="geocommons"
+				icon="assets/images/geocommons.png"
+				url="infoWidgets/Geocommons/GeoCommonsWidget.swf"
+				config="infoWidgets/Geocommons/GeoCommonsWidget.xml"/>
+			<widget label="Get Other Map Services"
+				url="widgets/MapServices/MapServices.swf"
+				config="widgets/MapServices/MapServices.xml"
+				icon="assets/images/i_globe.png"/>-->
+         </widgetgroup>
+         <widgetgroup label="Open Data" description="Find other sources of data" icon="assets/images/openData.png">
+         		<widget label="Local Data"
+	                icon="assets/images/i_zoomfull.png"
+	                config="infoWidgets/localData/LocalDataWidget.xml"
+	                url="infoWidgets/localData/LocalData.swf"/>
+              	<widget label="Load Shape Files"
+					x="400" y="60"
+					icon="widgets/ShapeFiles/assets/images/shapefiles.png"
+					config="widgets/ShapeFiles/ShapeFiles.xml"
+					url="widgets/ShapeFiles/ShapeFiles.swf"/>
+              	<widget label="School Identify" left="50" top="180"
+                icon="assets/images/school.png"
+                config="infoWidgets/SchoolIdentify/SchoolIdentify.xml"
+                url="infoWidgets/SchoolIdentify/SchoolIdentifyWidget.swf"
+                 />
+              	<widget label="See Click Fix"
+	                icon="assets/images/GeoprocessingTool32.png"
+	                config=""
+	                url="infoWidgets/SeeClickFix/SeeClickFixWidget.swf"/>
+                 <widget label="Social Media" left="50" top="100"
+	                icon="assets/images/i_socialMedia.png"
+	                config=""
+	                url="widgets/SocialMedia/SocialMediaWidget.swf"/>
+                <widget label="Find A Service Provider" left="50" top="180"
+	                icon="assets/images/i_options.png"
+	                config=""
+	                url="infoWidgets/serviceProviders/ServiceProviders.swf"
+                 />
+                
+                <widget label="Find your Representatives" left="50" top="100"
+               		icon="assets/images/i_rss.png"
+                	config="infoWidgets/Representatives/RepresentativesWidget.xml"
+                	url="infoWidgets/Representatives/RepresentativesWidget.swf"/>
+                
+                 <widget label="Community Issues" left="50" top="100"
+                icon="assets/images/i_rss.png"
+                config="widgets/GeoRSS/GeoRSSWidget.xml"
+                url="widgets/GeoRSS/GeoRSSWidget.swf"/>
+         </widgetgroup>
+    </widgetcontainer>
+    <widgetcontainer layout="horizontal">
+    	<widget label="Identify Tool" preload="minimized"
+            	    	icon	=	"assets/images/identifyButton.png"
+            	    	description = "Get summary profiles of places"
+                		config	=	"widgets/IdentifyTool/IdentifyWidget.xml"
+                		url		=	"widgets/IdentifyTool/IdentifyWidget.swf"/>   
+    </widgetcontainer>
+
+</configuration>

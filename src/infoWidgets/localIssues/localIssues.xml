@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<configuration>
+    <layers>
+        <layer>
+            <name>Alameda County Parcels</name>
+            <url>http://67.91.201.5/InfoAlameda/rest/services/LocalData/MapServer/0 </url>
+            <expression></expression>
+            <graphicalsearchlabel>Use one of the graphical search tools to select incidents</graphicalsearchlabel>
+            <titlefield>NewAPN</titlefield>
+            <linkfield></linkfield>
+            <fields all="false">
+                <field name="APN_SORT"/>
+                <field name="Foundation"/>
+                <field name="Roofing"/>
+                <field name="Siding_Stucco"/>
+                <field name="Windows"/>
+                <field name="Electrical"/>
+                <field name="Yard"/>
+                <field name="Exterior_Finish"/>
+                <field name="Foundation_Type"/>
+                <field name="Stories"/>
+                <field name="Vacant_Lot"/>
+                <field name="Parking"/>
+                <field name="Vacant"/>
+                <field name="Fire_Damaged"/>
+                <field name="Trees"/>
+                <field name="Shrubs_Bushes"/>
+                <field name="Lawn"/>
+                <field name="Concrete"/>
+              </fields>
+        </layer>
+      </layers>
+    <zoomscale>1000</zoomscale>
+    <info>widgets/InfoTemplates/InfoPopupWidget.swf</info>
+</configuration>

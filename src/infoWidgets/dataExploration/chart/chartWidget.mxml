@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" 
+				   xmlns:viewer="com.esri.viewer.*" 
+				   layout="absolute" creationComplete="basewidget1_widgetConfigLoadedHandler(event)"
+				   xmlns:esri="http://www.esri.com/2008/ags" xmlns:code="http://code.google.com/p/flexlib/" 
+				>
+	<fx:Script>
+		<![CDATA[
+			import classes.events.CustomEvents;
+			
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.geometry.MapPoint;
+			import com.esri.ags.symbols.TextSymbol;
+			import com.esri.ags.tasks.QueryTask;
+			import com.esri.ags.tasks.supportClasses.Query;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			import com.esri.viewer.components.HTMLHelpPopup;
+			import com.esri.viewer.components.HTMLPopup;
+			import com.google.analytics.debug.Label;
+			import com.google.analytics.debug.Panel;
+			
+			import flexlib.events.SuperTabEvent;
+			
+			import infoComponents.ColumnChartComponent;
+			import infoComponents.PieChartComponent;
+			import infoComponents.PlotChartComponent;
+			
+			import infoWidgets.dataExploration.chart.*;
+			
+			import mx.charts.Legend;
+			import mx.charts.PieChart;
+			import mx.charts.chartClasses.ChartBase;
+			import mx.charts.series.PieSeries;
+			import mx.collections.ArrayCollection;
+			import mx.containers.HBox;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.core.INavigatorContent;
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			
+			import myUtils.CSVExport;
+			
+			import spark.components.BorderContainer;
+			import spark.components.VGroup;
+			
+			private static const URLSTART:String=ViewerContainer.getInstance().configData.serverInstance+"/infoalameda/rest/services/Thematics";
+			
+			[Bindable]
+			private var qt:QueryTask;
+			private var _fieldName:String;
+			private var _chartSpecs:Object;
+			protected var chartComponentCollection:ArrayCollection=new ArrayCollection();
+			[Bindable]
+			private var _tableData:ArrayCollection=new ArrayCollection();
+			
+			private var content:String = "content";
+			private var btnLabel:String = "OK"
+			private var txtareaWidth:Number;
+			private var txtareaHeight:Number;
+			private var videoSource:String;
+			private const ICON_URL:String = "assets/images/";
+			
+			private var buttonIndex:int;
+			
+			protected function basewidget1_widgetConfigLoadedHandler(event:Event):void
+			{
+				AppEvent.addListener(AppEvent.DATA_NEW_PUBLISHED,processData);
+				//AppEvent.addListener(AppEvent.DATA_PUBLISH,processData);
+				//this.addEventListener(CustomEvents.MAP_CHARTDATA,showonMap);
+				wTemplate.addTitlebarButton(ICON_URL + "i_piechart.png","Chart", showChart);
+				wTemplate.addTitlebarButton(ICON_URL + "i_table.png","Table", showTable);
+				
+				//wTemplate.addTitlebarButton(ICON_URL + "i_clock.png","Trend", showTrendChart);
+				wTemplate.addTitlebarButton(ICON_URL + "i_help.png","Help", showStateHelp);
+				AppEvent.addListener(AppEvent.All_CLOSE,closeAll);
+				
+				AppEvent.addListener(AppEvent.ADD_CHART,addChart);
+			}
+			
+			protected function showStateHelp():void{
+				if (configXML)
+				{
+					content = configXML.content || "";
+					btnLabel = configXML.btnlabel || "OK";
+					txtareaWidth = configXML.width || 500;
+					txtareaHeight = configXML.height || 500;
+					videoSource = configXML.video || "none";
+					var hPop:HTMLHelpPopup = HTMLHelpPopup.show(content, btnLabel, txtareaWidth, txtareaHeight, videoSource);
+					hPop.addEventListener(FlexEvent.REMOVE,doThis);
+					buttonIndex = wTemplate.selectedTitlebarButtonIndex;
+					wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+				}
+			}
+			
+			private function doThis(e:Event):void{
+				wTemplate.selectedTitlebarButtonIndex = buttonIndex;
+			}
+			private function showChart():void
+				{
+					for each(var e:* in chartComponentCollection){
+						e.currentState='State1';
+					}
+				}
+			
+			private function showTrendChart():void
+				{
+					for each(var e:chartingComponent in chartComponentCollection){
+						e.currentState='trend';
+					}
+				}
+			
+			private function showTable():void
+				{
+				for each(var e:* in chartComponentCollection){
+					e.currentState='Table';
+					}
+				}
+				
+			private function closeAll(e:Event):void{
+				chartBox.removeAllElements();
+				chartComponentCollection.removeAll();
+				var data:Object =
+					{
+						id: this.widgetId,
+							state: "closed"
+					};
+					AppEvent.dispatch(AppEvent.WIDGET_STATE_CHANGED, data);
+			}
+			
+			private function sortByAttribute(a:Object, b:Object):Object
+			{
+				var x:String = a.attributes[_fieldName].toString();
+				var y:String = b.attributes[_fieldName].toString();
+				return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+			}	
+			
+			private function showonMap(e:CustomEvents):void{
+		/* 	qt=e.data.queryTask;
+			var qy:Query=e.data.query;
+			_fieldName=e.data.query.outFields[0];
+			if(map.getLayer("chartGraphic")){
+				map.removeLayer(map.getLayer("chartGraphic"));
+				}
+				map.addLayer(chartGraphic);
+				//qt.execute(qy,new AsyncResponder(onResult,onFault));
+				qt.addEventListener(QueryEvent.EXECUTE_COMPLETE,onResult);
+				
+				qt.execute(qy);
+				chartGraphic.symbol=chartSelect; */
+			}
+			
+			
+			//private function onResult(featureSet:FeatureSet,token:Object=null):void{
+			private function onResult(event:QueryEvent):void{	
+					var mp:MapPoint;	
+					var featureSet:FeatureSet=event.featureSet;
+						featureSet.features.sort(sortByAttribute);
+					var toolTipLabel:String=featureSet.fields[0].name;
+					
+					
+					//chartGraphic.graphicProvider=featureSet.features;
+					//chartGraphic.name="chartGraphic";
+					var i:int=1;
+					if(featureSet.features.length>0){
+					for each(var ft:Graphic in featureSet.features){
+						if(ft.geometry.extent){ 
+							ft.toolTip=toolTipLabel+" : "+ft.attributes[toolTipLabel];
+							var gr:Graphic=new Graphic();
+							gr.geometry=ft.geometry;
+							//chartGraphic.add(gr);
+							mp=ft.geometry.extent.center;
+							if(featureSet.features.length>1){
+								var chartText:TextSymbol=new TextSymbol(ft.attributes[toolTipLabel],null,0xffffff);
+									chartText.text=i.toString();
+									i++;
+								var gr1:Graphic=new Graphic();
+									gr1.geometry=mp;
+									gr1.symbol=chartText;
+								//chartGraphic.add(gr);
+								}
+							}
+						}
+					}
+				}
+			
+			private	function onFault(info:Object,token:Object=null):void{
+					Alert.show(info.toString(),"Query Problem"); 
+				}
+			
+			private function removeGraphics():void{
+				//map.removeLayer(chartGraphic);
+			}
+			
+
+			private function processData(e:AppEvent):void{
+				//tabBox.removeAllElements();	
+				if(e.data.key=="chart"){
+						var obj:Object=e.data.data.find(e.data.key);
+						var tabBox:VBox=new VBox();
+							tabBox.label=obj.specs.variablecategory;
+							tabBox.percentWidth=100;
+						var chartComponent:chartingComponent=new chartingComponent();
+							chartComponent.fieldName=obj.specs.field;
+							chartComponent.geography=obj.specs.boundary;
+							chartComponent.description=obj.specs.variable+ '\r'+ obj.specs.dataType+' ('+obj.specs.year+')';
+							chartComponent.chartSpecs=obj.specs;
+							chartComponent.theUrl = obj.theUrl;
+							chartComponent.theMap=map;
+							chartComponent.littleChartData=obj.features.attributes;
+							tabBox.addElement(chartComponent);
+							chartBox.addElement(tabBox as IVisualElement);
+					for each (var obj1:Object in obj.features.attributes){
+						_tableData.addItem(obj1);
+						}
+				_chartSpecs=obj.specs;
+				chartBox.selectedIndex=chartBox.numChildren-1;
+				
+				//historical collection
+				this.chartComponentCollection.addItem(chartComponent);
+				chartComponentCollection.refresh();
+					
+				}
+				
+			}
+
+		
+			protected function chartBox_tabCloseHandler(event:SuperTabEvent):void
+			{
+				var tempChartComponent:chartingComponent=chartComponentCollection.getItemAt(chartBox.selectedIndex) as chartingComponent;
+				if(tempChartComponent.hasGraphic=true){
+					map.removeLayer(map.getLayer("chartGraphicLayer"));
+				}
+				chartComponentCollection.removeItemAt(chartBox.selectedIndex);
+			}
+			public function addChart(evt:AppEvent):void{
+				//var vBox:Panel = new Panel("Chart",400,400);
+				
+				//Stub for extending charting component
+				var box:VBox = new VBox();
+					box.label = evt.data.label;
+					
+				if(evt.data.type=='pie'){
+				var pieChartComponent:PieChartComponent = new PieChartComponent();
+					pieChartComponent.dataCollection = evt.data.data as ArrayCollection;
+					pieChartComponent.chartLabel = evt.data.label as String;
+				chartComponentCollection.addItem(pieChartComponent);
+				box.addElement(pieChartComponent as IVisualElement);
+				}
+				else if(evt.data.type=='column'){
+				var columnChartComponent:ColumnChartComponent = new ColumnChartComponent();
+					columnChartComponent.dataCollection = evt.data.data as ArrayCollection;
+					columnChartComponent.chartLabel = evt.data.label as String;
+					columnChartComponent.chartSeries = evt.data.series as String;
+				chartComponentCollection.addItem(columnChartComponent);
+				box.addElement(columnChartComponent as IVisualElement);
+				}
+				else if(evt.data.type=='plot'){
+					var pChart:PlotChartComponent = new PlotChartComponent();
+						pChart.dataCollection = evt.data.data as ArrayCollection;
+						pChart.chartLabel = evt.data.label as String;
+				chartComponentCollection.addItem(pChart);
+				box.addElement(pChart as IVisualElement)
+				}
+				chartBox.addElement(box as IVisualElement);
+				box.percentWidth = 100;
+			}
+
+		]]>
+	</fx:Script>
+	<viewer:states>
+		<s:State name="State1"/>
+		
+	</viewer:states>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace viewer "com.esri.viewer.*";
+		@namespace esri "http://www.esri.com/2008/ags";
+		.headerStyle{
+			color:white;
+		}
+	</fx:Style>
+	<fx:Declarations>
+		
+		
+		
+	</fx:Declarations>
+	
+
+	<viewer:WidgetTemplate id="wTemplate" width="650" height="500">
+		<code:SuperTabNavigator id="chartBox" width="100%" height="100%" borderStyle="solid" tabClose="chartBox_tabCloseHandler(event)">
+		</code:SuperTabNavigator>
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

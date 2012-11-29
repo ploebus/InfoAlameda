@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- http://blog.flexexamples.com/2010/04/13/creating-a-custom-thumb-skin-on-an-mx-hslider-control-in-flex-4/ -->
+<s:SparkSkin name="NaturalBreakSliderSkin"
+			 xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 alpha.disabled="0.5">
+	<!-- states -->
+	<s:states>
+		<s:State name="up" />
+		<s:State name="over" />
+		<s:State name="down" />
+		<s:State name="disabled" />
+	</s:states>
+	
+	<fx:Script>
+		<![CDATA[
+			override protected function initializationComplete():void {
+				useChromeColor = true;
+				super.initializationComplete();
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Line yFrom="0" yTo="450">
+		<s:stroke>
+			<s:SolidColorStroke weight="3" color="0x0000FF"/>
+		</s:stroke>
+	</s:Line>
+	
+</s:SparkSkin>

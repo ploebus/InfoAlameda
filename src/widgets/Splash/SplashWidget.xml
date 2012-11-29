@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<configuration>
+    <!--
+        Refer to the doc below for valid HTML tags that can be used for the content
+        http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flashx/textLayout/conversion/TextConverter.html#TEXT_FIELD_HTML_FORMAT
+    -->
+    <width>700</width>
+    <height>525</height>
+    <content>
+        <![CDATA[<p align='center'>
+            <img src='assets/images/InfoBetaFlex.png'/>
+        </p>
+        <p align='center'>
+            <font size="16"><b>Welcome to InfoAlameda</b></font>
+        </p>
+       
+		  <textformat leftmargin="10 rightmargin="10">
+		  <p>This map room was designed to connect our community with information for action and change.</p>
+		  <p><b>To use this mapping system,you must agree to the following conditions:</b></p>
+		  <p>I have read, understood, and agree to the InfoAlamedaCounty legal disclaimer.
+		    Click <a href="http://beta.infoalamedacounty.org/help/terms" target="_blank"><font color="#00FFFF">here</a> to access the legal disclaimer</p>
+		  <p>No fees may be charged for use or distribution of InfoAlamedaCounty data or output.
+		  All persons are granted a limited license to use and distribute these data and products. You may not charge a fee for the data if you distribute it to others.</p>
+		  <p>Cite InfoAlamedaCounty appropriately.Publications, presentations, and research reports based on data from the InfoAlamedaCounty database, must cite it appropriately. Click <a href="http://beta.infoalamedacounty.org/help/citing" target="_blank"><font color="#00FFFF">here</a> for our protocol.</p>
+		  <p>We request that users send us citations to publications, research reports, media articles, or educational material making use of the data of products on InfoAlamedaCounty. Please send your citations to <a href="mailto:gis@urbanstrategies.org"><font color="#00FFFF">Research Director</a>.</p>
+		  <p><b>Use InfoAlamedaCounty for GOOD -- never for EVIL<b></p>
+		  <p >(Our Map Room was built using technology generously donated by <a href="http://www.esri.com/grants/esri/nonprofit.html" target="_blank"><font color="#00FFFF">ESRI</a>)
+		  </p>
+        
+       
+       </textformat>
+       <img src='assets/images/CCLicense.png'/>
+       ]]>
+    </content>
+    <btnlabel>I agree to the terms of use</btnlabel>
+
+</configuration>

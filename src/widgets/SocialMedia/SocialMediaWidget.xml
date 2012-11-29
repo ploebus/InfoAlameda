@@ -1,0 +1,6 @@
+<configuration>
+    <socialMediaProxyUrl></socialMediaProxyUrl>
+	<defaultSearchKeyword>snow</defaultSearchKeyword>
+    <maximumYouTubeSearchRadius>60</maximumYouTubeSearchRadius> <!--km-->
+    <maximumTwitterSearchRadius>60</maximumTwitterSearchRadius> <!--km-->
+</configuration>

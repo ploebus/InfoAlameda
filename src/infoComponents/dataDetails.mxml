@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="360" height="224" cornerRadius="10" borderColor="#790A0A">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+		
+		
+			
+			[Bindable]
+			public var panelTitle:String="None Selected";
+			
+			[Bindable]
+			public var variable:String="None Selected";
+			
+			[Bindable]
+			public var year:XMLList;
+			
+			[Bindable]
+			public var boundary:XMLList;
+			
+			public function yearSelected(e:ListEvent):void{
+				var myEvent:ListEvent=new ListEvent("yearSelected");
+				dispatchEvent(myEvent);
+			}
+			public function boundarySelected(e:ListEvent):void{
+				var myEvent:ListEvent=new ListEvent("boundarySelected");
+				dispatchEvent(myEvent);
+				
+			}
+			
+					
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Metadata>
+		[Event(name="yearSelected",type="mx.events.ListEvent")]
+		[Event(name="boundarySelected",type="mx.events.ListEvent")]
+		
+		
+	</mx:Metadata>
+	
+	<mx:Label text="Years Available:" width="361" fontWeight="bold" textAlign="center"/>
+	<mx:HorizontalList width="359" id="yearList" itemClick="yearSelected(event);" dataProvider="{year}" x="120" y="10" height="28" borderStyle="none" color="#0A0A0A"></mx:HorizontalList>
+	
+	<mx:Label x="10" y="69" text="Select Boundary:" width="361" fontWeight="bold" textAlign="center"/>
+	<mx:HorizontalList width="360" id="boundaryList" columnWidth="100" itemClick="boundarySelected(event);" dataProvider="{boundary}" x="120" y="59" height="64" borderStyle="none" color="#040404"></mx:HorizontalList>
+
+</mx:VBox>

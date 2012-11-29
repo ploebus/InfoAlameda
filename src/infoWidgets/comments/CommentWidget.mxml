@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" 
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:datalookup="services.datalookup.*" 
+				   width="450" height="450" layout="vertical">
+
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.rpc.events.ResultEvent;
+			import mx.controls.Alert;
+		
+		protected function button1_clickHandler(event:MouseEvent):void
+			{
+				postCommentResult.token=datalookup.comment(comment.text,email.text,category.selectedItem);
+			}
+			
+			
+			
+
+		protected function datalookup_resultHandler(event:ResultEvent):void
+			{
+				Alert.show("Thanks for giving us the feedback");
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<s:CallResponder id="postCommentResult"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" result="datalookup_resultHandler(event)" showBusyCursor="true"/>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<viewer:WidgetTemplate closed="{comment.text=''}" width="420" height="450">
+	<viewer:layout>
+		<s:VerticalLayout/>
+	</viewer:layout>
+	
+		
+		<s:Label x="-1" y="3" text="Help us out, post a comment " width="390" fontWeight="bold" textAlign="center" fontSize="16" height="21" verticalAlign="middle" />
+		
+		<s:Label x="11" y="74" text="Select a Category" />
+		<s:ComboBox id="category" width="247">
+			<s:dataProvider>
+				<s:ArrayCollection>
+					<fx:String>How it Looks</fx:String>
+					<fx:String>Getting the Data</fx:String>
+					<fx:String>Features--Have or Not</fx:String>
+					<fx:String>Data--Have or Have Not</fx:String>
+					<fx:String>Other</fx:String>
+				</s:ArrayCollection>
+			</s:dataProvider>
+		</s:ComboBox>
+		<s:TextArea x="9" y="88" width="370" height="233" color="#333333" contentBackgroundColor="#ffffff" id="comment"
+				 text="Click here and write your comment" editable="true"/> 
+		<!--<s:TextInput x="9" y="88" width="370" height="233"
+					 color="#333333" contentBackgroundColor="#FFFFFF" id="comment" 
+					 text="Click here and write your comment"  textAlign="left"/>-->
+		<s:Label x="1" y="29" text="If you want us to respond, leave your email" id="email" width="250" textAlign="center"/>
+		<s:TextInput text="Email Here (Optional)"   x="10" y="46" width="369"/>
+		<s:HGroup>
+			<s:Button label="Submit Comment" click="button1_clickHandler(event)" width="146"/>
+			<s:Button label="Clear Comment" click="{comment.text=''}" width="146"/>
+		</s:HGroup>
+</viewer:WidgetTemplate >
+	
+</viewer:BaseWidget>

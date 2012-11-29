@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true"
+			    xmlns:datalookup="services.datalookup.*" height="212" textAlign="center">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@font-face{
+			src:url("assets/fonts/CAMBRIA.TTC");
+			font-family:"cambria";
+		}
+		.cambria{font-family:"cambria"}
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+
+			
+			
+			protected function variableDetail(variable:String):void
+			{
+				variableDetailResult.token = datalookup.variableDetail(variable);
+			}
+			
+
+			protected function datagrid1_itemClickHandler(event:ListEvent):void
+				{
+					this.parent.dispatchEvent(new ListEvent("myEvent",true));
+				}
+
+		]]>
+	</fx:Script>
+	<fx:Metadata>
+		[Event(name="myEvent", type="event.ListEvent")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<s:CallResponder id="variableDetailResult"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+	</fx:Declarations>
+	<s:BorderContainer  styleName="cambria">
+		<s:Label textAlign="center" width="100%" y="10" text="{data.alias}" color="0x000000" fontSize="16"/>
+		<mx:DataGrid creationComplete="variableDetail(data.alias)" itemClick="datagrid1_itemClickHandler(event)" dataProvider="{variableDetailResult.lastResult.item}" y="40" color="#010101" height="172" dropShadowVisible="true" x="0">
+			<mx:columns>
+				<mx:DataGridColumn color="#000000" dataField="coverage"  fontFamily="Arial" headerText="Coverage"/>
+				<mx:DataGridColumn color="0x000000" dataField="boundaryLabel"  fontFamily="Arial" headerText="Boundary"/>
+				<mx:DataGridColumn color="0x000000" dataField="year"  fontFamily="Arial" headerText="Year"/>
+					
+			</mx:columns>
+		</mx:DataGrid>
+		
+		
+	</s:BorderContainer>
+	
+	
+</s:ItemRenderer>

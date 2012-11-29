@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer 
+		xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:datalookup="services.datalookup.*" xmlns:states="com.degrafa.states.*" useHandCursor="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			
+						
+
+			protected function list1_creationCompleteHandler(event:FlexEvent):void
+			{
+				subCategoryResult.token = datalookup.subCategory(data.category);
+			}
+
+
+			protected function bordercontainer1_rollOverHandler(event:MouseEvent):void
+			{
+				event.currentTarget.setStyle('borderWeight',3);
+								
+			}
+
+
+			
+
+
+			protected function thisBox_rollOutHandler(event:MouseEvent):void
+			{
+				event.currentTarget.setStyle('borderWeight',1);
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@font-face{
+			src:url("assets/fonts/CAMBRIA.TTC");
+			font-family:"cambria";
+		}
+		.cambria{font-family:"cambria"}
+	</fx:Style>
+	<s:states>
+		<s:State name="State1"/>
+		<s:State name="rollover"/>
+	</s:states>
+	<fx:Declarations>
+		<s:CallResponder id="subCategoryResult"/>
+		<datalookup:Datalookup id="datalookup" fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)" showBusyCursor="true"/>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+	</fx:Declarations>
+
+	
+	
+	
+
+	<s:BorderContainer id="thisBox" useHandCursor="true" buttonMode="true" width="200" height="200" rollOut="thisBox_rollOutHandler(event)" rollOver="bordercontainer1_rollOverHandler(event)" rollOverColor="0x00007f" dropShadowVisible="true" cornerRadius="5" styleName="cambria">
+		<s:Label width="100%" y="10" textAlign="center" fontSize="16" color="0x000000" text="{data.category}"/>
+		<s:TextArea textAlign="center" width="100%" y="39" selectable="false"  text="{data.description}" contentBackgroundColor="0xffffff" borderVisible="false" editable="false" color="0x000000"/>
+	</s:BorderContainer>
+	
+</s:ItemRenderer>
