@@ -42,6 +42,7 @@
 			
 			
 			public static const STARTURL:String = "proxy.php?url=http://seeclickfix.com/api/issues.rss?";
+			//public static const STARTURL:String = "http://seeclickfix.com/api/issues.rss?";
 			
 			protected function httpservice1_resultHandler(event:ResultEvent):void
 			{
@@ -91,9 +92,9 @@
 					at:placeToSearch.text
 				};
 				
-				seeClickCall.url = STARTURL;
+				seeClickCall.url = STARTURL + "at=" + placeToSearch.text;
 				//Alert.show(seeClickCall.url);
-				seeClickCall.send(params);
+				seeClickCall.send();
 				
 			}
 			
@@ -186,10 +187,13 @@
 					lng_min:gr.extent.xmin,
 					lng_max:gr.extent.xmax
 				};
-				
-				seeClickCall.url = STARTURL;
+				var paramString:String = "lat_min=" + gr.extent.ymin;
+				paramString += "&lat_max=" + gr.extent.ymax;
+				paramString += "&lng_min=" + gr.extent.xmin;
+				paramString += "&lng_max=" + gr.extent.xmax;
+				seeClickCall.url = STARTURL + escape(paramString);
 				myDrawTool.deactivate();
-				seeClickCall.send(params);
+				seeClickCall.send();
 			}
 			
 		]]>
